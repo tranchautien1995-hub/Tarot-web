@@ -1,0 +1,9 @@
+Rider-Waite-Smith card fronts bundled with Tarot Practice V2.8.
+
+Source chain used for these local copies:
+- plateau-tarot-api image assets by Gerald Fingburke (Unlicense repository)
+- The repository credits the Rider-Waite Smith Tarot Cards CC0 set by luciellaes
+- Original Rider-Waite-Smith artwork is public domain in relevant jurisdictions; the CC0 source provides the scans for reuse.
+
+Only the 78 traditional card fronts are bundled here.
+The website's existing card-back design is NOT replaced by these assets.

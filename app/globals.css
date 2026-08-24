@@ -1,0 +1,2552 @@
+:root {
+  --bg:#0b0910; --panel:#15111c; --panel2:#1b1522; --ink:#f4eee5; --muted:#a69daa;
+  --gold:#d5b36d; --gold2:#f0d89f; --line:rgba(213,179,109,.24); --wine:#65213f; --danger:#d48b9b;
+  --font-ui:Cambria,"Times New Roman",Times,serif; --font-heading:Cambria,"Times New Roman",Times,serif;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed;opacity:.42} textarea,input{color:var(--ink)}
+main{min-height:100vh;position:relative;overflow:hidden;background:radial-gradient(circle at 50% -10%,#321b34 0,#121019 35%,#09080e 72%)}
+.ambient{position:fixed;inset:0;pointer-events:none;opacity:.4;background-image:radial-gradient(circle at 12% 20%,#fff 0 1px,transparent 1.4px),radial-gradient(circle at 70% 12%,#d5b36d 0 1px,transparent 1.4px),radial-gradient(circle at 88% 60%,#fff 0 1px,transparent 1.4px),radial-gradient(circle at 42% 75%,#d5b36d 0 1px,transparent 1.4px);background-size:220px 220px,310px 310px,260px 260px,360px 360px}
+.shell{width:min(1180px,calc(100% - 36px));margin:0 auto;position:relative;z-index:1}.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.brand{color:var(--gold2);letter-spacing:.18em;font-size:13px;font-weight:700}.top-note,.eyebrow,.panel-kicker{font-size:10px;letter-spacing:.2em;color:#83798a;text-transform:uppercase}.intro{text-align:center;padding:76px 0 48px}
+.eyebrow{color:var(--gold);margin-bottom:18px}.intro h1{font-family:var(--font-heading);font-size:clamp(48px,7vw,84px);font-weight:650;line-height:.98;letter-spacing:-.035em;margin:0}.intro h1 em{font-style:normal;font-weight:500;color:var(--gold2)}
+.lead{max-width:760px;margin:22px auto 30px;color:#b9afbd;font-size:17px;line-height:1.7}.ai-status{max-width:760px;margin:auto;border:1px solid var(--line);background:rgba(255,255,255,.025);padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;text-align:left}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#c69270}.ai-status.ready .status-dot{background:#8eb69b;box-shadow:0 0 14px rgba(142,182,155,.45)}.ai-status b{font-size:12px;font-weight:600}.ai-status small{display:block;margin-top:3px;color:#8e8492;font-size:11px}.ai-status button,.ghost-button{border:1px solid var(--line);background:transparent;color:var(--gold2);padding:10px 13px;font-size:11px}
+.workspace{padding:26px 0 90px}.panel{border:1px solid var(--line);background:linear-gradient(180deg,rgba(28,22,35,.93),rgba(17,14,23,.94));padding:22px;box-shadow:0 18px 55px rgba(0,0,0,.2)}.panel-kicker{color:var(--gold)}
+.question-card textarea{width:100%;border:0;border-bottom:1px solid rgba(255,255,255,.08);background:transparent;outline:0;resize:vertical;min-height:96px;padding:18px 0;font-size:20px;line-height:1.55}.question-card textarea::placeholder,input::placeholder{color:#6f6774}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.chips button{border:1px solid rgba(255,255,255,.08);background:transparent;color:#9f96a3;border-radius:999px;padding:8px 11px;font-size:11px}.chips button:hover{color:var(--gold2);border-color:var(--line)}
+.control-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.mode-switch button{min-height:112px;text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12);color:#b8afbc;padding:15px;display:grid;grid-template-columns:auto 1fr;column-gap:10px}.mode-switch button span{font-size:23px;grid-row:1/3}.mode-switch button b{font-size:14px;color:#ded5de}.mode-switch button small{font-size:11px;line-height:1.45;margin-top:4px;color:#817886}.mode-switch button.active{border-color:var(--gold);background:rgba(98,55,87,.22)}
+.count-row{display:flex;gap:9px;align-items:stretch;margin-top:15px}.count-row>button{min-width:74px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12);color:#c6bdc9}.count-row>button.active{border-color:var(--gold);color:var(--gold2)}.custom-count{display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.08);padding:8px 10px;color:#9e95a2;font-size:11px}.custom-count input{width:64px;background:rgba(0,0,0,.2);border:1px solid var(--line);padding:9px;outline:0}.hint{color:#756d79;font-size:11px;line-height:1.5;margin:12px 0 0}
+.spread-toolbar{display:flex;justify-content:space-between;gap:20px;align-items:end;margin:48px 0 20px}.spread-toolbar h2,.synthesis-panel h2,.result-head h2{font-family:var(--font-heading);font-weight:600;font-size:32px;margin:8px 0 0}.toolbar-actions,.ai-buttons{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}.gold-button{border:1px solid var(--gold);background:var(--gold);color:#171119;padding:13px 17px;font-size:11px;font-weight:700}.gold-button:hover:not(:disabled){background:var(--gold2)}
+.practice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}.practice-grid.dense{grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:11px}.empty-card-slot{aspect-ratio:2/3.15;border:1px dashed rgba(213,179,109,.35);background:rgba(255,255,255,.018);color:#776d7b;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px}.empty-card-slot span{position:absolute;align-self:flex-start;margin:-220px 0 0 12px;font-size:9px;letter-spacing:.15em}.empty-card-slot b{font-size:28px;color:var(--gold)}.empty-card-slot em{font-style:normal;font-size:11px}.empty-card-slot:hover{border-color:var(--gold);color:var(--gold2)}
+.practice-card-wrap{min-width:0}.practice-position{height:36px;display:flex;align-items:flex-end;color:#a99fad;font-size:11px;line-height:1.3;padding:0 4px 8px}.practice-card-face{aspect-ratio:2/3.15;background:linear-gradient(150deg,#e8decb,#c8b99f);color:#251c25;border:1px solid #8e6c42;border-radius:7px;padding:8px;box-shadow:0 18px 40px rgba(0,0,0,.25);transition:transform .35s ease}.practice-card-face.reversed-card{transform:rotate(180deg)}.practice-card-inner{height:100%;border:1px solid rgba(66,46,35,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:12px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.9),transparent 30%)}.practice-number{position:absolute;top:10px;right:10px;font-size:9px}.practice-symbol{font-family:var(--font-heading);font-size:54px;color:var(--wine);margin-bottom:14px}.practice-card-inner strong{font-family:var(--font-heading);font-size:17px;text-transform:uppercase}.practice-card-inner small{margin-top:6px;letter-spacing:.12em;text-transform:uppercase;color:#735d51;font-size:9px}.practice-card-inner p{margin:14px 0 0;font-size:9px;line-height:1.5;text-transform:uppercase;color:#6f5b50}.card-actions{display:grid;grid-template-columns:1fr 1fr auto;gap:5px;margin-top:8px}.card-actions button{border:1px solid rgba(255,255,255,.08);background:transparent;color:#a69ba9;padding:8px 6px;font-size:10px}.card-actions button:hover{border-color:var(--line);color:var(--gold2)}.card-actions .danger-link{color:#a87b84}
+.synthesis-panel{margin-top:50px}.synthesis-head{display:flex;justify-content:space-between;gap:28px;align-items:flex-start}.synthesis-head>div:first-child{max-width:720px}.synthesis-head p{margin:10px 0 0;color:#a79cab;font-size:14px;line-height:1.65}.synthesis-placeholder{margin-top:22px;border:1px dashed rgba(213,179,109,.28);background:rgba(213,179,109,.025);padding:22px;color:#8f8593;font-size:13px;line-height:1.6}.synthesis-content{margin-top:28px;border-top:1px solid rgba(255,255,255,.07);padding-top:24px}.error-box{margin-top:14px;border:1px solid rgba(212,139,155,.45);background:rgba(101,33,63,.18);padding:14px;color:#efb2bf;font-size:13px}.reading-text{max-width:900px;color:#d7ced9;font-size:16px;line-height:1.85}.reading-text h3{font-family:var(--font-heading);color:var(--gold2);font-weight:400;font-size:26px;margin:38px 0 10px}.reading-text h4{color:#eee4d5;font-weight:600;font-size:17px}.reading-text p{margin:10px 0}.reading-text .bullet{margin:8px 0 8px 12px}.reading-text .spacer{height:6px}
+.chat-panel{margin-top:38px;border:1px solid var(--line);background:rgba(18,14,24,.9)}.chat-heading{padding:17px 20px;border-bottom:1px solid rgba(255,255,255,.06)}.chat-heading b{font-family:var(--font-heading);font-size:20px;font-weight:400}.chat-heading small{display:block;color:#7e7582;font-size:11px;margin-top:4px}.chat-history{padding:18px;max-height:440px;overflow:auto}.message{max-width:80%;margin-bottom:14px}.message.user{margin-left:auto}.message span{display:block;color:#796e7f;font-size:8px;letter-spacing:.15em;margin-bottom:4px}.message p{margin:0;background:rgba(255,255,255,.045);padding:12px 14px;white-space:pre-wrap;font-size:13px;line-height:1.65}.message.user p{background:rgba(101,33,63,.35)}.chat-form{display:grid;grid-template-columns:1fr auto;border-top:1px solid rgba(255,255,255,.06)}.chat-form input{border:0;outline:0;background:transparent;padding:17px 19px}.chat-form button{border:0;border-left:1px solid var(--line);background:transparent;color:var(--gold2);padding:0 22px}
+.modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(3,2,5,.84);backdrop-filter:blur(8px);padding:34px;display:flex;align-items:center;justify-content:center}.card-picker-modal{width:min(1120px,100%);max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--line);background:#100d15;box-shadow:0 30px 100px #000}.picker-modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.06)}.mini-label{color:var(--gold);font-size:9px;letter-spacing:.18em}.picker-modal-head h3{font-family:var(--font-heading);font-weight:400;font-size:26px;margin:5px 0 0}.icon-close{border:0;background:transparent;color:#a89daa;font-size:30px}.picker-tools{padding:15px 20px;border-bottom:1px solid rgba(255,255,255,.06)}.picker-tools>input{width:100%;border:1px solid rgba(255,255,255,.09);background:#0b0910;outline:0;padding:12px 14px}.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.filter-row button{border:1px solid rgba(255,255,255,.08);background:transparent;color:#918795;padding:7px 10px;font-size:10px}.filter-row button.active{border-color:var(--gold);color:var(--gold2)}.library-grid{overflow:auto;padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px}.library-card{border:1px solid rgba(255,255,255,.07);background:#16111c;color:#d5ccd7;padding:8px;text-align:left}.library-card:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px)}.library-card.disabled{opacity:.35}.library-art{aspect-ratio:2/2.65;border:1px solid #8e6c42;background:linear-gradient(150deg,#e8decb,#c8b99f);display:flex;align-items:center;justify-content:center;color:var(--wine);font-family:var(--font-heading);font-size:38px;margin-bottom:8px}.library-card strong{display:block;font-family:var(--font-heading);font-size:13px;line-height:1.2}.library-card small{display:block;color:#827887;font-size:10px;margin-top:3px}.library-card em{display:block;color:var(--gold);font-size:9px;font-style:normal;margin-top:6px}
+footer{display:flex;justify-content:space-between;gap:30px;border-top:1px solid var(--line);padding:28px 0 42px;color:#756d79;font-size:10px;letter-spacing:.08em}footer p{margin:0}
+@media(max-width:850px){.control-grid{grid-template-columns:1fr}.spread-toolbar,.synthesis-head{align-items:flex-start;flex-direction:column}.toolbar-actions,.ai-buttons{justify-content:flex-start}.practice-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+@media(max-width:620px){.shell{width:min(100% - 22px,1180px)}.top-note{display:none}.intro{padding-top:52px}.mode-switch{grid-template-columns:1fr}.count-row{flex-wrap:wrap}.ai-status{grid-template-columns:auto 1fr}.ai-status button{grid-column:1/-1}.spread-toolbar h2,.synthesis-panel h2{font-size:27px}.practice-grid,.practice-grid.dense{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-backdrop{padding:10px}.library-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px}.chat-form{grid-template-columns:1fr}.chat-form button{border-left:0;border-top:1px solid var(--line);padding:12px}footer{flex-direction:column}.practice-symbol{font-size:44px}.card-actions{grid-template-columns:1fr 1fr}.card-actions .danger-link{grid-column:1/-1}}
+
+
+/* V2.2 font + Rider-Waite image overrides */
+body{line-height:1.5;text-rendering:optimizeLegibility}
+.brand,.top-note,.eyebrow,.panel-kicker,.mini-label,.message span{letter-spacing:.14em}
+.question-card textarea,.chat-form input,.picker-tools>input,.custom-count input{font-family:var(--font-ui)}
+.practice-card-face{background:#efe6d2;padding:6px}
+.practice-card-inner.image-mode{padding:0;overflow:hidden;background:#f4eddf}
+.practice-card-image,.library-image,.viewer-image{display:block;width:100%;height:100%;object-fit:contain;background:#f4eddf}
+.practice-card-image{min-height:100%}
+.practice-card-caption{padding:10px 4px 0;text-align:center}
+.practice-card-caption strong{display:block;font-family:var(--font-heading);font-size:18px;line-height:1.2}
+.practice-card-caption small{display:block;color:#9a8f9e;font-size:11px;margin-top:4px}
+.practice-card-caption p{margin:10px 0 0;font-size:10px;line-height:1.5;color:#8b808d;text-transform:uppercase}
+.card-artwork-fallback{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;background:linear-gradient(150deg,#e8decb,#c8b99f);color:#241b24;border:1px solid rgba(66,46,35,.45)}
+.card-artwork-fallback span{font-size:42px;color:var(--wine);line-height:1}
+.card-artwork-fallback strong{margin-top:10px;font-family:var(--font-heading);font-size:16px;line-height:1.15}
+.card-artwork-fallback small{margin-top:5px;font-size:10px;color:#6d5d56}
+.library-grid.image-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}
+.library-card.image-card{padding:10px}
+.library-art.image-mode{overflow:hidden;background:#f4eddf;border-radius:3px}
+.library-image{aspect-ratio:2/3.1}
+.library-fallback span{font-size:30px}
+.viewer-image{aspect-ratio:2/3.15}
+.viewer-fallback span{font-size:36px}
+@media(max-width:620px){
+  .practice-card-caption strong{font-size:15px}
+  .library-grid.image-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* =========================
+   V2.3 — presets + history
+   ========================= */
+.compact-intro{padding-bottom:38px}
+.v23-controls{grid-template-columns:.92fr 1.08fr}
+.preset-panel{min-width:0}
+.preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:15px}
+.preset-grid button{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12);color:#b8afbc;padding:14px;text-align:left;min-height:78px}
+.preset-grid button:hover{border-color:var(--line)}
+.preset-grid button.active{border-color:var(--gold);background:rgba(98,55,87,.22);color:var(--gold2)}
+.preset-grid b{display:block;font-family:var(--font-heading);font-size:17px;font-weight:600}
+.preset-grid small{display:block;margin-top:5px;color:#817886;font-size:11px;line-height:1.4}
+.custom-v23{margin-top:10px;width:max-content}
+.celtic-grid{grid-template-columns:repeat(5,minmax(145px,1fr))}
+.history-section{margin-top:52px}
+.history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px}
+.history-head h2{font-family:var(--font-heading);font-weight:600;font-size:34px;margin:8px 0 0}
+.history-head p{margin:8px 0 0;color:#918695;font-size:13px;line-height:1.55}
+.history-empty{border:1px dashed rgba(213,179,109,.28);background:rgba(213,179,109,.02);padding:24px;color:#8f8593;font-size:13px}
+.history-list{display:grid;gap:12px}
+.history-card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(28,22,35,.88),rgba(16,13,21,.9));padding:18px 20px}
+.history-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.history-card-top span{color:#83798a;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.history-card-top h3{font-family:var(--font-heading);font-size:21px;font-weight:600;margin:6px 0 0;line-height:1.25}
+.history-actions{display:flex;gap:6px;flex-shrink:0}
+.history-actions button{border:1px solid rgba(255,255,255,.08);background:transparent;color:#b8adb9;padding:8px 11px;font-size:10px}
+.history-actions button:hover{border-color:var(--gold);color:var(--gold2)}
+.history-actions .danger-link{color:#b9838e}
+.history-cards-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.history-cards-line span{border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.14);padding:6px 8px;color:#a89eaa;font-size:10px}
+.history-reading-preview{margin:14px 0 0;border-top:1px solid rgba(255,255,255,.05);padding-top:13px;color:#a99fac;font-size:12px;line-height:1.65}
+@media(max-width:1000px){.celtic-grid{grid-template-columns:repeat(3,minmax(145px,1fr))}}
+@media(max-width:850px){.v23-controls{grid-template-columns:1fr}.history-head{align-items:flex-start;flex-direction:column}.celtic-grid{grid-template-columns:repeat(2,minmax(145px,1fr))}}
+@media(max-width:620px){.preset-grid{grid-template-columns:1fr 1fr}.history-card-top{flex-direction:column}.history-actions{width:100%}.history-actions button{flex:1}.celtic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* =========================
+   V2.4 — interactive shuffle + draw
+   ========================= */
+.interactive-draw{margin-top:26px;padding:0;overflow:hidden;background:linear-gradient(180deg,rgba(21,17,28,.98),rgba(11,9,16,.99))}
+.interactive-draw-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:22px 24px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+.interactive-draw-head h2{font-family:var(--font-heading);font-size:32px;font-weight:600;margin:7px 0 0}
+.interactive-draw-head p{margin:8px 0 0;color:#9f95a2;font-size:13px;line-height:1.55}
+.draw-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.draw-table{position:relative;min-height:590px;overflow:hidden;background:radial-gradient(circle at 50% 22%,rgba(213,179,109,.06),transparent 25%),linear-gradient(180deg,#100d16,#09070c)}
+.draw-table::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 12% 18%,rgba(255,255,255,.55) 0 1px,transparent 1.2px),radial-gradient(circle at 79% 23%,rgba(213,179,109,.55) 0 1px,transparent 1.2px);background-size:190px 190px,270px 270px;opacity:.2}
+.picked-slots{position:relative;z-index:120;display:grid;grid-template-columns:repeat(3,minmax(92px,145px));gap:12px;justify-content:center;padding:34px 24px 10px;min-height:180px}
+.picked-slots.count-6{grid-template-columns:repeat(6,minmax(76px,112px))}
+.picked-slots.count-many{grid-template-columns:repeat(5,minmax(74px,105px));max-width:650px;margin:auto}
+.picked-slot{aspect-ratio:2/3.12;border:1px solid rgba(213,179,109,.24);background:rgba(255,255,255,.018);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px;color:#716875;position:relative;border-radius:6px;transition:border-color .25s ease,background .25s ease}
+.picked-slot>span{position:absolute;top:8px;left:9px;font-size:9px;letter-spacing:.12em;color:#8a7e8d}
+.picked-slot small{font-size:9px;line-height:1.3;color:#736a77}
+.picked-slot.filled{border-color:rgba(213,179,109,.5);background:rgba(213,179,109,.045)}
+.mini-card-back,.shuffle-card,.fan-card{border:1px solid rgba(231,211,163,.54);background:linear-gradient(145deg,#252621,#121510 62%,#090b08);box-shadow:0 12px 30px rgba(0,0,0,.34),inset 0 0 0 4px #151a13,inset 0 0 0 5px rgba(213,179,109,.16);color:#dfc47f}
+.mini-card-back::before,.shuffle-card::before,.fan-card::before{content:"";position:absolute;inset:9px;border:1px solid rgba(213,179,109,.26);background:radial-gradient(circle at center,transparent 0 10px,rgba(213,179,109,.06) 11px 12px,transparent 13px),linear-gradient(45deg,transparent 48%,rgba(213,179,109,.11) 49% 51%,transparent 52%),linear-gradient(-45deg,transparent 48%,rgba(213,179,109,.11) 49% 51%,transparent 52%)}
+.mini-card-back span,.fan-card span{position:relative;z-index:2;font-size:20px;text-shadow:0 0 12px rgba(213,179,109,.35)}
+.picked-card-back{position:absolute;inset:7px;border-radius:5px;display:flex;align-items:center;justify-content:center;animation:pickedArrive .42s cubic-bezier(.2,.75,.2,1.08) both}
+@keyframes pickedArrive{0%{opacity:0;transform:translateY(70px) scale(.76) rotate(5deg)}100%{opacity:1;transform:none}}
+.shuffle-zone{position:absolute;left:50%;top:57%;width:190px;height:255px;transform:translate(-50%,-50%);z-index:30}
+.shuffle-card{position:absolute;left:50%;top:50%;width:112px;height:176px;border-radius:7px;transform:translate(-50%,-50%) rotate(calc((var(--shuffle-index) - 7) * .32deg));transition:transform .35s ease}
+.shuffle-back-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:27px;z-index:2}
+.shuffle-caption{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:10px;letter-spacing:.22em;color:#776e79;white-space:nowrap}
+.is-shuffling .shuffle-card.left-packet{animation:shuffleLeft 1.02s ease-in-out calc((var(--shuffle-index) % 4) * 90ms) 2 alternate}
+.is-shuffling .shuffle-card.right-packet{animation:shuffleRight 1.02s ease-in-out calc((var(--shuffle-index) % 4) * 90ms) 2 alternate}
+@keyframes shuffleLeft{0%{transform:translate(-50%,-50%) rotate(-2deg)}45%{transform:translate(-112%,-50%) rotate(-13deg) translateY(-8px)}70%{transform:translate(-72%,-43%) rotate(8deg)}100%{transform:translate(-50%,-50%) rotate(-1deg)}}
+@keyframes shuffleRight{0%{transform:translate(-50%,-50%) rotate(2deg)}45%{transform:translate(12%,-50%) rotate(13deg) translateY(8px)}70%{transform:translate(-28%,-57%) rotate(-8deg)}100%{transform:translate(-50%,-50%) rotate(1deg)}}
+.fan-zone{position:absolute;left:0;right:0;bottom:0;height:345px;z-index:20;animation:fanReveal .7s ease both}
+@keyframes fanReveal{from{opacity:0;transform:translateY(75px) scale(.96)}to{opacity:1;transform:none}}
+.fan-card{position:absolute;width:78px;height:123px;border-radius:5px;padding:0;display:flex;align-items:center;justify-content:center;transform-origin:50% 116%;transition:bottom .16s ease,filter .16s ease,opacity .22s ease,box-shadow .16s ease;will-change:transform,bottom}
+.fan-card:hover:not(:disabled){bottom:94px!important;filter:brightness(1.24);box-shadow:0 19px 34px rgba(0,0,0,.56),0 0 0 1px rgba(240,216,159,.34)}
+.fan-card.picked{opacity:0;pointer-events:none}
+.fan-card.flying{animation:flyCard .43s cubic-bezier(.21,.7,.22,1) forwards;z-index:200!important;pointer-events:none}
+@keyframes flyCard{0%{filter:brightness(1.22)}55%{transform:translateX(-50%) translateY(-235px) rotate(0deg) scale(1.07)}100%{opacity:0;transform:translateX(-50%) translateY(-325px) rotate(0deg) scale(.78)}}
+.fan-shadow{position:absolute;left:7%;right:7%;bottom:-10px;height:90px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.55),transparent 70%);filter:blur(12px);pointer-events:none}
+.fan-tip{margin:0;padding:13px 20px 17px;text-align:center;border-top:1px solid rgba(255,255,255,.045);color:#7f7582;font-size:11px;letter-spacing:.03em}
+@media(max-width:920px){
+  .picked-slots.count-6{grid-template-columns:repeat(3,minmax(76px,108px));min-height:310px}
+  .picked-slots.count-many{grid-template-columns:repeat(5,minmax(58px,88px))}
+  .draw-table{min-height:660px}
+  .fan-card{width:64px;height:101px}
+}
+@media(max-width:620px){
+  .interactive-draw-head{flex-direction:column;padding:18px}
+  .draw-actions{justify-content:flex-start}
+  .draw-table{min-height:650px}
+  .picked-slots,.picked-slots.count-6,.picked-slots.count-many{grid-template-columns:repeat(3,minmax(0,1fr));padding:22px 12px 8px;gap:8px;max-width:360px}
+  .picked-slot small{display:none}
+  .picked-slot{min-width:0}
+  .fan-zone{height:300px}
+  .fan-card{width:47px;height:74px}
+  .fan-card::before{inset:5px}
+  .fan-card span{font-size:13px}
+  .fan-card:hover:not(:disabled){bottom:78px!important}
+  .shuffle-zone{top:62%;transform:translate(-50%,-50%) scale(.84)}
+}
+
+/* =========================
+   V2.5 — riffle shuffle + drag/drop + Ethereal Visions asset slot
+   ========================= */
+.ethereal-card-back{
+  background-color:#172019;
+  background-image:
+    url('/cards/ethereal-visions/back.jpg'),
+    radial-gradient(circle at center,rgba(227,203,132,.22) 0 2px,transparent 3px 18px,rgba(227,203,132,.12) 19px 20px,transparent 21px),
+    linear-gradient(135deg,#263328,#121914 58%,#090d0a);
+  background-size:cover,auto,auto;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.v25-table{min-height:620px;touch-action:none;user-select:none}
+.draggable-slots{z-index:140;position:relative}
+.drop-slot{transition:border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease}
+.drop-slot.drop-hover:not(.drop-blocked){border-color:var(--gold2);background:rgba(213,179,109,.12);box-shadow:0 0 0 2px rgba(213,179,109,.1),0 0 28px rgba(213,179,109,.13);transform:translateY(-3px)}
+.drop-slot.drop-blocked{border-color:#a35d69;background:rgba(124,47,65,.14)}
+.draggable-picked{cursor:grab;touch-action:none}
+.draggable-picked:active,.fan-card:active{cursor:grabbing}
+.picked-card-back i{position:relative;z-index:3;font-style:normal;font-size:20px;color:#e4cb8b;text-shadow:0 0 12px rgba(213,179,109,.45)}
+.slot-remove{position:absolute;right:4px;top:4px;z-index:8;width:22px;height:22px;border:1px solid rgba(255,255,255,.09);border-radius:50%;background:rgba(8,7,10,.72);color:#a99da9;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+.slot-remove:hover{border-color:#b67f8c;color:#e6b3bf}
+
+.riffle-zone{position:absolute;left:50%;top:60%;width:330px;height:285px;transform:translate(-50%,-50%);z-index:35;perspective:900px}
+.riffle-card{position:absolute;left:50%;top:42%;width:112px;height:176px;border:1px solid rgba(231,211,163,.54);border-radius:7px;box-shadow:0 12px 30px rgba(0,0,0,.34),inset 0 0 0 4px rgba(15,19,15,.7),inset 0 0 0 5px rgba(213,179,109,.16);display:flex;align-items:center;justify-content:center;color:#dfc47f;transform:translate(-50%,-50%) translate(calc((var(--stack-index) - 12) * .18px),calc((var(--stack-index) - 12) * -.25px)) rotate(calc((var(--stack-index) - 12) * .055deg));transform-origin:50% 90%;will-change:transform,opacity;z-index:calc(30 - var(--stack-index))}
+.riffle-card::after{content:"";position:absolute;inset:9px;border:1px solid rgba(213,179,109,.24);pointer-events:none}
+.riffle-card span{position:relative;z-index:3;font-size:24px;text-shadow:0 0 12px rgba(213,179,109,.35)}
+.riffle-zone.is-shuffling .packet-left{animation:v25RiffleLeft 2.85s cubic-bezier(.34,.04,.2,1) calc(var(--packet-index) * 34ms) both}
+.riffle-zone.is-shuffling .packet-right{animation:v25RiffleRight 2.85s cubic-bezier(.34,.04,.2,1) calc(var(--packet-index) * 34ms) both}
+@keyframes v25RiffleLeft{
+  0%,8%{transform:translate(-50%,-50%) translateX(-1px) rotate(-.5deg)}
+  23%{transform:translate(-118%,-49%) translateY(calc(var(--packet-index) * -.6px)) rotate(-11deg)}
+  38%{transform:translate(-122%,-44%) translateY(calc(var(--packet-index) * -.8px)) rotate(-15deg)}
+  55%{transform:translate(-78%,-39%) translateY(calc(var(--packet-index) * 1.1px)) rotate(-7deg)}
+  67%{transform:translate(-55%,-48%) translateY(calc(var(--packet-index) * -.55px)) rotate(3deg)}
+  82%{transform:translate(-50%,-50%) translateY(calc(var(--packet-index) * -.34px)) rotate(.6deg)}
+  100%{transform:translate(-50%,-50%) translate(calc((var(--packet-index) - 6) * .18px),calc((var(--packet-index) - 6) * -.2px)) rotate(0deg)}
+}
+@keyframes v25RiffleRight{
+  0%,8%{transform:translate(-50%,-50%) translateX(1px) rotate(.5deg)}
+  23%{transform:translate(18%,-49%) translateY(calc(var(--packet-index) * .6px)) rotate(11deg)}
+  38%{transform:translate(22%,-44%) translateY(calc(var(--packet-index) * .8px)) rotate(15deg)}
+  55%{transform:translate(-22%,-39%) translateY(calc(var(--packet-index) * -1.1px)) rotate(7deg)}
+  67%{transform:translate(-45%,-48%) translateY(calc(var(--packet-index) * .55px)) rotate(-3deg)}
+  82%{transform:translate(-50%,-50%) translateY(calc(var(--packet-index) * -.34px)) rotate(-.6deg)}
+  100%{transform:translate(-50%,-50%) translate(calc((var(--packet-index) - 6) * -.18px),calc((var(--packet-index) - 6) * -.2px)) rotate(0deg)}
+}
+.riffle-shadow{position:absolute;left:22%;right:22%;top:67%;height:38px;background:radial-gradient(ellipse at center,rgba(0,0,0,.62),transparent 72%);filter:blur(9px)}
+.shuffle-progress-label{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;white-space:nowrap}
+.shuffle-progress-label b{font-size:10px;letter-spacing:.2em;color:var(--gold2)}
+.shuffle-progress-label span{font-size:10px;color:#766e79;letter-spacing:.03em}
+
+.v25-fan .fan-card{touch-action:none;cursor:grab}
+.v25-fan .fan-card.source-dragging{opacity:.18;filter:brightness(.7)}
+.drag-card-ghost{position:fixed;z-index:9999;width:84px;height:132px;transform:translate(-50%,-50%) rotate(2deg) scale(1.04);border:1px solid rgba(240,216,159,.7);border-radius:6px;box-shadow:0 24px 55px rgba(0,0,0,.58),0 0 0 1px rgba(213,179,109,.18);pointer-events:none;display:flex;align-items:center;justify-content:center;color:#e6cf94}
+.drag-card-ghost span{font-size:21px;text-shadow:0 0 14px rgba(213,179,109,.45)}
+.v25-tip{font-size:12px;line-height:1.55}
+
+/* When the user provides Ethereal Visions images, the existing image components use them automatically. */
+.card-artwork-fallback::after{content:"ETHEREAL VISIONS · THÊM ẢNH VÀO /public/cards/ethereal-visions";display:block;margin-top:9px;max-width:120px;font-size:7px;line-height:1.35;letter-spacing:.05em;color:#78675e}
+
+@media(max-width:920px){.riffle-zone{top:63%;transform:translate(-50%,-50%) scale(.92)}}
+@media(max-width:620px){
+  .v25-table{min-height:670px}
+  .riffle-zone{top:66%;transform:translate(-50%,-50%) scale(.76)}
+  .shuffle-progress-label span{display:none}
+  .drag-card-ghost{width:62px;height:98px}
+  .v25-tip{font-size:10px}
+}
+
+/* =========================
+   V2.6 — shuffle button below deck + in-place 3D reveal + Rider-Waite faces
+   ========================= */
+.v26-head{display:block}
+.v26-table{padding-bottom:8px}
+.deck-bottom-actions{display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap;padding:16px 20px 18px;border-top:1px solid rgba(255,255,255,.055);background:rgba(8,7,11,.52)}
+.deck-shuffle-button{min-width:150px;box-shadow:0 10px 34px rgba(213,179,109,.12)}
+.soft-gold-button{background:transparent;color:var(--gold2)}
+.soft-gold-button:hover:not(:disabled){background:rgba(213,179,109,.12)}
+.v26-slots{padding-bottom:28px}
+.v26-slot{perspective:1100px;overflow:visible}
+.v26-slot .slot-index-label{z-index:22;padding:2px 5px;border-radius:4px;background:rgba(8,7,10,.7);color:#d9c28b;pointer-events:none}
+.v26-slot .slot-position-label{position:absolute;left:6px;right:6px;bottom:6px;z-index:22;padding:4px 5px;border-radius:4px;background:linear-gradient(180deg,transparent,rgba(7,6,9,.82));color:#d3c9d3;font-size:8px;line-height:1.25;pointer-events:none;text-shadow:0 1px 2px #000}
+.slot-flip-card{position:absolute;inset:7px;padding:0;border:0;background:transparent;border-radius:5px;perspective:1100px;touch-action:none;cursor:grab;z-index:10}
+.slot-flip-card:active{cursor:grabbing}
+.slot-flip-inner{position:absolute;inset:0;display:block;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.72,.18,1);will-change:transform}
+.slot-flip-card.is-revealed .slot-flip-inner{transform:rotateY(180deg)}
+.slot-flip-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:5px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 12px 25px rgba(0,0,0,.35)}
+.slot-flip-back{border:1px solid rgba(231,211,163,.54);color:#e4cb8b}
+.slot-flip-back::after{content:"";position:absolute;inset:8px;border:1px solid rgba(213,179,109,.24);pointer-events:none}
+.slot-flip-back i{position:relative;z-index:3;font-style:normal;font-size:20px;color:#e4cb8b;text-shadow:0 0 12px rgba(213,179,109,.45)}
+.slot-flip-front{transform:rotateY(180deg);background:#efe8d9;border:1px solid rgba(213,179,109,.48)}
+.slot-front-art{position:absolute;inset:0;display:block;transition:transform .28s ease}
+.slot-front-art.reversed-art{transform:rotate(180deg)}
+.slot-rider-image{width:100%;height:100%;object-fit:contain;display:block;background:#efe8d9}
+.slot-rider-fallback{width:100%;height:100%;font-family:var(--font-heading)}
+.v26-slot.revealed-slot{border-color:rgba(240,216,159,.72);box-shadow:0 0 25px rgba(213,179,109,.09)}
+.v26-slot.revealed-slot .slot-remove{display:none}
+@keyframes v26RevealGlow{0%{box-shadow:0 0 0 rgba(213,179,109,0)}45%{box-shadow:0 0 34px rgba(213,179,109,.25)}100%{box-shadow:0 0 0 rgba(213,179,109,0)}}
+.slot-flip-card.is-revealed{animation:v26RevealGlow .9s ease both}
+.v26-tip{padding-left:24px;padding-right:24px}
+
+/* Front images are Rider-Waite, while the V2.5 Ethereal back stays untouched. */
+.card-artwork-fallback::after{content:"RIDER–WAITE · THÊM ẢNH VÀO /public/cards/rider-waite"}
+
+@media(max-width:620px){
+  .deck-bottom-actions{padding:13px 10px 15px;gap:7px}
+  .deck-bottom-actions button{flex:1;min-width:130px}
+  .v26-slot .slot-position-label{font-size:7px}
+  .slot-flip-card{inset:5px}
+}
+
+/* =========================
+   V2.7 — cleaner hero + separated spread/deck stage
+   ========================= */
+.v27-table{
+  min-height:0!important;
+  padding-bottom:0;
+  overflow:visible;
+  display:flex;
+  flex-direction:column;
+}
+.v27-slots{
+  position:relative;
+  z-index:140;
+  flex:none;
+  min-height:0!important;
+  padding:28px 24px 30px;
+  border-bottom:1px solid rgba(255,255,255,.055);
+  background:linear-gradient(180deg,rgba(255,255,255,.012),rgba(255,255,255,.004));
+}
+.v27-slots.count-many{
+  grid-template-columns:repeat(5,minmax(74px,105px));
+  max-width:720px;
+  width:100%;
+}
+.v27-deck-stage{
+  position:relative;
+  flex:none;
+  width:100%;
+  height:380px;
+  z-index:30;
+  background:radial-gradient(circle at 50% 42%,rgba(213,179,109,.055),transparent 34%);
+}
+.v27-riffle-zone{
+  top:48%;
+}
+.v27-shuffle-label{
+  bottom:48px;
+}
+.v27-inline-shuffle{
+  position:absolute;
+  left:50%;
+  bottom:-2px;
+  transform:translateX(-50%);
+  z-index:80;
+  display:flex;
+  justify-content:center;
+  width:max-content;
+}
+.v27-inline-shuffle .deck-shuffle-button{
+  min-width:158px;
+  padding:12px 18px;
+}
+.v27-fan{
+  height:355px;
+  bottom:0;
+}
+.v27-deck-actions{
+  border-top:1px solid rgba(255,255,255,.045);
+  padding-top:13px;
+  padding-bottom:13px;
+}
+.compact-intro{
+  padding-bottom:42px;
+}
+.compact-intro .lead{
+  margin-bottom:0;
+}
+
+@media(max-width:920px){
+  .v27-slots.count-6{
+    min-height:0!important;
+  }
+  .v27-slots.count-many{
+    grid-template-columns:repeat(5,minmax(58px,88px));
+    max-width:560px;
+  }
+  .v27-deck-stage{height:370px}
+  .v27-riffle-zone{top:48%;transform:translate(-50%,-50%) scale(.92)}
+}
+
+@media(max-width:620px){
+  .v27-table{min-height:0!important}
+  .v27-slots,.v27-slots.count-6,.v27-slots.count-many{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    max-width:360px;
+    width:100%;
+    min-height:0!important;
+    padding:20px 12px 24px;
+  }
+  .v27-deck-stage{height:325px}
+  .v27-riffle-zone{top:47%;transform:translate(-50%,-50%) scale(.76)}
+  .v27-shuffle-label{bottom:44px}
+  .v27-inline-shuffle{bottom:2px}
+  .compact-intro{padding-bottom:34px}
+}
+
+/* =========================
+   V2.8 — revealed cards stay in the exact same slot size
+   ========================= */
+.slot-flip-card,
+.slot-flip-card.is-revealed,
+.v26-slot.revealed-slot{
+  scale:1!important;
+}
+.slot-flip-card.is-revealed{
+  animation:none!important;
+}
+.slot-flip-inner{
+  transform-origin:center center;
+}
+.slot-flip-card.is-revealed .slot-flip-inner{
+  transform:rotateY(180deg)!important;
+}
+.v26-slot.revealed-slot{
+  transform:none!important;
+}
+
+/* =========================
+   V2.9 — larger spread slots + tighter fan spacing + top save/clear actions
+   ========================= */
+.v29-top-toolbar{
+  margin:34px 0 12px;
+  align-items:center;
+}
+.v29-top-toolbar + .interactive-draw{
+  margin-top:0;
+}
+
+/* Make the working card slots a little larger without changing the card ratio. */
+.v27-slots{
+  gap:14px;
+  padding:22px 24px 16px;
+}
+.v27-slots.count-3{
+  grid-template-columns:repeat(3,minmax(118px,162px));
+}
+.v27-slots.count-6{
+  grid-template-columns:repeat(6,minmax(86px,126px));
+}
+.v27-slots.count-many{
+  grid-template-columns:repeat(5,minmax(82px,116px));
+  max-width:760px;
+}
+
+/* After the deck is fanned, bring the 78-card fan closer to the slots above. */
+.phase-fan .v27-deck-stage,
+.phase-ready .v27-deck-stage,
+.phase-revealing .v27-deck-stage,
+.phase-done .v27-deck-stage{
+  height:292px;
+}
+.phase-fan .v27-fan,
+.phase-ready .v27-fan,
+.phase-revealing .v27-fan,
+.phase-done .v27-fan{
+  height:270px;
+}
+
+/* Keep manual-mode cards slightly larger too. */
+.practice-grid:not(.dense){
+  grid-template-columns:repeat(auto-fit,minmax(192px,1fr));
+}
+
+@media(max-width:920px){
+  .v27-slots.count-3{grid-template-columns:repeat(3,minmax(105px,145px))}
+  .v27-slots.count-6{grid-template-columns:repeat(3,minmax(92px,126px))}
+  .v27-slots.count-many{grid-template-columns:repeat(5,minmax(66px,96px));max-width:620px}
+  .phase-fan .v27-deck-stage,
+  .phase-ready .v27-deck-stage,
+  .phase-revealing .v27-deck-stage,
+  .phase-done .v27-deck-stage{height:280px}
+  .phase-fan .v27-fan,
+  .phase-ready .v27-fan,
+  .phase-revealing .v27-fan,
+  .phase-done .v27-fan{height:258px}
+}
+
+@media(max-width:620px){
+  .v29-top-toolbar{margin:28px 0 10px}
+  .v27-slots,.v27-slots.count-3,.v27-slots.count-6,.v27-slots.count-many{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    max-width:390px;
+    gap:9px;
+    padding:17px 10px 13px;
+  }
+  .phase-fan .v27-deck-stage,
+  .phase-ready .v27-deck-stage,
+  .phase-revealing .v27-deck-stage,
+  .phase-done .v27-deck-stage{height:245px}
+  .phase-fan .v27-fan,
+  .phase-ready .v27-fan,
+  .phase-revealing .v27-fan,
+  .phase-done .v27-fan{height:225px}
+  .practice-grid:not(.dense){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* =========================
+   V2.10 — Light / Dark themes + drifting star field
+   ========================= */
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f4ef;
+  --panel:rgba(255,255,255,.78);
+  --panel2:#fbf8f3;
+  --ink:#302934;
+  --muted:#786f7b;
+  --gold:#a77c3e;
+  --gold2:#765328;
+  --line:rgba(112,82,52,.18);
+  --wine:#815267;
+  --danger:#a45c69;
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0b0910;
+  --panel:#15111c;
+  --panel2:#1b1522;
+  --ink:#f4eee5;
+  --muted:#a69daa;
+  --gold:#d5b36d;
+  --gold2:#f0d89f;
+  --line:rgba(213,179,109,.24);
+  --wine:#65213f;
+  --danger:#d48b9b;
+}
+html[data-theme="light"] body{background:#f6f2ec;color:var(--ink)}
+html[data-theme="dark"] body{background:#09080e;color:var(--ink)}
+
+main.theme-light{
+  background:
+    radial-gradient(circle at 50% -14%,rgba(223,204,245,.68) 0,rgba(247,240,250,.74) 23%,transparent 47%),
+    radial-gradient(circle at 8% 35%,rgba(245,221,188,.53),transparent 31%),
+    radial-gradient(circle at 94% 60%,rgba(219,229,247,.56),transparent 34%),
+    linear-gradient(180deg,#fffdf9 0%,#f8f4ee 54%,#f3efe9 100%);
+  color:#302934;
+}
+main.theme-dark{
+  background:
+    radial-gradient(circle at 50% -10%,#321b34 0,#121019 35%,#09080e 72%),
+    linear-gradient(180deg,#0d0a12,#08070b);
+  color:#f4eee5;
+}
+
+/* Soft moving star dust across the whole page. */
+.star-field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.star-field span{
+  position:absolute;
+  left:var(--star-left);
+  top:var(--star-top);
+  width:var(--star-size);
+  height:var(--star-size);
+  border-radius:50%;
+  opacity:.36;
+  animation:starDrift var(--star-duration) ease-in-out var(--star-delay) infinite alternate;
+  will-change:transform,opacity;
+}
+.theme-light .star-field span{background:#9c7ab1;box-shadow:0 0 5px rgba(166,125,75,.22)}
+.theme-light .star-field span:nth-child(3n){background:#b98b4e;opacity:.28}
+.theme-light .star-field span:nth-child(5n){background:#7891b0;opacity:.24}
+.theme-dark .star-field span{background:#fff8e7;box-shadow:0 0 7px rgba(240,216,159,.45);opacity:.36}
+.theme-dark .star-field span:nth-child(3n){background:#d5b36d;opacity:.28}
+@keyframes starDrift{
+  0%{transform:translate3d(0,0,0) scale(.8);opacity:.14}
+  48%{opacity:.42}
+  100%{transform:translate3d(var(--star-drift),-18px,0) scale(1.2);opacity:.2}
+}
+
+/* Ambient gradient blobs replace the old static star pattern. */
+.theme-light .ambient{
+  opacity:1;
+  background:
+    radial-gradient(circle at 18% 17%,rgba(201,176,226,.22),transparent 20%),
+    radial-gradient(circle at 80% 28%,rgba(235,204,160,.17),transparent 23%),
+    radial-gradient(circle at 54% 77%,rgba(186,204,230,.16),transparent 27%);
+  filter:blur(18px);
+}
+.theme-dark .ambient{opacity:.34}
+
+/* Header and theme switch */
+.topbar-right{display:flex;align-items:center;gap:18px}
+.theme-toggle{display:flex;align-items:center;gap:7px;min-width:82px;justify-content:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:transparent;color:var(--ink);font-size:11px;transition:background .25s ease,border-color .25s ease,transform .2s ease,color .25s ease}
+.theme-toggle:hover{transform:translateY(-1px);border-color:var(--gold);background:rgba(255,255,255,.06)}
+.theme-toggle-icon{font-size:14px;line-height:1}
+.theme-light .topbar{border-color:rgba(91,68,47,.13)}
+.theme-light .brand{color:#815c2f}
+.theme-light .top-note{color:#8b818d}
+.theme-light .theme-toggle{background:rgba(255,255,255,.56);box-shadow:0 8px 24px rgba(68,52,72,.06)}
+.theme-light .theme-toggle:hover{background:#fff}
+
+/* Hero */
+.theme-light .eyebrow,.theme-light .panel-kicker,.theme-light .mini-label{color:#986d35}
+.theme-light .intro h1{color:#332b36;text-shadow:0 8px 28px rgba(108,79,118,.08)}
+.theme-light .intro h1 em{color:#8b5f78}
+.theme-light .lead{color:#716a74}
+
+/* Shared glass panels */
+.theme-light .panel,
+.theme-light .interactive-draw,
+.theme-light .history-card{
+  border-color:rgba(116,88,59,.14);
+  background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(255,252,247,.68));
+  box-shadow:0 18px 50px rgba(71,53,78,.075),inset 0 1px 0 rgba(255,255,255,.9);
+  backdrop-filter:blur(14px);
+}
+.theme-light .question-card textarea{color:#332d35;border-color:rgba(91,70,52,.14)}
+.theme-light .question-card textarea::placeholder,
+.theme-light input::placeholder{color:#a49ca5}
+.theme-light textarea,.theme-light input{color:#332d35}
+
+/* Pills, selectors and controls */
+.theme-light .chips button,
+.theme-light .mode-switch button,
+.theme-light .preset-grid button,
+.theme-light .card-actions button,
+.theme-light .history-actions button,
+.theme-light .filter-row button{
+  border-color:rgba(102,79,57,.14);
+  background:rgba(255,255,255,.54);
+  color:#706672;
+}
+.theme-light .chips button:hover,
+.theme-light .mode-switch button:hover,
+.theme-light .preset-grid button:hover,
+.theme-light .filter-row button:hover{border-color:rgba(157,114,62,.4);background:#fff;color:#5f4d5d}
+.theme-light .mode-switch button b{color:#403843}
+.theme-light .mode-switch button small,
+.theme-light .preset-grid small{color:#8e858f}
+.theme-light .mode-switch button.active,
+.theme-light .preset-grid button.active{
+  border-color:rgba(157,114,62,.52);
+  background:linear-gradient(145deg,rgba(245,232,249,.75),rgba(255,244,225,.82));
+  color:#75542d;
+  box-shadow:0 8px 24px rgba(100,72,110,.055);
+}
+.theme-light .custom-count{border-color:rgba(102,79,57,.14);color:#827783;background:rgba(255,255,255,.5)}
+.theme-light .custom-count input{background:#fff;border-color:rgba(157,114,62,.28)}
+
+/* Buttons */
+.theme-light .gold-button{border-color:#9f7540;background:#9f7540;color:#fffdf8;box-shadow:0 9px 25px rgba(135,92,43,.14)}
+.theme-light .gold-button:hover:not(:disabled){background:#87602f}
+.theme-light .ghost-button{border-color:rgba(106,82,57,.18);background:rgba(255,255,255,.5);color:#72542f}
+.theme-light .ghost-button:hover:not(:disabled){border-color:#a77c3e;background:#fff}
+.theme-light .soft-gold-button{background:rgba(255,255,255,.55);color:#765328}
+
+/* Spread headings and manual cards */
+.theme-light .spread-toolbar h2,
+.theme-light .synthesis-panel h2,
+.theme-light .history-head h2{color:#352e38}
+.theme-light .practice-position{color:#756b77}
+.theme-light .practice-card-caption strong{color:#382f39}
+.theme-light .practice-card-caption small{color:#817783}
+.theme-light .practice-card-caption p{color:#8b7f89}
+.theme-light .empty-card-slot{border-color:rgba(157,114,62,.32);background:rgba(255,255,255,.42);color:#8a7e89}
+.theme-light .empty-card-slot:hover{background:#fff;border-color:#9f7540;color:#6e512f}
+
+/* Interactive draw table: light, airy and still keeps the existing dark green card backs. */
+.theme-light .interactive-draw{overflow:hidden}
+.theme-light .interactive-draw-head{border-color:rgba(94,72,54,.12)}
+.theme-light .interactive-draw-head h2{color:#342d36}
+.theme-light .interactive-draw-head p{color:#817782}
+.theme-light .draw-table,
+.theme-light .v27-table{
+  background:
+    radial-gradient(circle at 50% 24%,rgba(215,193,231,.25),transparent 25%),
+    radial-gradient(circle at 14% 70%,rgba(239,219,185,.2),transparent 25%),
+    linear-gradient(180deg,rgba(255,255,255,.72),rgba(248,243,236,.94));
+}
+.theme-light .draw-table::before{opacity:.18;background-image:radial-gradient(circle at 12% 18%,rgba(123,91,146,.55) 0 1px,transparent 1.2px),radial-gradient(circle at 79% 23%,rgba(167,124,62,.52) 0 1px,transparent 1.2px)}
+.theme-light .v27-slots{border-color:rgba(97,74,55,.1);background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,.16))}
+.theme-light .picked-slot{border-color:rgba(126,97,64,.2);background:rgba(255,255,255,.48);color:#8c818b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.theme-light .picked-slot>span,.theme-light .picked-slot small{color:#8b7f89}
+.theme-light .picked-slot.filled{border-color:rgba(167,124,62,.46);background:rgba(255,250,242,.75)}
+.theme-light .v27-deck-stage{background:radial-gradient(circle at 50% 42%,rgba(168,129,177,.08),transparent 36%)}
+.theme-light .shuffle-progress-label b{color:#72522e}
+.theme-light .shuffle-progress-label span,.theme-light .fan-tip{color:#847984}
+.theme-light .deck-bottom-actions{border-color:rgba(96,73,53,.1);background:rgba(255,255,255,.52)}
+.theme-light .v27-deck-actions{border-color:rgba(96,73,53,.1)}
+.theme-light .fan-shadow,.theme-light .riffle-shadow{opacity:.32}
+.theme-light .slot-position-label{color:#f5eee7}
+
+/* AI reading */
+.theme-light .synthesis-head p{color:#776d79}
+.theme-light .synthesis-placeholder,
+.theme-light .history-empty{
+  border-color:rgba(157,114,62,.25);
+  background:rgba(255,255,255,.42);
+  color:#817681;
+}
+.theme-light .synthesis-content{border-color:rgba(92,70,52,.1)}
+.theme-light .reading-text{color:#4d454f}
+.theme-light .reading-text h3{color:#7b5730}
+.theme-light .reading-text h4{color:#3e3540}
+.theme-light .chat-panel{border-color:rgba(106,82,57,.16);background:rgba(255,255,255,.54);box-shadow:0 12px 34px rgba(67,51,71,.05)}
+.theme-light .chat-heading,.theme-light .chat-form{border-color:rgba(94,72,54,.1)}
+.theme-light .chat-heading small{color:#8a808a}
+.theme-light .message span{color:#8c818b}
+.theme-light .message p{background:rgba(104,88,111,.07);color:#4e454f}
+.theme-light .message.user p{background:rgba(150,104,126,.12)}
+.theme-light .chat-form input{color:#3d3540}
+.theme-light .chat-form button{color:#765328;border-color:rgba(106,82,57,.15)}
+.theme-light .error-box{border-color:rgba(164,92,105,.34);background:rgba(164,92,105,.07);color:#914d5c}
+
+/* History */
+.theme-light .history-head p{color:#817682}
+.theme-light .history-card-top span{color:#918693}
+.theme-light .history-card-top h3{color:#3d3540}
+.theme-light .history-actions .danger-link{color:#a45c69}
+.theme-light .history-cards-line span{border-color:rgba(102,79,57,.1);background:rgba(255,255,255,.56);color:#756b76}
+.theme-light .history-reading-preview{border-color:rgba(94,72,54,.1);color:#746b76}
+
+/* Card picker modal */
+.theme-light .modal-backdrop{background:rgba(67,58,70,.28);backdrop-filter:blur(13px)}
+.theme-light .card-picker-modal{border-color:rgba(107,81,55,.18);background:#fbf8f3;box-shadow:0 35px 100px rgba(50,39,53,.23)}
+.theme-light .picker-modal-head,.theme-light .picker-tools{border-color:rgba(97,74,54,.1)}
+.theme-light .picker-modal-head h3{color:#362e38}
+.theme-light .icon-close{color:#7a6e7b}
+.theme-light .picker-tools>input{border-color:rgba(105,81,57,.15);background:#fff;color:#332c35}
+.theme-light .library-card{border-color:rgba(104,80,57,.12);background:#fffdf9;color:#3e3540;box-shadow:0 7px 22px rgba(62,48,65,.045)}
+.theme-light .library-card:hover:not(:disabled){border-color:#a77c3e;box-shadow:0 10px 28px rgba(79,57,83,.08)}
+.theme-light .library-card small{color:#817682}
+
+/* Footer */
+.theme-light footer{border-color:rgba(93,70,51,.13);color:#8b818b}
+.theme-dark footer{color:#756d79}
+
+/* Smooth but restrained theme transition. */
+body,main,.panel,.interactive-draw,.history-card,.card-picker-modal,.chat-panel,.theme-toggle,.mode-switch button,.preset-grid button,.ghost-button,.gold-button{
+  transition:background-color .28s ease,background .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease;
+}
+
+@media(max-width:620px){
+  .topbar-right{gap:8px}
+  .theme-toggle{min-width:72px;padding:7px 10px}
+  .theme-toggle span:last-child{display:none}
+  .theme-toggle{min-width:38px;width:38px;height:38px;padding:0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .star-field span{animation:none!important}
+  body,main,.panel,.interactive-draw,.history-card,.card-picker-modal,.chat-panel,.theme-toggle,.mode-switch button,.preset-grid button,.ghost-button,.gold-button{transition:none!important}
+}
+
+/* =========================
+   V2.11 — clearer light glass, visible stars and light card backs
+   ========================= */
+/* Keep moving stars above the page background but below all real content. */
+.star-field{z-index:1}
+.shell{z-index:2}
+.theme-light .star-field{opacity:1}
+.theme-light .star-field span{
+  opacity:.58;
+  background:#84629a;
+  box-shadow:0 0 0 1px rgba(255,255,255,.42),0 0 7px rgba(117,83,139,.34);
+}
+.theme-light .star-field span:nth-child(3n){background:#a97634;opacity:.52;box-shadow:0 0 6px rgba(169,118,52,.28)}
+.theme-light .star-field span:nth-child(5n){background:#597b9f;opacity:.46;box-shadow:0 0 6px rgba(89,123,159,.25)}
+.theme-light .star-field span:nth-child(7n){background:#9d6e8d;opacity:.62}
+@keyframes starDrift{
+  0%{transform:translate3d(0,5px,0) scale(.78);opacity:.28}
+  45%{opacity:.78}
+  100%{transform:translate3d(var(--star-drift),-22px,0) scale(1.28);opacity:.36}
+}
+
+/* Higher-contrast glass surfaces in Light mode. */
+.theme-light .panel,
+.theme-light .interactive-draw,
+.theme-light .history-card{
+  border-color:rgba(91,65,43,.25);
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(249,244,238,.87));
+  box-shadow:0 20px 52px rgba(66,49,72,.12),0 4px 14px rgba(114,82,47,.055),inset 0 1px 0 rgba(255,255,255,1);
+  backdrop-filter:blur(18px) saturate(1.08);
+}
+.theme-light .question-card,
+.theme-light .synthesis-panel{background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(250,246,240,.9))}
+.theme-light .chips button,
+.theme-light .mode-switch button,
+.theme-light .preset-grid button,
+.theme-light .history-actions button,
+.theme-light .filter-row button{
+  border-color:rgba(95,68,45,.22);
+  background:rgba(255,255,255,.82);
+  color:#5f5662;
+}
+.theme-light .mode-switch button.active,
+.theme-light .preset-grid button.active{
+  border-color:rgba(149,101,47,.62);
+  background:linear-gradient(145deg,#f5eafa,#fff1dc);
+  box-shadow:0 8px 22px rgba(94,67,103,.10);
+}
+.theme-light .ghost-button{background:rgba(255,255,255,.86);border-color:rgba(105,75,45,.26)}
+.theme-light .theme-toggle{background:rgba(255,255,255,.9);border-color:rgba(100,74,52,.22)}
+
+/* Fix the whole draw surface for Light mode: readable slots, clear drop states and no dark inherited labels. */
+.theme-light .draw-table,
+.theme-light .v27-table{
+  background:
+    radial-gradient(circle at 50% 15%,rgba(210,184,231,.33),transparent 29%),
+    radial-gradient(circle at 14% 72%,rgba(240,211,169,.28),transparent 27%),
+    linear-gradient(180deg,#fffefa 0%,#f5f0ea 100%);
+}
+.theme-light .v27-slots{
+  border-color:rgba(96,70,48,.18);
+  background:linear-gradient(180deg,rgba(255,255,255,.76),rgba(249,244,237,.54));
+}
+.theme-light .picked-slot{
+  border-color:rgba(126,91,56,.34);
+  background:rgba(255,255,255,.73);
+  color:#6d626f;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 6px 18px rgba(81,62,85,.045);
+}
+.theme-light .picked-slot>span,
+.theme-light .picked-slot small,
+.theme-light .slot-index-label,
+.theme-light .slot-position-label{color:#685d6b!important}
+.theme-light .picked-slot.filled{
+  border-color:rgba(157,108,49,.58);
+  background:rgba(255,250,242,.93);
+  box-shadow:0 9px 24px rgba(119,83,47,.08),inset 0 0 0 1px rgba(255,255,255,.9);
+}
+.theme-light .drop-slot.drop-hover:not(.drop-blocked){
+  border-color:#9b6d33;
+  background:#fff4dc;
+  box-shadow:0 0 0 3px rgba(173,121,55,.13),0 12px 28px rgba(110,77,46,.10);
+}
+.theme-light .drop-slot.drop-blocked{border-color:#b66777;background:#fce8ec}
+.theme-light .slot-remove{background:rgba(255,255,255,.93);border-color:rgba(112,76,50,.24);color:#846c74;box-shadow:0 3px 10px rgba(73,58,75,.08)}
+.theme-light .slot-remove:hover{background:#fff0f2;border-color:#b66777;color:#a04f60}
+.theme-light .fan-tip{color:#6f6571}
+.theme-light .shuffle-progress-label b{color:#68491f}
+.theme-light .shuffle-progress-label span{color:#746a76}
+.theme-light .fan-shadow,
+.theme-light .riffle-shadow{background:radial-gradient(ellipse at center,rgba(104,78,55,.20),transparent 70%);opacity:.55}
+
+/* Light-mode card back. Dark mode keeps the existing back unchanged. */
+.theme-light .ethereal-card-back{
+  background-color:#f4eee5;
+  background-image:
+    radial-gradient(circle at center,#b3864a 0 2px,transparent 3px 16px,rgba(151,112,64,.20) 17px 18px,transparent 19px),
+    linear-gradient(45deg,transparent 47%,rgba(139,98,151,.12) 48% 52%,transparent 53%),
+    linear-gradient(-45deg,transparent 47%,rgba(180,132,66,.13) 48% 52%,transparent 53%),
+    linear-gradient(145deg,#fffdf8 0%,#f1e9f4 54%,#eadfcf 100%);
+  background-size:auto,24px 24px,24px 24px,cover;
+  background-position:center;
+  border-color:rgba(142,99,48,.58)!important;
+  color:#8b6333!important;
+  box-shadow:0 12px 28px rgba(78,60,82,.16),inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22)!important;
+}
+.theme-light .ethereal-card-back::before,
+.theme-light .ethereal-card-back::after{
+  border-color:rgba(151,108,55,.30)!important;
+}
+.theme-light .ethereal-card-back span,
+.theme-light .ethereal-card-back i{
+  color:#966c36!important;
+  text-shadow:0 0 10px rgba(181,128,59,.20)!important;
+}
+.theme-light .fan-card:hover:not(:disabled){
+  filter:brightness(1.03) saturate(1.05);
+  box-shadow:0 18px 34px rgba(83,62,87,.20),0 0 0 2px rgba(158,111,54,.20)!important;
+}
+.theme-light .v25-fan .fan-card.source-dragging{opacity:.28;filter:brightness(.96)}
+.theme-light .drag-card-ghost{
+  border-color:rgba(157,111,55,.65);
+  box-shadow:0 22px 48px rgba(75,57,79,.22),0 0 0 1px rgba(255,255,255,.75);
+}
+.theme-light .slot-flip-back{border-color:rgba(157,111,55,.58);color:#906634}
+
+@media(prefers-reduced-motion:reduce){
+  .theme-light .star-field span{opacity:.48!important}
+}
+
+/* =========================
+   V2.12 — larger cards, external position labels, richer sky, cleaner light deck
+   ========================= */
+
+/* 150 mixed stars: dots, sparkles and five-point stars. */
+.star-field .star-item{
+  position:absolute;
+  left:var(--star-left);
+  top:var(--star-top);
+  width:var(--star-size);
+  height:var(--star-size);
+  animation:
+    v212StarTravel var(--star-duration) ease-in-out var(--star-delay) infinite alternate,
+    v212StarTwinkle var(--star-twinkle) ease-in-out var(--star-delay) infinite;
+  will-change:transform,opacity;
+}
+.star-field .star-dot{
+  border-radius:50%;
+}
+.star-field .star-sparkle,
+.star-field .star-five{
+  width:auto;
+  height:auto;
+  background:transparent!important;
+  border-radius:0;
+  font-size:calc(var(--star-size) * 1.5);
+  line-height:1;
+  display:block;
+  transform-origin:center;
+}
+.theme-light .star-field .star-dot{background:#8d68a6;opacity:.66;box-shadow:0 0 7px rgba(119,83,143,.34)}
+.theme-light .star-field .star-sparkle{color:#ad7532;opacity:.76;text-shadow:0 0 7px rgba(177,122,52,.30)}
+.theme-light .star-field .star-five{color:#6d83a5;opacity:.68;text-shadow:0 0 8px rgba(79,108,146,.28)}
+.theme-dark .star-field .star-dot{background:#fff4d7;opacity:.66;box-shadow:0 0 8px rgba(240,216,159,.50)}
+.theme-dark .star-field .star-sparkle{color:#f0d89f;opacity:.82;text-shadow:0 0 9px rgba(240,216,159,.58)}
+.theme-dark .star-field .star-five{color:#d8c5e8;opacity:.74;text-shadow:0 0 9px rgba(194,160,218,.42)}
+@keyframes v212StarTravel{
+  0%{transform:translate3d(0,5px,0) rotate(-7deg) scale(.82)}
+  50%{transform:translate3d(calc(var(--star-drift-x) * .48),calc(var(--star-drift-y) * .48),0) rotate(6deg) scale(1.08)}
+  100%{transform:translate3d(var(--star-drift-x),var(--star-drift-y),0) rotate(15deg) scale(1.22)}
+}
+@keyframes v212StarTwinkle{
+  0%,100%{opacity:.34;filter:brightness(.9)}
+  45%{opacity:1;filter:brightness(1.28)}
+  65%{opacity:.58;filter:brightness(1.06)}
+}
+
+/* Shooting stars cross in both directions. */
+.shooting-star-field{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.shooting-star{
+  position:absolute;
+  top:var(--shoot-top);
+  width:150px;
+  height:2px;
+  border-radius:999px;
+  opacity:0;
+  will-change:transform,opacity;
+}
+.shooting-star::before{
+  content:"";
+  position:absolute;
+  right:-2px;
+  top:50%;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  transform:translateY(-50%);
+  box-shadow:0 0 11px currentColor;
+  background:currentColor;
+}
+.theme-light .shooting-star{color:#a37a43;background:linear-gradient(90deg,transparent,rgba(159,117,64,.08),rgba(159,117,64,.72))}
+.theme-dark .shooting-star{color:#f0d89f;background:linear-gradient(90deg,transparent,rgba(240,216,159,.08),rgba(240,216,159,.82))}
+.shooting-right{left:-190px;transform:rotate(-18deg);animation:v212ShootRight var(--shoot-duration) linear var(--shoot-delay) infinite}
+.shooting-left{right:-190px;transform:rotate(198deg);animation:v212ShootLeft var(--shoot-duration) linear var(--shoot-delay) infinite}
+@keyframes v212ShootRight{
+  0%,12%{opacity:0;translate:0 0}
+  17%{opacity:.82}
+  55%{opacity:.72}
+  68%,100%{opacity:0;translate:calc(100vw + 380px) 180px}
+}
+@keyframes v212ShootLeft{
+  0%,12%{opacity:0;translate:0 0}
+  17%{opacity:.78}
+  55%{opacity:.68}
+  68%,100%{opacity:0;translate:calc(-100vw - 380px) 180px}
+}
+
+/* Labels live outside the card frame and are deliberately easier to scan. */
+.spread-slot-item{min-width:0;display:flex;flex-direction:column}
+.slot-position-heading{
+  min-height:54px;
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  padding:0 4px 10px;
+  text-align:left;
+}
+.slot-position-heading span{
+  flex:none;
+  font-size:11px;
+  line-height:1;
+  letter-spacing:.08em;
+  color:var(--gold);
+  font-weight:700;
+}
+.slot-position-heading strong{
+  display:block;
+  font-family:var(--font-heading);
+  font-size:16px;
+  line-height:1.16;
+  font-weight:600;
+  color:#e9dfeb;
+}
+.theme-light .slot-position-heading span{color:#9d6f35}
+.theme-light .slot-position-heading strong{color:#403642}
+
+/* Make every working card substantially larger, including 6- and 10-card spreads. */
+.v27-slots{
+  gap:18px;
+  padding:24px 26px 18px;
+  align-items:start;
+}
+.v27-slots.count-3{
+  grid-template-columns:repeat(3,minmax(190px,230px));
+  max-width:790px;
+  width:100%;
+  margin-inline:auto;
+}
+.v27-slots.count-6{
+  grid-template-columns:repeat(6,minmax(132px,158px));
+  max-width:1080px;
+  width:100%;
+  margin-inline:auto;
+}
+.v27-slots.count-many{
+  grid-template-columns:repeat(5,minmax(140px,164px));
+  max-width:940px;
+  width:100%;
+  margin-inline:auto;
+}
+.picked-slot{width:100%;padding:0}
+.slot-flip-card{inset:6px}
+.slot-remove{right:7px;top:7px;width:25px;height:25px;font-size:15px}
+
+/* The reference screenshot showed a dark halo made by 24 stacked shadows. Remove it in Light mode. */
+.theme-light .riffle-card.ethereal-card-back{
+  box-shadow:
+    inset 0 0 0 4px rgba(255,255,255,.78),
+    inset 0 0 0 5px rgba(157,112,56,.22)!important;
+  filter:none!important;
+}
+.theme-light .riffle-shadow{
+  opacity:.08!important;
+  filter:blur(4px)!important;
+  background:radial-gradient(ellipse at center,rgba(112,83,56,.12),transparent 72%)!important;
+}
+.theme-light .riffle-zone{filter:none!important}
+
+/* Drag ghost is portalled to <body> so backdrop-filter on the light glass panel cannot offset fixed coordinates. */
+.drag-card-ghost{
+  width:92px;
+  height:145px;
+  z-index:2147483000;
+  margin:0;
+  translate:none;
+}
+html[data-theme="light"] .drag-card-ghost.ethereal-card-back{
+  background-color:#f4eee5;
+  background-image:
+    radial-gradient(circle at center,#b3864a 0 2px,transparent 3px 16px,rgba(151,112,64,.20) 17px 18px,transparent 19px),
+    linear-gradient(45deg,transparent 47%,rgba(139,98,151,.12) 48% 52%,transparent 53%),
+    linear-gradient(-45deg,transparent 47%,rgba(180,132,66,.13) 48% 52%,transparent 53%),
+    linear-gradient(145deg,#fffdf8 0%,#f1e9f4 54%,#eadfcf 100%);
+  background-size:auto,24px 24px,24px 24px,cover;
+  background-position:center;
+  border-color:rgba(142,99,48,.62)!important;
+  color:#8b6333!important;
+  box-shadow:0 14px 28px rgba(78,60,82,.16),inset 0 0 0 4px rgba(255,255,255,.76),inset 0 0 0 5px rgba(157,112,56,.22)!important;
+}
+html[data-theme="light"] .drag-card-ghost span{color:#966c36!important;text-shadow:0 0 10px rgba(181,128,59,.20)!important}
+
+@media(max-width:1100px){
+  .v27-slots.count-6{grid-template-columns:repeat(3,minmax(155px,190px));max-width:690px}
+  .v27-slots.count-many{grid-template-columns:repeat(5,minmax(112px,142px));max-width:790px}
+}
+@media(max-width:820px){
+  .v27-slots.count-3{grid-template-columns:repeat(3,minmax(130px,170px));max-width:570px}
+  .v27-slots.count-6{grid-template-columns:repeat(3,minmax(135px,172px));max-width:600px}
+  .v27-slots.count-many{grid-template-columns:repeat(2,minmax(150px,185px));max-width:430px}
+  .slot-position-heading{min-height:50px}
+  .slot-position-heading strong{font-size:15px}
+}
+@media(max-width:620px){
+  .v27-slots,.v27-slots.count-3,.v27-slots.count-6,.v27-slots.count-many{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    max-width:430px;
+    gap:12px;
+    padding:18px 12px 14px;
+  }
+  .slot-position-heading{min-height:48px;padding:0 2px 7px;gap:6px}
+  .slot-position-heading span{font-size:9px}
+  .slot-position-heading strong{font-size:14px}
+  .drag-card-ghost{width:76px;height:120px}
+  .shooting-star{width:105px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .star-field .star-item,.shooting-star{animation:none!important}
+}
+
+/* =========================
+   V2.15 — fixed 4.5cm × 7cm cards + compact one-line labels
+   ========================= */
+:root{
+  --spread-card-width:4.5cm;
+  --spread-card-height:7cm;
+}
+
+/* Every spread uses the exact same card box size. The grid wraps instead of shrinking cards. */
+.v27-slots,
+.v27-slots.count-1,
+.v27-slots.count-2,
+.v27-slots.count-3,
+.v27-slots.count-4,
+.v27-slots.count-5,
+.v27-slots.count-6,
+.v27-slots.count-many{
+  display:grid;
+  gap:20px 18px;
+  justify-content:center;
+  align-items:start;
+  width:100%;
+  max-width:none;
+  margin-inline:auto;
+  padding:22px 18px 18px;
+}
+.v27-slots.count-1{grid-template-columns:repeat(1,var(--spread-card-width))}
+.v27-slots.count-2{grid-template-columns:repeat(2,var(--spread-card-width))}
+.v27-slots.count-3{grid-template-columns:repeat(3,var(--spread-card-width))}
+.v27-slots.count-4{grid-template-columns:repeat(2,var(--spread-card-width))}
+.v27-slots.count-5{grid-template-columns:repeat(3,var(--spread-card-width))}
+.v27-slots.count-6{grid-template-columns:repeat(3,var(--spread-card-width))}
+.v27-slots.count-many{grid-template-columns:repeat(5,var(--spread-card-width))}
+
+.spread-slot-item{
+  width:var(--spread-card-width);
+  min-width:var(--spread-card-width);
+  max-width:var(--spread-card-width);
+}
+.picked-slot{
+  width:var(--spread-card-width)!important;
+  height:var(--spread-card-height)!important;
+  min-width:var(--spread-card-width)!important;
+  min-height:var(--spread-card-height)!important;
+  max-width:var(--spread-card-width)!important;
+  max-height:var(--spread-card-height)!important;
+  aspect-ratio:auto!important;
+  flex:none;
+}
+
+/* Position titles stay outside the card, compact, regular-weight and one line. */
+.slot-position-heading{
+  width:var(--spread-card-width);
+  min-height:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 2px 6px;
+  overflow:visible;
+}
+.slot-position-heading>span:first-child{
+  flex:none;
+  font-size:9px;
+  line-height:1;
+  letter-spacing:.06em;
+  color:var(--gold);
+  font-weight:400;
+}
+.slot-position-name{
+  display:block;
+  min-width:0;
+  flex:1;
+  white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
+  font-family:var(--font-ui);
+  font-size:12px;
+  line-height:1;
+  font-weight:400;
+  letter-spacing:0;
+  color:#d7ccd9;
+}
+.theme-light .slot-position-name{color:#544b57}
+.theme-light .slot-position-heading>span:first-child{color:#9d6f35}
+
+/* Keep the 78-card status visibly below the physical deck, not underneath it. */
+.v27-shuffle-label{
+  bottom:20px!important;
+  z-index:75;
+  min-width:126px;
+  padding:5px 10px;
+  border-radius:10px;
+  background:rgba(11,9,16,.78);
+  backdrop-filter:blur(5px);
+}
+.theme-light .v27-shuffle-label{
+  background:rgba(255,252,247,.94);
+  box-shadow:0 3px 10px rgba(78,60,82,.07);
+}
+.v27-shuffle-label b,
+.v27-shuffle-label span{position:relative;z-index:2}
+
+/* Lift the card packet slightly so the status and shuffle button have a clean lane below it. */
+.v27-riffle-zone .riffle-card{top:36%}
+.v27-inline-shuffle{bottom:-17px}
+
+/* Preserve exact card size through common desktop widths by wrapping the layout. */
+@media(max-width:1180px){
+  .v27-slots.count-many{grid-template-columns:repeat(3,var(--spread-card-width))}
+}
+@media(max-width:820px){
+  .v27-slots.count-3,
+  .v27-slots.count-5,
+  .v27-slots.count-6,
+  .v27-slots.count-many{grid-template-columns:repeat(2,var(--spread-card-width))}
+}
+@media(max-width:520px){
+  /* Physical card dimensions remain unchanged; the board can scroll horizontally on very narrow screens. */
+  .v27-slots,
+  .v27-slots.count-1,
+  .v27-slots.count-2,
+  .v27-slots.count-3,
+  .v27-slots.count-4,
+  .v27-slots.count-5,
+  .v27-slots.count-6,
+  .v27-slots.count-many{
+    grid-template-columns:var(--spread-card-width);
+    overflow-x:auto;
+  }
+  .slot-position-name{font-size:11.5px}
+}
+
+/* =========================
+   V2.16 — compact AI actions + popup reader
+   ========================= */
+.reading-actions-panel{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:12px;
+  margin:34px 0 12px;
+  padding:16px 18px;
+  border:1px solid var(--line);
+  background:linear-gradient(145deg,rgba(27,21,33,.82),rgba(15,12,20,.76));
+  box-shadow:0 14px 36px rgba(0,0,0,.12);
+  backdrop-filter:blur(14px);
+}
+.reading-actions-panel .ghost-button,
+.reading-actions-panel .gold-button{
+  min-height:44px;
+  padding-inline:18px;
+}
+.reading-ai-button{min-width:174px}
+.reading-copy-button{min-width:190px}
+
+.theme-light .reading-actions-panel{
+  border-color:rgba(105,75,45,.20);
+  background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(250,245,238,.84));
+  box-shadow:0 12px 34px rgba(69,53,72,.08);
+}
+
+.ai-reading-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:2147483400;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  background:rgba(7,5,10,.70);
+  backdrop-filter:blur(12px);
+  animation:aiModalFadeIn .18s ease-out both;
+}
+.ai-reading-modal{
+  width:min(980px,100%);
+  max-height:min(88vh,920px);
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  overflow:hidden;
+  border:1px solid rgba(213,179,109,.34);
+  border-radius:18px;
+  background:linear-gradient(160deg,rgba(27,21,34,.98),rgba(13,11,18,.98));
+  box-shadow:0 34px 110px rgba(0,0,0,.52);
+  animation:aiModalRiseIn .22s cubic-bezier(.2,.8,.2,1) both;
+}
+.ai-reading-modal-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  padding:22px 24px 18px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.018);
+}
+.ai-reading-modal-header h2{
+  margin:5px 0 0;
+  font-family:var(--font-heading);
+  font-size:30px;
+  font-weight:500;
+  color:var(--ink);
+}
+.ai-reading-modal-header p{
+  max-width:760px;
+  margin:7px 0 0;
+  color:#9f95a3;
+  font-size:12px;
+  line-height:1.5;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ai-modal-close{
+  width:42px;
+  height:42px;
+  flex:none;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:transparent;
+  color:#c7bbc9;
+  font-size:26px;
+  line-height:1;
+}
+.ai-modal-close:hover{border-color:var(--gold);color:var(--gold2);background:rgba(255,255,255,.04)}
+.ai-reading-modal-body{
+  min-height:240px;
+  overflow:auto;
+  padding:22px 26px 30px;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.ai-reading-result{
+  max-width:880px;
+  margin:0 auto;
+}
+.ai-reading-result .reading-text{max-width:none}
+.ai-reading-result .reading-text h3:first-child{margin-top:2px}
+.ai-modal-loading{
+  min-height:300px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  text-align:left;
+}
+.ai-modal-loading b{font-family:var(--font-heading);font-size:22px;font-weight:500;color:var(--gold2)}
+.ai-modal-loading p{margin:7px 0 0;color:#958b99;font-size:13px;line-height:1.6}
+.ai-loading-orbit{
+  display:grid;
+  place-items:center;
+  width:54px;
+  height:54px;
+  flex:none;
+  border:1px solid var(--line);
+  border-radius:50%;
+  color:var(--gold2);
+  font-size:21px;
+  animation:aiOrbitPulse 1.15s ease-in-out infinite;
+}
+.ai-modal-error{margin:30px auto;max-width:720px}
+.ai-modal-error b{display:block;font-size:17px;margin-bottom:5px}
+.ai-modal-error p{margin:0 0 14px;line-height:1.55}
+.ai-modal-chat{margin:30px 0 0}
+.ai-reading-modal-footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:14px 20px;
+  border-top:1px solid rgba(255,255,255,.07);
+  background:rgba(0,0,0,.12);
+}
+
+.theme-light .ai-reading-modal-backdrop{background:rgba(55,45,58,.34)}
+.theme-light .ai-reading-modal{
+  border-color:rgba(117,86,53,.24);
+  background:linear-gradient(155deg,#fffdfa 0%,#f8f2eb 100%);
+  box-shadow:0 34px 100px rgba(64,48,67,.25);
+}
+.theme-light .ai-reading-modal-header{
+  border-color:rgba(101,77,55,.11);
+  background:rgba(255,255,255,.68);
+}
+.theme-light .ai-reading-modal-header h2{color:#342d36}
+.theme-light .ai-reading-modal-header p{color:#7d737e}
+.theme-light .ai-modal-close{border-color:rgba(109,81,55,.18);background:rgba(255,255,255,.72);color:#746977}
+.theme-light .ai-modal-close:hover{border-color:#a67a40;background:#fff;color:#765328}
+.theme-light .ai-modal-loading b{color:#765328}
+.theme-light .ai-modal-loading p{color:#817681}
+.theme-light .ai-loading-orbit{border-color:rgba(153,109,55,.30);color:#966b33;background:rgba(255,255,255,.72)}
+.theme-light .ai-reading-modal-footer{border-color:rgba(101,77,55,.11);background:rgba(255,255,255,.52)}
+
+@keyframes aiModalFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes aiModalRiseIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes aiOrbitPulse{0%,100%{transform:rotate(0deg) scale(.94);box-shadow:0 0 0 rgba(213,179,109,0)}50%{transform:rotate(180deg) scale(1.05);box-shadow:0 0 24px rgba(213,179,109,.23)}}
+
+@media(max-width:720px){
+  .reading-actions-panel{justify-content:stretch;display:grid;grid-template-columns:1fr;margin-top:26px}
+  .reading-actions-panel .ghost-button,.reading-actions-panel .gold-button{width:100%;min-width:0}
+  .ai-reading-modal-backdrop{padding:10px}
+  .ai-reading-modal{max-height:94vh;border-radius:14px}
+  .ai-reading-modal-header{padding:17px 16px 14px}
+  .ai-reading-modal-header h2{font-size:25px}
+  .ai-reading-modal-header p{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ai-reading-modal-body{padding:18px 16px 24px}
+  .ai-reading-modal-footer{padding:12px 14px;flex-wrap:wrap}
+  .ai-reading-modal-footer .ghost-button,.ai-reading-modal-footer .gold-button{flex:1}
+}
+
+/* =========================
+   V2.17 — one-row 6-card spread + softer shooting stars + host-ready auth
+   ========================= */
+
+/* Six-card spreads always stay on one horizontal row at the exact physical card size.
+   Narrow screens scroll horizontally instead of wrapping to a second row. */
+.v27-slots.count-6{
+  grid-template-columns:repeat(6,var(--spread-card-width))!important;
+  grid-auto-flow:column;
+  justify-content:center;
+  overflow-x:auto;
+  overflow-y:visible;
+  max-width:100%;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(171,132,77,.45) transparent;
+}
+.v27-slots.count-6::-webkit-scrollbar{height:7px}
+.v27-slots.count-6::-webkit-scrollbar-track{background:transparent}
+.v27-slots.count-6::-webkit-scrollbar-thumb{background:rgba(171,132,77,.35);border-radius:999px}
+@media(max-width:1120px){
+  .v27-slots.count-6{justify-content:start;padding-left:20px;padding-right:20px}
+}
+
+/* Softer, slightly curved shooting-star paths. The star keeps moving forward,
+   but its vertical drift changes gradually so the movement does not feel robotic. */
+.shooting-star{
+  width:162px;
+  height:1.7px;
+  filter:blur(.05px);
+  transform-origin:100% 50%;
+}
+.shooting-star::after{
+  content:"";
+  position:absolute;
+  inset:-6px -10px -6px 38%;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,currentColor);
+  opacity:.08;
+  filter:blur(5px);
+}
+.shooting-right{
+  left:-210px;
+  right:auto;
+  transform:none;
+  animation:v217ShootRight var(--shoot-duration) cubic-bezier(.38,.05,.23,.98) var(--shoot-delay) infinite;
+}
+.shooting-left{
+  right:-210px;
+  left:auto;
+  transform:none;
+  animation:v217ShootLeft var(--shoot-duration) cubic-bezier(.38,.05,.23,.98) var(--shoot-delay) infinite;
+}
+@keyframes v217ShootRight{
+  0%,9%{opacity:0;transform:translate3d(-6vw,24px,0) rotate(-17deg) scaleX(.82)}
+  14%{opacity:.82}
+  28%{opacity:.88;transform:translate3d(22vw,-8px,0) rotate(-15deg) scaleX(.96)}
+  44%{transform:translate3d(45vw,15px,0) rotate(-18deg) scaleX(1)}
+  60%{opacity:.76;transform:translate3d(67vw,-11px,0) rotate(-15.5deg) scaleX(.98)}
+  77%{opacity:.58;transform:translate3d(89vw,9px,0) rotate(-17.5deg) scaleX(.93)}
+  92%,100%{opacity:0;transform:translate3d(calc(100vw + 390px),-5px,0) rotate(-16deg) scaleX(.86)}
+}
+@keyframes v217ShootLeft{
+  0%,9%{opacity:0;transform:translate3d(6vw,22px,0) rotate(197deg) scaleX(.82)}
+  14%{opacity:.78}
+  28%{opacity:.86;transform:translate3d(-22vw,-9px,0) rotate(195deg) scaleX(.96)}
+  44%{transform:translate3d(-45vw,14px,0) rotate(198deg) scaleX(1)}
+  60%{opacity:.74;transform:translate3d(-67vw,-12px,0) rotate(195.5deg) scaleX(.98)}
+  77%{opacity:.56;transform:translate3d(-89vw,8px,0) rotate(197.5deg) scaleX(.93)}
+  92%,100%{opacity:0;transform:translate3d(calc(-100vw - 390px),-6px,0) rotate(196deg) scaleX(.86)}
+}
+
+/* Authentication screen — intentionally separate from the Tarot theme so it can
+   render before the user's saved light/dark preference has loaded. */
+.auth-shell{
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:34px 18px;
+  position:relative;
+  overflow:hidden;
+  color:#332b37;
+  background:
+    radial-gradient(circle at 18% 16%,rgba(202,184,229,.48),transparent 30%),
+    radial-gradient(circle at 82% 22%,rgba(238,213,168,.43),transparent 29%),
+    radial-gradient(circle at 64% 82%,rgba(187,208,225,.34),transparent 28%),
+    linear-gradient(145deg,#fffdfb 0%,#f7f3f8 48%,#f8f4ec 100%);
+  font-family:var(--font-ui);
+}
+.auth-shell::before,.auth-shell::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(4px);
+}
+.auth-shell::before{
+  width:420px;height:420px;left:-210px;bottom:-180px;
+  background:rgba(154,123,180,.13);
+}
+.auth-shell::after{
+  width:360px;height:360px;right:-170px;top:-130px;
+  background:rgba(210,167,95,.13);
+}
+.auth-card{
+  width:min(460px,100%);
+  position:relative;
+  z-index:2;
+  padding:38px 36px 34px;
+  border:1px solid rgba(112,88,116,.18);
+  border-radius:24px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 24px 80px rgba(70,52,75,.13),inset 0 1px 0 rgba(255,255,255,.9);
+  backdrop-filter:blur(22px) saturate(118%);
+  -webkit-backdrop-filter:blur(22px) saturate(118%);
+}
+.auth-setup-card{width:min(560px,100%)}
+.auth-symbol{
+  width:46px;height:46px;display:grid;place-items:center;margin-bottom:20px;
+  border-radius:50%;border:1px solid rgba(164,120,62,.25);
+  background:linear-gradient(145deg,#fff,#f4ead9);
+  color:#9d6f35;font-size:21px;box-shadow:0 8px 24px rgba(150,109,56,.12);
+}
+.auth-eyebrow{font-size:10px;letter-spacing:.22em;color:#9b7647;margin-bottom:10px}
+.auth-card h1{font-family:var(--font-heading);font-size:clamp(30px,5vw,44px);line-height:1.04;font-weight:400;margin:0;color:#302735}
+.auth-card>p{margin:15px 0 24px;color:#746b77;line-height:1.7;font-size:14px}
+.auth-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 0 22px;padding:4px;
+  background:rgba(85,66,91,.055);border:1px solid rgba(94,72,99,.08);border-radius:13px;
+}
+.auth-tabs button{
+  border:0;background:transparent;color:#817684;padding:10px 12px;border-radius:10px;
+  font:inherit;font-size:13px;cursor:pointer;transition:.2s ease;
+}
+.auth-tabs button.active{background:#fff;color:#4a3d4f;box-shadow:0 4px 14px rgba(68,51,72,.09)}
+.auth-form{display:grid;gap:15px}
+.auth-form label{display:grid;gap:7px}
+.auth-form label>span{font-size:11px;letter-spacing:.08em;color:#746778}
+.auth-form input{
+  width:100%;border:1px solid rgba(87,67,92,.17);border-radius:12px;background:rgba(255,255,255,.76);
+  color:#342d38;padding:13px 14px;outline:none;font:inherit;font-size:14px;
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+.auth-form input:focus{border-color:rgba(157,111,53,.55);background:#fff;box-shadow:0 0 0 3px rgba(181,138,78,.09)}
+.auth-primary{
+  width:100%;border:1px solid #a77a42;border-radius:12px;padding:13px 16px;margin-top:4px;
+  background:linear-gradient(135deg,#b88b4f,#9a6b34);color:#fffaf1;font:inherit;font-size:13px;
+  letter-spacing:.04em;cursor:pointer;box-shadow:0 9px 25px rgba(155,108,52,.18);transition:transform .18s ease,filter .18s ease;
+}
+.auth-primary:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.04)}
+.auth-primary:disabled{opacity:.55;cursor:wait}
+.auth-message{padding:11px 12px;border-radius:10px;font-size:12px;line-height:1.55}
+.auth-error{background:#fff0f2;border:1px solid rgba(178,86,105,.22);color:#9b4658}
+.auth-notice{background:#f4f7ee;border:1px solid rgba(102,137,77,.2);color:#5c7749}
+.auth-setup-code{display:grid;gap:8px;margin:0 0 20px}
+.auth-setup-code code{display:block;padding:10px 12px;border-radius:9px;background:#f6f1f7;color:#695d6d;font-size:12px;border:1px solid rgba(105,82,110,.09)}
+.auth-setup-card small{display:block;margin-top:13px;color:#958b97;line-height:1.55;text-align:center}
+.auth-loading-screen{align-content:center;color:#6e6173;text-align:center}
+.auth-orb{font-size:30px;color:#a57438;animation:authPulse 1.5s ease-in-out infinite}
+@keyframes authPulse{0%,100%{transform:scale(.85);opacity:.45}50%{transform:scale(1.12);opacity:1}}
+.auth-account-chip{
+  position:fixed;right:18px;bottom:18px;z-index:10000;display:flex;align-items:center;gap:12px;
+  max-width:min(420px,calc(100vw - 36px));padding:8px 8px 8px 13px;border-radius:15px;
+  background:rgba(20,17,24,.88);border:1px solid rgba(255,255,255,.1);color:#f1e9f3;
+  box-shadow:0 12px 38px rgba(0,0,0,.22);backdrop-filter:blur(16px);
+}
+.auth-account-chip>div{min-width:0;display:grid;gap:1px}
+.auth-account-chip span{font-size:8px;letter-spacing:.16em;color:#b8aeb9;text-transform:uppercase}
+.auth-account-chip strong{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.auth-account-chip button{border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.07);color:#eee4ef;padding:7px 9px;font-size:10px;cursor:pointer;white-space:nowrap}
+.auth-account-chip button:hover{background:rgba(255,255,255,.12)}
+@media(max-width:600px){
+  .auth-card{padding:30px 22px 26px;border-radius:20px}
+  .auth-account-chip{right:10px;bottom:10px;left:10px;max-width:none;justify-content:space-between}
+}
+@media(prefers-reduced-motion:reduce){
+  .shooting-right,.shooting-left,.auth-orb{animation:none!important}
+}
+
+/* =========================
+   V2.19 — manual draw mirrors shuffle/draw slots + fast blurred shooting stars
+   ========================= */
+
+/* "Tự chọn bài" now uses the same physical card dimensions and placement rules
+   as the shuffle/drag board: 3 across, 6 on one row, 10/custom in 5-column rows. */
+.practice-grid.manual-slot-layout,
+.practice-grid.manual-slot-layout.dense,
+.practice-grid.manual-slot-layout.celtic-grid{
+  display:grid;
+  grid-template-columns:none;
+  gap:20px 18px;
+  justify-content:center;
+  align-items:start;
+  width:100%;
+  max-width:none;
+  margin:0 auto;
+  padding:22px 18px 18px;
+  overflow:visible;
+}
+.manual-slot-layout.count-1{grid-template-columns:repeat(1,var(--spread-card-width))}
+.manual-slot-layout.count-2{grid-template-columns:repeat(2,var(--spread-card-width))}
+.manual-slot-layout.count-3{grid-template-columns:repeat(3,var(--spread-card-width))}
+.manual-slot-layout.count-4{grid-template-columns:repeat(2,var(--spread-card-width))}
+.manual-slot-layout.count-5{grid-template-columns:repeat(3,var(--spread-card-width))}
+.manual-slot-layout.count-6{
+  grid-template-columns:repeat(6,var(--spread-card-width));
+  grid-auto-flow:column;
+  justify-content:center;
+  overflow-x:auto;
+  overflow-y:visible;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(171,132,77,.45) transparent;
+}
+.manual-slot-layout.count-many{grid-template-columns:repeat(5,var(--spread-card-width))}
+.manual-slot-layout.count-6::-webkit-scrollbar{height:7px}
+.manual-slot-layout.count-6::-webkit-scrollbar-track{background:transparent}
+.manual-slot-layout.count-6::-webkit-scrollbar-thumb{background:rgba(171,132,77,.35);border-radius:999px}
+.manual-slot-item{
+  width:var(--spread-card-width);
+  min-width:var(--spread-card-width);
+  max-width:var(--spread-card-width);
+  align-self:start;
+}
+.manual-slot-item .practice-card-face,
+.manual-slot-item .manual-empty-slot{
+  width:var(--spread-card-width)!important;
+  height:var(--spread-card-height)!important;
+  min-width:var(--spread-card-width)!important;
+  min-height:var(--spread-card-height)!important;
+  max-width:var(--spread-card-width)!important;
+  max-height:var(--spread-card-height)!important;
+  aspect-ratio:auto!important;
+  box-sizing:border-box;
+  flex:none;
+}
+.manual-slot-item .practice-card-face{padding:6px}
+.manual-slot-item .manual-empty-slot{
+  position:relative;
+  margin:0;
+}
+.manual-slot-item .manual-empty-slot span{display:none}
+.manual-slot-item .practice-card-caption,
+.manual-slot-item .card-actions{width:var(--spread-card-width)}
+.manual-slot-item .practice-card-caption strong{font-size:15px}
+.manual-slot-item .practice-card-caption p{font-size:9px}
+.manual-slot-item .card-actions{grid-template-columns:1fr 1fr;gap:5px}
+.manual-slot-item .card-actions .danger-link{grid-column:1/-1}
+
+@media(max-width:1120px){
+  .manual-slot-layout.count-6{justify-content:start;padding-left:20px;padding-right:20px}
+}
+@media(max-width:1180px){
+  .manual-slot-layout.count-many{grid-template-columns:repeat(3,var(--spread-card-width))}
+}
+@media(max-width:820px){
+  .manual-slot-layout.count-3,
+  .manual-slot-layout.count-5,
+  .manual-slot-layout.count-many{grid-template-columns:repeat(2,var(--spread-card-width))}
+  .manual-slot-layout.count-6{grid-template-columns:repeat(6,var(--spread-card-width));justify-content:start}
+}
+@media(max-width:520px){
+  .manual-slot-layout.count-1,
+  .manual-slot-layout.count-2,
+  .manual-slot-layout.count-3,
+  .manual-slot-layout.count-4,
+  .manual-slot-layout.count-5,
+  .manual-slot-layout.count-many{
+    grid-template-columns:var(--spread-card-width);
+    overflow-x:auto;
+  }
+  .manual-slot-layout.count-6{grid-template-columns:repeat(6,var(--spread-card-width))}
+}
+
+/* Fast shooting-star glide: a short bright head followed by a long soft tail.
+   The visible pass lasts roughly 1.4–1.9 seconds instead of drifting for many seconds. */
+.shooting-star{
+  width:238px;
+  height:2px;
+  border-radius:999px;
+  opacity:0;
+  transform-origin:100% 50%;
+  will-change:transform,opacity;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.015) 18%,currentColor 88%,currentColor 100%)!important;
+  filter:drop-shadow(0 0 3px currentColor);
+}
+.shooting-star::before{
+  right:-3px;
+  width:7px;
+  height:7px;
+  box-shadow:0 0 8px currentColor,0 0 18px currentColor;
+  filter:none;
+}
+.shooting-star::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:12px;
+  top:-5px;
+  height:12px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent 0%,currentColor 70%,currentColor 100%);
+  opacity:.18;
+  filter:blur(6px);
+  transform:scaleY(.68);
+  transform-origin:right center;
+}
+.theme-light .shooting-star{color:#b48955}
+.theme-dark .shooting-star{color:#f0d89f}
+.shooting-right{
+  left:-280px;
+  right:auto;
+  transform:none;
+  animation:v219ShootRight var(--shoot-duration) linear var(--shoot-delay) infinite;
+}
+.shooting-left{
+  right:-280px;
+  left:auto;
+  transform:none;
+  animation:v219ShootLeft var(--shoot-duration) linear var(--shoot-delay) infinite;
+}
+@keyframes v219ShootRight{
+  0%,8%{opacity:0;transform:translate3d(-8vw,10px,0) rotate(-15deg) scaleX(.78)}
+  12%{opacity:.95}
+  28%{opacity:.94;transform:translate3d(24vw,-5px,0) rotate(-14deg) scaleX(1.04)}
+  52%{opacity:.86;transform:translate3d(63vw,3px,0) rotate(-15deg) scaleX(1)}
+  73%{opacity:.50;transform:translate3d(96vw,-4px,0) rotate(-14.5deg) scaleX(.94)}
+  80%,100%{opacity:0;transform:translate3d(calc(100vw + 480px),0,0) rotate(-15deg) scaleX(.86)}
+}
+@keyframes v219ShootLeft{
+  0%,8%{opacity:0;transform:translate3d(8vw,10px,0) rotate(195deg) scaleX(.78)}
+  12%{opacity:.95}
+  28%{opacity:.94;transform:translate3d(-24vw,-5px,0) rotate(194deg) scaleX(1.04)}
+  52%{opacity:.86;transform:translate3d(-63vw,3px,0) rotate(195deg) scaleX(1)}
+  73%{opacity:.50;transform:translate3d(-96vw,-4px,0) rotate(194.5deg) scaleX(.94)}
+  80%,100%{opacity:0;transform:translate3d(calc(-100vw - 480px),0,0) rotate(195deg) scaleX(.86)}
+}
+
+/* V2.33 — polished Reader text formatting */
+.reading-text strong{
+  font-weight:700;
+  color:#f0e4cf;
+}
+.theme-light .reading-text strong{
+  color:#4f3c2f;
+}
+.reading-text .tarot-card-name{
+  font-weight:800;
+}
+
+/* =========================
+   V2.34.1 — UI-only fan/shuffle fixes (baseline: V2.34)
+   ========================= */
+/* Fanned cards now match the exact physical slot size. Only a dense subset is
+   rendered by InteractiveDeck; the underlying shuffled deck remains unchanged. */
+.phase-fan .v27-deck-stage,
+.phase-ready .v27-deck-stage,
+.phase-revealing .v27-deck-stage,
+.phase-done .v27-deck-stage{
+  height:360px;
+}
+.phase-fan .v27-fan,
+.phase-ready .v27-fan,
+.phase-revealing .v27-fan,
+.phase-done .v27-fan{
+  height:338px;
+}
+.v27-fan .fan-card{
+  width:var(--spread-card-width)!important;
+  height:var(--spread-card-height)!important;
+  min-width:var(--spread-card-width)!important;
+  min-height:var(--spread-card-height)!important;
+  max-width:var(--spread-card-width)!important;
+  max-height:var(--spread-card-height)!important;
+  transform-origin:50% 112%;
+}
+
+/* Fix the hover flicker that occurred at the overlap seam between two cards.
+   Never move a fan card's hit-box on hover; only change its visual emphasis. */
+.v25-fan .fan-card:hover:not(:disabled),
+.v27-fan .fan-card:hover:not(:disabled){
+  bottom:var(--fan-bottom)!important;
+  filter:brightness(1.16);
+  box-shadow:0 19px 34px rgba(0,0,0,.50),0 0 0 1px rgba(240,216,159,.30);
+}
+
+/* Give the riffle animation and its status text separate vertical lanes so the
+   label/background no longer cuts into the moving packet. */
+.v27-riffle-zone .riffle-card{
+  top:27%!important;
+}
+.v27-shuffle-label{
+  bottom:52px!important;
+  z-index:76;
+}
+.v27-inline-shuffle{
+  bottom:0!important;
+}
+
+@media(max-width:920px){
+  .phase-fan .v27-deck-stage,
+  .phase-ready .v27-deck-stage,
+  .phase-revealing .v27-deck-stage,
+  .phase-done .v27-deck-stage{height:348px}
+  .phase-fan .v27-fan,
+  .phase-ready .v27-fan,
+  .phase-revealing .v27-fan,
+  .phase-done .v27-fan{height:326px}
+}
+
+
+/* =========================
+   V2.34.3 — fan sizing + reading copy button
+   ========================= */
+/* Keep all 78 cards in the fan, but render each fanned card at 2/3 of the
+   4.5 × 7 cm spread-slot size. The actual spread slots remain unchanged. */
+.v27-fan .fan-card{
+  width:3cm!important;
+  height:4.6667cm!important;
+  min-width:3cm!important;
+  min-height:4.6667cm!important;
+  max-width:3cm!important;
+  max-height:4.6667cm!important;
+  transform-origin:50% 112%;
+}
+
+/* =========================
+   Tarot-1.1 — reading actions above the spread
+   ========================= */
+.reading-actions-panel.reading-actions-top{
+  width:max-content;
+  max-width:100%;
+  margin:0 0 14px auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.theme-light .reading-actions-panel.reading-actions-top{
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+@media(max-width:620px){
+  .reading-actions-panel.reading-actions-top{
+    width:100%;
+    margin:0 0 14px;
+  }
+}
+
+/* =========================
+   Tarot-1.2 — reading actions inside the spread area
+   ========================= */
+.v34-actions-head{
+  position:relative;
+  min-height:112px;
+  padding-right:430px!important;
+}
+.v34-reading-actions-slot{
+  position:absolute;
+  top:18px;
+  right:20px;
+  z-index:12;
+}
+.reading-actions-panel.reading-actions-inside{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  width:max-content;
+  max-width:100%;
+  margin:0;
+  padding:10px;
+  border:1px solid var(--line);
+  background:rgba(12,9,16,.68);
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
+  backdrop-filter:blur(10px);
+}
+.theme-light .reading-actions-panel.reading-actions-inside{
+  border-color:rgba(105,75,45,.20);
+  background:rgba(255,255,255,.82);
+  box-shadow:0 10px 28px rgba(69,53,72,.08);
+}
+.reading-actions-panel.reading-actions-inside .ghost-button,
+.reading-actions-panel.reading-actions-inside .gold-button{
+  min-height:40px;
+  padding:10px 14px;
+}
+.manual-spread-reading-shell{
+  position:relative;
+  padding-top:62px;
+}
+.manual-reading-actions{
+  position:absolute!important;
+  top:0;
+  right:0;
+  z-index:12;
+}
+
+@media(max-width:820px){
+  .v34-actions-head{
+    min-height:0;
+    padding-right:24px!important;
+    padding-bottom:78px!important;
+  }
+  .v34-reading-actions-slot{
+    top:auto;
+    right:18px;
+    left:18px;
+    bottom:14px;
+  }
+  .reading-actions-panel.reading-actions-inside{
+    width:100%;
+    justify-content:flex-end;
+  }
+  .manual-spread-reading-shell{padding-top:68px}
+}
+@media(max-width:620px){
+  .reading-actions-panel.reading-actions-inside{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .reading-actions-panel.reading-actions-inside .ghost-button,
+  .reading-actions-panel.reading-actions-inside .gold-button{
+    width:100%;
+    min-width:0;
+  }
+  .manual-spread-reading-shell{padding-top:72px}
+}
+
+/* Tarot-1.3 · two-stage interface shell (part 3 reserved for later) */
+.flow-stage{animation:flowStageIn .28s ease both}
+.flow-stage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 0 18px}
+.flow-stage-head h2{font-family:var(--font-heading);font-size:30px;font-weight:600;margin:7px 0 0}
+.flow-step-indicator{display:inline-flex;align-items:center;justify-content:center;min-width:56px;height:32px;padding:0 12px;border:1px solid var(--line);color:var(--gold2);font-size:11px;letter-spacing:.08em;background:rgba(0,0,0,.08)}
+.flow-continue-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;padding:16px 18px;border:1px solid var(--line);background:rgba(18,14,23,.54)}
+.flow-continue-summary{display:flex;align-items:center;gap:9px;color:#8e8492;font-size:12px}
+.flow-continue-button{min-width:150px}
+.flow-stage-nav{display:flex;align-items:center;gap:10px}
+.flow-stage-spread .spread-toolbar{margin-top:24px}
+.theme-light .flow-step-indicator{background:rgba(255,255,255,.62);color:#765328;border-color:rgba(105,75,45,.22)}
+.theme-light .flow-continue-row{background:rgba(255,255,255,.58);border-color:rgba(105,75,45,.18)}
+.theme-light .flow-continue-summary{color:#776b60}
+@keyframes flowStageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:700px){.flow-stage-head{align-items:flex-start}.flow-stage-head-spread{flex-direction:column}.flow-stage-nav{width:100%;justify-content:space-between}.flow-continue-row{align-items:stretch;flex-direction:column}.flow-continue-button{width:100%}.flow-continue-summary{flex-wrap:wrap}}
+
+
+/* Tarot-1.4 · page-1 hero exit + cleaner page-2 hierarchy */
+.flow-intro{
+  overflow:hidden;
+  max-height:320px;
+  opacity:1;
+  transform:translateY(0);
+  transition:max-height .42s cubic-bezier(.2,.8,.2,1),
+             opacity .28s ease,
+             transform .42s cubic-bezier(.2,.8,.2,1),
+             padding .42s cubic-bezier(.2,.8,.2,1),
+             margin .42s cubic-bezier(.2,.8,.2,1);
+  will-change:max-height,opacity,transform;
+}
+.flow-intro.flow-intro-hidden{
+  max-height:0;
+  opacity:0;
+  transform:translateY(-22px) scale(.985);
+  padding-top:0!important;
+  padding-bottom:0!important;
+  margin-top:0;
+  margin-bottom:0;
+  pointer-events:none;
+}
+.flow-stage-head-nav-only{
+  min-height:34px;
+  margin-bottom:8px;
+  justify-content:flex-end;
+}
+.flow-stage-head-nav-only .flow-stage-nav{margin-left:auto}
+.spread-toolbar-actions-only{
+  margin:0 0 12px!important;
+  min-height:42px;
+  justify-content:flex-end;
+  align-items:center;
+}
+.spread-toolbar-actions-only .toolbar-actions{margin-left:auto}
+.manual-spread-reading-shell{padding-top:76px}
+.manual-spread-meta{
+  position:absolute;
+  left:18px;
+  top:8px;
+  z-index:5;
+}
+.manual-spread-meta h2{
+  margin:6px 0 0;
+  font-family:var(--font-heading);
+  font-weight:600;
+  font-size:28px;
+}
+@media(max-width:820px){
+  .manual-spread-reading-shell{padding-top:126px}
+  .manual-spread-meta{left:0;top:0}
+}
+@media(max-width:620px){
+  .flow-intro{max-height:280px}
+  .flow-stage-head-nav-only{margin-bottom:4px}
+  .spread-toolbar-actions-only{align-items:stretch}
+  .spread-toolbar-actions-only .toolbar-actions{width:100%;justify-content:flex-end}
+}
+
+/* Tarot-1.5 · slower page transition + spread controls inside the spread frame */
+.flow-intro{
+  transition:max-height .95s cubic-bezier(.16,.84,.24,1),
+             opacity .72s cubic-bezier(.22,.7,.24,1),
+             transform .95s cubic-bezier(.16,.84,.24,1),
+             padding .95s cubic-bezier(.16,.84,.24,1),
+             margin .95s cubic-bezier(.16,.84,.24,1);
+}
+.flow-intro.flow-intro-hidden{
+  transform:translateY(-30px) scale(.98);
+}
+.flow-stage-spread{
+  animation-duration:.55s;
+  animation-delay:.22s;
+}
+
+/* Save/delete and reading controls now live together inside the spread area. */
+.v34-actions-head{
+  padding-right:650px!important;
+  min-height:118px;
+}
+.reading-actions-panel.reading-actions-inside{
+  gap:12px;
+  padding:9px 10px;
+}
+.spread-management-actions,
+.spread-reading-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.spread-reading-actions{
+  padding-left:12px;
+  border-left:1px solid var(--line);
+}
+.reading-actions-panel .danger-action{
+  color:#b98993;
+}
+.reading-actions-panel .danger-action:hover{
+  color:#d3a1aa;
+  border-color:rgba(196,126,139,.42);
+}
+.theme-light .spread-reading-actions{
+  border-left-color:rgba(105,75,45,.20);
+}
+.theme-light .reading-actions-panel .danger-action{
+  color:#945e68;
+}
+.manual-spread-reading-shell{
+  padding-top:76px;
+}
+
+@media(max-width:1080px){
+  .v34-actions-head{
+    padding-right:24px!important;
+    padding-bottom:132px!important;
+  }
+  .v34-reading-actions-slot{
+    top:auto;
+    right:18px;
+    left:18px;
+    bottom:14px;
+  }
+  .reading-actions-panel.reading-actions-inside{
+    width:100%;
+    justify-content:space-between;
+  }
+}
+@media(max-width:760px){
+  .reading-actions-panel.reading-actions-inside{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .spread-management-actions,
+  .spread-reading-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+    gap:8px;
+  }
+  .spread-reading-actions{
+    padding-left:0;
+    padding-top:8px;
+    border-left:0;
+    border-top:1px solid var(--line);
+  }
+  .manual-spread-reading-shell{padding-top:142px}
+}
+@media(max-width:520px){
+  .spread-management-actions,
+  .spread-reading-actions{
+    grid-template-columns:1fr;
+  }
+  .manual-spread-reading-shell{padding-top:236px}
+}
+@media(max-width:1080px){
+  .manual-spread-reading-shell{padding-top:150px}
+  .manual-reading-actions{
+    top:66px;
+    left:0;
+    right:0;
+  }
+}
+@media(max-width:760px){
+  .manual-spread-reading-shell{padding-top:220px}
+  .manual-reading-actions{top:68px}
+}
+@media(max-width:520px){
+  .manual-spread-reading-shell{padding-top:330px}
+}
+
+/* =========================
+   Tarot-1.6 — cleaner spread controls + smoother 1s step transitions
+   ========================= */
+/* Remove the outer glass/frame around Save / Delete / Copy / Read controls.
+   Individual button borders remain so each action is still clear and clickable. */
+.reading-actions-panel.reading-actions-inside{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  padding:0!important;
+}
+.theme-light .reading-actions-panel.reading-actions-inside{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.spread-reading-actions{
+  padding-left:0!important;
+  border-left:0!important;
+}
+@media(max-width:760px){
+  .spread-reading-actions{
+    padding-top:0!important;
+    border-top:0!important;
+  }
+}
+
+/* Delete is no longer red; it uses the same warm gold text as the other ghost actions. */
+.reading-actions-panel .danger-action,
+.theme-light .reading-actions-panel .danger-action{
+  color:var(--gold2)!important;
+}
+.reading-actions-panel .danger-action:hover,
+.theme-light .reading-actions-panel .danger-action:hover{
+  color:var(--gold2)!important;
+  border-color:var(--gold)!important;
+}
+
+/* Part 1 <-> Part 2: both directions use an approximately 1 second, soft transition. */
+.flow-intro{
+  transition:max-height 1s cubic-bezier(.22,.61,.36,1),
+             opacity 1s cubic-bezier(.22,.61,.36,1),
+             transform 1s cubic-bezier(.22,.61,.36,1),
+             padding 1s cubic-bezier(.22,.61,.36,1),
+             margin 1s cubic-bezier(.22,.61,.36,1)!important;
+}
+.flow-intro.flow-intro-hidden{
+  transform:translateY(-24px) scale(.988);
+}
+.flow-stage,
+.flow-stage-spread,
+.flow-stage-setup{
+  animation-duration:1s!important;
+  animation-delay:0s!important;
+  animation-timing-function:cubic-bezier(.22,.61,.36,1)!important;
+}
+
+/* =========================
+   TAROT-1.7 — left menu + history drawer
+   ========================= */
+.side-menu-toggle{
+  position:fixed;left:18px;top:92px;z-index:12000;width:42px;height:42px;
+  border:1px solid var(--line);background:rgba(16,13,21,.86);backdrop-filter:blur(14px);
+  display:grid;align-content:center;justify-items:center;gap:4px;padding:0;
+  box-shadow:0 12px 34px rgba(0,0,0,.2);transition:transform .22s ease,border-color .22s ease,background .22s ease;
+}
+.side-menu-toggle:hover{transform:translateY(-1px);border-color:var(--gold);background:rgba(25,19,31,.94)}
+.side-menu-toggle span{display:block;width:17px;height:1px;background:var(--gold2);transition:transform .22s ease,opacity .22s ease}
+.side-menu-layer{position:fixed;inset:0;z-index:11990;background:rgba(4,3,7,.56);backdrop-filter:blur(5px);animation:sideMenuFade .28s ease both}
+.side-menu-drawer{
+  position:absolute;inset:0 auto 0 0;width:min(420px,92vw);display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(24,19,30,.985),rgba(10,8,14,.99));
+  border-right:1px solid var(--line);box-shadow:24px 0 80px rgba(0,0,0,.38);animation:sideMenuSlide .34s cubic-bezier(.2,.75,.2,1) both;
+}
+.side-menu-head{min-height:92px;padding:24px 22px 18px 26px;border-bottom:1px solid rgba(255,255,255,.065);display:flex;align-items:center;justify-content:space-between;gap:18px}
+.side-menu-head h2{font-family:var(--font-heading);font-size:29px;font-weight:500;margin:5px 0 0;color:var(--ink)}
+.side-menu-close{width:37px;height:37px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--gold2);font-size:24px;line-height:1}
+.side-menu-close:hover{border-color:var(--gold)}
+.side-menu-nav{padding:18px;display:grid;gap:9px}
+.side-menu-nav>button{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);color:var(--ink);padding:16px 15px;display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;text-align:left;transition:border-color .2s ease,background .2s ease,transform .2s ease}
+.side-menu-nav>button:hover{border-color:var(--line);background:rgba(213,179,109,.055);transform:translateX(2px)}
+.side-menu-item-icon{width:31px;height:31px;border:1px solid rgba(213,179,109,.22);display:grid;place-items:center;color:var(--gold2);font-size:15px}
+.side-menu-nav strong{display:block;font-size:14px;font-weight:600;color:var(--gold2)}
+.side-menu-nav small{display:block;margin-top:3px;color:#8f8593;font-size:10px;line-height:1.45}
+.side-menu-nav b{font-size:21px;font-weight:400;color:#6f6573}
+.side-history-view{min-height:0;display:flex;flex-direction:column;flex:1}
+.side-history-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.055)}
+.side-history-toolbar button{border:0;background:transparent;color:var(--gold2);font-size:11px;padding:8px 7px}
+.side-history-toolbar .side-history-clear{color:#a99f82}
+.side-history-list{overflow:auto;min-height:0;padding:14px 14px 30px;gap:10px}
+.side-history-card{padding:14px 15px;background:rgba(255,255,255,.025);box-shadow:none}
+.side-history-card .history-card-top{display:block}
+.side-history-card .history-card-top h3{font-size:17px;line-height:1.3;margin-top:6px}
+.side-history-actions{display:flex;gap:7px;margin-top:12px}
+.side-history-actions button{border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--gold2);padding:7px 10px;font-size:10px}
+.side-history-actions button:hover{border-color:var(--gold)}
+.side-history-actions button:last-child{color:#aa9f83}
+.side-history-card .history-cards-line{max-height:76px;overflow:hidden}
+.side-history-card .history-reading-preview{font-size:11px;line-height:1.55}
+.side-history-empty{margin:18px;padding:18px}
+@keyframes sideMenuFade{from{opacity:0}to{opacity:1}}
+@keyframes sideMenuSlide{from{transform:translateX(-24px);opacity:.72}to{transform:translateX(0);opacity:1}}
+
+.account-panel-backdrop{position:fixed;inset:0;z-index:13000;background:rgba(4,3,7,.66);backdrop-filter:blur(7px);display:grid;place-items:center;padding:20px;animation:sideMenuFade .25s ease both}
+.account-panel{width:min(470px,100%);border:1px solid var(--line);background:linear-gradient(180deg,rgba(27,21,34,.985),rgba(13,10,18,.99));box-shadow:0 30px 100px rgba(0,0,0,.45)}
+.account-panel-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.06)}
+.account-panel-kicker{font-size:9px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+.account-panel-head h2{font-family:var(--font-heading);font-size:26px;font-weight:500;margin:5px 0 0}
+.account-panel-head>button{width:36px;height:36px;border:1px solid rgba(255,255,255,.09);background:transparent;color:var(--gold2);font-size:23px}
+.account-panel-body{padding:20px 22px 22px;display:grid;gap:10px}
+.account-info-row{display:grid;gap:4px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.055)}
+.account-info-row span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#827887}
+.account-info-row strong{font-size:13px;font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.account-signout{margin-top:8px;border:1px solid var(--line);background:transparent;color:var(--gold2);padding:11px 13px;font-size:11px}
+.account-local-note{margin:4px 0 0;color:#948a97;font-size:12px;line-height:1.6}
+
+.theme-light .side-menu-toggle{background:rgba(255,253,248,.9);box-shadow:0 10px 28px rgba(74,56,48,.1)}
+.theme-light .side-menu-layer{background:rgba(71,59,66,.18)}
+.theme-light .side-menu-drawer{background:linear-gradient(180deg,rgba(255,253,249,.99),rgba(246,241,244,.99));box-shadow:24px 0 70px rgba(77,59,70,.16)}
+.theme-light .side-menu-head,.theme-light .side-history-toolbar{border-color:rgba(94,72,54,.1)}
+.theme-light .side-menu-head h2,.theme-light .side-menu-nav>button,.theme-light .account-panel-head h2,.theme-light .account-info-row strong{color:#3c3340}
+.theme-light .side-menu-close,.theme-light .side-menu-nav>button,.theme-light .side-history-actions button,.theme-light .account-panel-head>button{border-color:rgba(94,72,54,.12)}
+.theme-light .side-menu-nav>button{background:rgba(255,255,255,.5)}
+.theme-light .side-menu-nav small,.theme-light .account-local-note{color:#817683}
+.theme-light .side-history-card{background:rgba(255,255,255,.56)}
+.theme-light .account-panel-backdrop{background:rgba(78,66,75,.22)}
+.theme-light .account-panel{background:linear-gradient(180deg,#fffdf9,#f6f1f5);box-shadow:0 24px 80px rgba(78,61,72,.18)}
+.theme-light .account-panel-head,.theme-light .account-info-row{border-color:rgba(94,72,54,.1)}
+
+@media(max-width:620px){
+  .side-menu-toggle{left:10px;top:82px;width:39px;height:39px}
+  .side-menu-drawer{width:min(390px,94vw)}
+  .side-menu-head{padding-left:20px}
+}
+@media(prefers-reduced-motion:reduce){.side-menu-layer,.side-menu-drawer,.account-panel-backdrop{animation:none!important}}
+html[data-theme="light"] .account-panel-backdrop{background:rgba(78,66,75,.22)}
+html[data-theme="light"] .account-panel{background:linear-gradient(180deg,#fffdf9,#f6f1f5);box-shadow:0 24px 80px rgba(78,61,72,.18);color:#3c3340}
+html[data-theme="light"] .account-panel-head,html[data-theme="light"] .account-info-row{border-color:rgba(94,72,54,.1)}
+html[data-theme="light"] .account-panel-head h2,html[data-theme="light"] .account-info-row strong{color:#3c3340}
+html[data-theme="light"] .account-panel-head>button{border-color:rgba(94,72,54,.12);color:#8d6a3c}
+html[data-theme="light"] .account-local-note{color:#817683}
+
+/* =========================
+   TAROT-1.8 — mobile-only optimization
+   Desktop layout and Reader logic remain unchanged.
+   ========================= */
+@media(max-width:760px){
+  :root{
+    --spread-card-width:3cm;
+    --spread-card-height:4.6667cm;
+  }
+
+  html{-webkit-text-size-adjust:100%;scroll-padding-top:74px}
+  body{-webkit-tap-highlight-color:transparent;overscroll-behavior-x:none}
+  main{overflow-x:hidden}
+  .shell{width:calc(100% - 20px)}
+
+  /* Compact top navigation while keeping the existing visual language. */
+  .topbar{height:64px;padding-left:46px}
+  .brand{font-size:10.5px;letter-spacing:.12em;white-space:nowrap}
+  .topbar-right{gap:7px}
+  .theme-toggle{min-width:40px;min-height:40px}
+  .side-menu-toggle{left:10px;top:74px;width:40px;height:40px}
+
+  /* Part 1: shorter, thumb-friendly setup flow. */
+  .intro{padding:38px 0 26px}
+  .compact-intro{padding-bottom:26px}
+  .intro h1{font-size:clamp(38px,11.5vw,52px);line-height:1.02}
+  .eyebrow{margin-bottom:12px;font-size:9px}
+  .lead{font-size:14px;line-height:1.58;margin:15px auto 0;max-width:34em}
+  .workspace{padding:12px 0 64px}
+  .flow-stage-head{margin-bottom:12px;gap:10px}
+  .flow-stage-head h2{font-size:25px;margin-top:4px}
+  .flow-step-indicator{font-size:10px}
+  .panel{padding:16px}
+  .question-card textarea{
+    min-height:106px;
+    padding:12px 0 14px;
+    font-size:16px;
+    line-height:1.55;
+  }
+  .chips{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:3px;
+  }
+  .chips::-webkit-scrollbar{display:none}
+  .chips button{flex:none;min-height:38px;padding:8px 11px}
+  .control-grid,.v23-controls{grid-template-columns:1fr;gap:10px;margin-top:10px}
+  .mode-switch{grid-template-columns:1fr;gap:8px;margin-top:11px}
+  .mode-switch button{
+    min-height:84px;
+    padding:12px;
+    grid-template-columns:30px 1fr;
+    column-gap:9px;
+  }
+  .mode-switch button span{font-size:20px}
+  .mode-switch button b{font-size:13px}
+  .mode-switch button small{font-size:10.5px;line-height:1.4}
+  .preset-grid{grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}
+  .preset-grid button{min-height:68px;padding:10px}
+  .preset-grid b{font-size:15px}
+  .preset-grid small{font-size:9.5px;line-height:1.35}
+  .custom-v23{width:100%;justify-content:space-between}
+  .custom-count input{font-size:16px}
+  .flow-continue-row{margin-top:12px;padding:12px;gap:10px}
+  .flow-continue-summary{font-size:10.5px;line-height:1.45}
+  .flow-continue-button{width:100%;min-height:48px;font-size:12px}
+
+  /* Part 2 header + controls: compact 2×2 action grid, no tall stacked block. */
+  .flow-stage-head-nav-only{min-height:40px;margin-bottom:4px}
+  .flow-stage-nav{width:100%;justify-content:space-between}
+  .flow-stage-nav .ghost-button{min-height:42px}
+  .interactive-draw{margin-top:10px}
+  .interactive-draw-head,.v34-actions-head{
+    min-height:0!important;
+    display:block;
+    padding:16px!important;
+  }
+  .interactive-draw-head h2{font-size:26px;margin-top:4px}
+  .interactive-draw-head p{font-size:11.5px;line-height:1.48;margin-top:6px}
+  .v34-reading-actions-slot{
+    position:static!important;
+    width:100%;
+    margin-top:13px;
+  }
+  .reading-actions-panel.reading-actions-inside{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  .spread-management-actions,.spread-reading-actions{display:contents!important}
+  .reading-actions-panel.reading-actions-inside .ghost-button,
+  .reading-actions-panel.reading-actions-inside .gold-button{
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    padding:9px 7px;
+    font-size:10.5px;
+  }
+
+  /* Spread cards: 3 cards fit on a typical phone; 4/6/10 become one smooth swipe row. */
+  .v27-slots,
+  .v27-slots.count-1,
+  .v27-slots.count-2,
+  .v27-slots.count-3,
+  .v27-slots.count-4,
+  .v27-slots.count-5,
+  .v27-slots.count-6,
+  .v27-slots.count-many{
+    display:flex!important;
+    grid-template-columns:none!important;
+    grid-auto-flow:initial!important;
+    width:100%!important;
+    max-width:none!important;
+    min-height:0!important;
+    gap:10px!important;
+    padding:14px 10px 15px!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    justify-content:flex-start!important;
+    scroll-snap-type:x proximity;
+    scroll-padding-inline:10px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+  }
+  .v27-slots::-webkit-scrollbar{display:none}
+  .v27-slots.count-1,.v27-slots.count-2,.v27-slots.count-3{justify-content:center!important}
+  .spread-slot-item{scroll-snap-align:center;flex:0 0 var(--spread-card-width)}
+  .slot-position-heading{
+    height:auto;
+    min-height:38px;
+    padding:0 1px 6px;
+    align-items:flex-start;
+    gap:5px;
+  }
+  .slot-position-heading>span:first-child{font-size:8px;padding-top:2px}
+  .slot-position-name{
+    white-space:normal;
+    overflow:visible;
+    font-size:10.5px;
+    line-height:1.14;
+  }
+  .picked-slot{border-radius:7px}
+  .slot-remove{width:30px!important;height:30px!important;right:-7px!important;top:-7px!important}
+
+  /* Mobile deck: keep all 78 cards, but reduce physical fan size and height. */
+  .phase-fan .v27-deck-stage,
+  .phase-ready .v27-deck-stage,
+  .phase-revealing .v27-deck-stage,
+  .phase-done .v27-deck-stage{height:252px!important}
+  .phase-fan .v27-fan,
+  .phase-ready .v27-fan,
+  .phase-revealing .v27-fan,
+  .phase-done .v27-fan{height:232px!important}
+  .v27-deck-stage{height:270px}
+  .v27-fan .fan-card{
+    width:2.25cm!important;
+    height:3.5cm!important;
+    min-width:2.25cm!important;
+    min-height:3.5cm!important;
+    max-width:2.25cm!important;
+    max-height:3.5cm!important;
+    border-radius:5px;
+    transform-origin:50% 118%;
+  }
+  .v27-fan .fan-card::before{inset:6px}
+  .v27-fan .fan-card span{font-size:15px}
+  .v27-riffle-zone{top:48%;transform:translate(-50%,-50%) scale(.72)!important}
+  .v27-shuffle-label{bottom:47px!important}
+  .v27-inline-shuffle{bottom:0!important}
+
+  /* Bottom deck controls stay reachable with a thumb and never become four tall rows. */
+  .v27-deck-actions{
+    position:sticky;
+    bottom:8px;
+    z-index:600;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px!important;
+    margin:0 8px 8px;
+    padding:8px!important;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    border:1px solid var(--line)!important;
+    border-radius:12px;
+    background:rgba(10,8,14,.88)!important;
+    backdrop-filter:blur(12px);
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+  .theme-light .v27-deck-actions{background:rgba(255,252,248,.91)!important}
+  .v27-deck-actions button{
+    width:100%;
+    min-width:0!important;
+    min-height:44px;
+    padding:9px 7px;
+    font-size:10.5px;
+  }
+  .fan-tip{font-size:10.5px!important;line-height:1.45!important;padding:0 12px 14px!important}
+
+  /* Manual draw uses the same compact horizontal card rail as random draw. */
+  .manual-spread-reading-shell{padding-top:0!important}
+  .manual-spread-meta{
+    position:static!important;
+    margin:0 0 10px;
+  }
+  .manual-spread-meta h2{font-size:24px}
+  .manual-reading-actions{
+    position:static!important;
+    margin:0 0 10px;
+  }
+  .practice-grid.manual-slot-layout,
+  .practice-grid.manual-slot-layout.dense,
+  .practice-grid.manual-slot-layout.celtic-grid,
+  .manual-slot-layout.count-1,
+  .manual-slot-layout.count-2,
+  .manual-slot-layout.count-3,
+  .manual-slot-layout.count-4,
+  .manual-slot-layout.count-5,
+  .manual-slot-layout.count-6,
+  .manual-slot-layout.count-many{
+    display:flex!important;
+    grid-template-columns:none!important;
+    grid-auto-flow:initial!important;
+    width:100%!important;
+    max-width:none!important;
+    gap:10px!important;
+    padding:12px 10px 15px!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    justify-content:flex-start!important;
+    scroll-snap-type:x proximity;
+    scroll-padding-inline:10px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+  }
+  .manual-slot-layout::-webkit-scrollbar{display:none}
+  .manual-slot-layout.count-1,.manual-slot-layout.count-2,.manual-slot-layout.count-3{justify-content:center!important}
+  .manual-slot-item{scroll-snap-align:center;flex:0 0 var(--spread-card-width)}
+  .manual-slot-item .practice-card-caption strong{font-size:13px}
+  .manual-slot-item .practice-card-caption p{font-size:8.5px}
+  .manual-slot-item .card-actions button{min-height:40px;padding:7px 4px}
+
+  /* Card library behaves like a native full-screen picker on phones. */
+  .modal-backdrop{padding:0!important;align-items:stretch}
+  .card-picker-modal{
+    width:100%!important;
+    height:100dvh;
+    max-height:100dvh!important;
+    border-left:0;
+    border-right:0;
+  }
+  .picker-modal-head{padding:15px 14px 12px}
+  .picker-modal-head h3{font-size:23px}
+  .icon-close{width:42px;height:42px;font-size:28px}
+  .picker-tools{padding:11px 12px}
+  .picker-tools>input{font-size:16px;min-height:44px}
+  .filter-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .filter-row::-webkit-scrollbar{display:none}
+  .filter-row button{flex:none;min-height:38px}
+  .library-grid,.library-grid.image-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px;
+    padding:10px!important;
+  }
+  .library-card{padding:7px}
+
+  /* Reader popup becomes a true phone reading surface. */
+  .ai-reading-modal-backdrop{padding:0!important;align-items:stretch}
+  .ai-reading-modal{
+    width:100%!important;
+    height:100dvh;
+    max-height:100dvh!important;
+    border-radius:0!important;
+    border-left:0;
+    border-right:0;
+  }
+  .ai-reading-modal-header{
+    position:relative;
+    padding:15px 54px 13px 15px!important;
+    gap:10px;
+  }
+  .ai-reading-modal-header h2{font-size:24px!important}
+  .ai-reading-modal-header p{font-size:10.5px;line-height:1.45;-webkit-line-clamp:2}
+  .ai-modal-close{position:absolute;right:12px;top:12px;width:40px;height:40px}
+  .ai-reading-modal-body{padding:16px 15px 24px!important;scrollbar-gutter:auto}
+  .ai-reading-result .reading-text{font-size:15.5px;line-height:1.76}
+  .ai-reading-result .reading-text h3{font-size:23px;margin-top:30px}
+  .ai-reading-modal-footer{
+    position:sticky;
+    bottom:0;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px!important;
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom))!important;
+    backdrop-filter:blur(14px);
+  }
+  .ai-reading-modal-footer .ghost-button,
+  .ai-reading-modal-footer .gold-button{width:100%;min-height:44px;min-width:0}
+  .chat-history{padding:12px;max-height:50vh}
+  .message{max-width:92%}
+  .chat-form input{font-size:16px;min-height:48px}
+
+  /* Menu/account surfaces fill the phone more naturally. */
+  .side-menu-drawer{width:min(360px,92vw)}
+  .side-menu-head{min-height:76px;padding:17px 16px 14px 18px}
+  .side-menu-head h2{font-size:25px}
+  .side-menu-nav{padding:12px;gap:8px}
+  .side-menu-nav>button{padding:13px 12px;min-height:64px}
+  .account-panel-backdrop{padding:10px}
+  .account-panel{max-height:calc(100dvh - 20px);overflow:auto}
+
+  footer{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+}
+
+@media(max-width:390px){
+  .shell{width:calc(100% - 16px)}
+  .topbar{padding-left:44px}
+  .brand{font-size:9.5px;letter-spacing:.1em}
+  .intro h1{font-size:39px}
+  .preset-grid button{padding:9px 8px}
+  .reading-actions-panel.reading-actions-inside{gap:6px!important}
+  .reading-actions-panel.reading-actions-inside .ghost-button,
+  .reading-actions-panel.reading-actions-inside .gold-button{font-size:9.8px;padding-inline:5px}
+  .v27-slots,.manual-slot-layout{gap:8px!important}
+}
+
+@media(max-width:760px) and (hover:none){
+  .fan-card:hover:not(:disabled){filter:none!important;box-shadow:0 12px 30px rgba(0,0,0,.34)!important}
+  .fan-card:active:not(:disabled){filter:brightness(1.18)!important}
+  .ghost-button:active,.gold-button:active,.mode-switch button:active,.preset-grid button:active{transform:scale(.985)}
+}
