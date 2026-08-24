@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { createPortal } from "react-dom";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import CardArtwork from "@/components/CardArtwork";
+import { getCardImageCandidates } from "@/lib/card-images";
 import { TAROT_DECK, randomOrientation } from "@/lib/deck";
 import type { DrawnCard, TarotCard } from "@/lib/types";
 
@@ -22,8 +23,6 @@ type DragState = {
   fromSlot: number | null;
   startX: number;
   startY: number;
-  x: number;
-  y: number;
 };
 
 function shuffleDeck(): TarotCard[] {
@@ -51,6 +50,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   const [shuffleRound, setShuffleRound] = useState(0);
   const timers = useRef<number[]>([]);
   const completionScheduled = useRef(false);
+  const dragGhostRef = useRef<HTMLDivElement | null>(null);
+  const dragPointerRef = useRef({ x: 0, y: 0 });
+  const dragRafRef = useRef<number | null>(null);
+  const hoverSlotRef = useRef<number | null>(null);
 
   const pickedSet = useMemo(() => new Set(slots.filter((value): value is number => value !== undefined)), [slots]);
   // Keep all 78 Tarot cards in the spread. They overlap densely so every card remains
@@ -59,12 +62,38 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     () => deck.map((card, deckIndex) => ({ card, deckIndex })),
     [deck]
   );
+  const fanLayout = useMemo(() => visibleFanCards.map(({ card, deckIndex }, visualIndex) => {
+    const progress = visibleFanCards.length <= 1 ? 0 : visualIndex / (visibleFanCards.length - 1);
+    const normal = progress * 2 - 1;
+    const left = 50 + normal * 45;
+    const bottom = 8 + (1 - normal * normal) * 68;
+    const rotate = normal * 33;
+    return { card, deckIndex, visualIndex, left, bottom, rotate };
+  }), [visibleFanCards]);
   const filledCount = pickedSet.size;
   const revealedCount = revealed.filter(Boolean).length;
 
   useEffect(() => () => {
     timers.current.forEach((timer) => window.clearTimeout(timer));
+    if (dragRafRef.current !== null) window.cancelAnimationFrame(dragRafRef.current);
+    if (typeof document !== "undefined") delete document.documentElement.dataset.tarotDeckBusy;
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const busy = phase === "shuffling" || phase === "fan" || phase === "ready" || phase === "revealing";
+    if (busy) document.documentElement.dataset.tarotDeckBusy = "true";
+    else delete document.documentElement.dataset.tarotDeckBusy;
+  }, [phase]);
+
+  useEffect(() => {
+    if (!preparedCards || typeof window === "undefined") return;
+    preparedCards.forEach((card) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = getCardImageCandidates(card.id)[0];
+    });
+  }, [preparedCards]);
 
   function schedule(callback: () => void, delay: number) {
     const timer = window.setTimeout(callback, delay);
@@ -110,29 +139,47 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     if (fromSlot === null && pickedSet.has(deckIndex)) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    dragPointerRef.current = { x: event.clientX, y: event.clientY };
+    hoverSlotRef.current = null;
     setDrag({
       deckIndex,
       fromSlot,
       startX: event.clientX,
-      startY: event.clientY,
-      x: event.clientX,
-      y: event.clientY
+      startY: event.clientY
     });
   }
 
   function moveDrag(event: ReactPointerEvent<HTMLElement>) {
     if (!drag) return;
     event.preventDefault();
-    setDrag((current) => current ? { ...current, x: event.clientX, y: event.clientY } : current);
-    const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
-    const slot = target?.closest<HTMLElement>("[data-drop-slot]");
-    setHoverSlot(slot ? Number(slot.dataset.dropSlot) : null);
+    dragPointerRef.current = { x: event.clientX, y: event.clientY };
+
+    if (dragRafRef.current !== null) return;
+    dragRafRef.current = window.requestAnimationFrame(() => {
+      dragRafRef.current = null;
+      const { x, y } = dragPointerRef.current;
+      if (dragGhostRef.current) {
+        dragGhostRef.current.style.setProperty("--drag-x", `${x}px`);
+        dragGhostRef.current.style.setProperty("--drag-y", `${y}px`);
+      }
+      const target = document.elementFromPoint(x, y) as HTMLElement | null;
+      const slot = target?.closest<HTMLElement>("[data-drop-slot]");
+      const nextHover = slot ? Number(slot.dataset.dropSlot) : null;
+      if (nextHover !== hoverSlotRef.current) {
+        hoverSlotRef.current = nextHover;
+        setHoverSlot(nextHover);
+      }
+    });
   }
 
   function endDrag(event: ReactPointerEvent<HTMLElement>) {
     if (!drag) return;
     event.preventDefault();
     const currentDrag = drag;
+    if (dragRafRef.current !== null) {
+      window.cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
     const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
     const slotElement = target?.closest<HTMLElement>("[data-drop-slot]");
     const dropSlot = slotElement ? Number(slotElement.dataset.dropSlot) : null;
@@ -150,6 +197,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture?.(event.pointerId);
     }
+    hoverSlotRef.current = null;
     setDrag(null);
     setHoverSlot(null);
   }
@@ -310,7 +358,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                         <span className="slot-flip-face slot-flip-front">
                           {drawn && (
                             <span className={`slot-front-art ${drawn.orientation === "reversed" ? "reversed-art" : ""}`}>
-                              <CardArtwork card={drawn} className="slot-rider-image" fallbackClassName="slot-rider-fallback" />
+                              <CardArtwork card={drawn} className="slot-rider-image" fallbackClassName="slot-rider-fallback" eager />
                             </span>
                           )}
                         </span>
@@ -360,12 +408,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
 
           {(phase === "fan" || phase === "ready" || phase === "revealing" || phase === "done") && (
             <div className="fan-zone v25-fan v27-fan" aria-label="Bộ bài đang được trải úp">
-              {visibleFanCards.map(({ card, deckIndex }, visualIndex) => {
-                const progress = visibleFanCards.length <= 1 ? 0 : visualIndex / (visibleFanCards.length - 1);
-                const normal = progress * 2 - 1;
-                const left = 50 + normal * 45;
-                const bottom = 8 + (1 - normal * normal) * 68;
-                const rotate = normal * 33;
+              {fanLayout.map(({ card, deckIndex, visualIndex, left, bottom, rotate }) => {
                 const isPicked = pickedSet.has(deckIndex);
                 const isDragging = drag?.deckIndex === deckIndex && drag.fromSlot === null;
                 return (
@@ -398,7 +441,12 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
         </div>
 
         {drag && typeof document !== "undefined" && createPortal(
-          <div className="drag-card-ghost ethereal-card-back" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
+          <div
+            ref={dragGhostRef}
+            className="drag-card-ghost ethereal-card-back performance-drag-ghost"
+            style={{ "--drag-x": `${drag.startX}px`, "--drag-y": `${drag.startY}px` } as CSSProperties}
+            aria-hidden="true"
+          >
             <span>✦</span>
           </div>,
           document.body

@@ -2550,3 +2550,57 @@ html[data-theme="light"] .account-local-note{color:#817683}
   .fan-card:active:not(:disabled){filter:brightness(1.18)!important}
   .ghost-button:active,.gold-button:active,.mode-switch button:active,.preset-grid button:active{transform:scale(.985)}
 }
+
+/* =========================
+   Tarot-1.9 Performance — frontend-only performance pass
+   ========================= */
+/* Do not force 150 star elements onto their own compositor layers all the time.
+   While the physical deck is moving/being handled, keep the star field visible
+   but temporarily freeze its animations so the GPU can focus on the cards. */
+.star-field .star-item{
+  will-change:auto!important;
+}
+html[data-tarot-deck-busy="true"] .star-field .star-item{
+  animation-play-state:paused!important;
+  will-change:auto!important;
+}
+
+/* The 78-card fan is mostly static once spread. Avoid reserving 78 compositor
+   layers and avoid animating geometry at overlap seams; only visual emphasis
+   changes on hover. */
+.v27-fan .fan-card{
+  will-change:auto!important;
+  contain:layout style;
+  transition:filter .12s ease,opacity .16s ease,box-shadow .12s ease!important;
+}
+.v27-fan .fan-card.picked{
+  visibility:hidden;
+}
+.v27-fan .fan-card.source-dragging{
+  will-change:opacity,filter!important;
+}
+
+/* Dragging now moves one portal ghost with transform on requestAnimationFrame
+   instead of causing the whole 78-card React tree to render on pointermove. */
+.drag-card-ghost.performance-drag-ghost{
+  left:0!important;
+  top:0!important;
+  transform:translate3d(var(--drag-x),var(--drag-y),0) translate(-50%,-50%) rotate(2deg) scale(1.04)!important;
+  will-change:transform;
+}
+
+/* During intensive deck interaction, remove the costly blur from the single fan
+   floor shadow. Geometry and overall visual structure stay unchanged. */
+html[data-tarot-deck-busy="true"] .fan-shadow{
+  filter:none!important;
+  opacity:.55;
+}
+
+/* Mobile sticky controls no longer need a live backdrop blur while the deck is
+   actively animating; use the already-near-opaque background instead. */
+@media(max-width:760px){
+  html[data-tarot-deck-busy="true"] .v27-deck-actions{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+}
