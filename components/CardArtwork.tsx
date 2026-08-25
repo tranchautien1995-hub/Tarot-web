@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import type { TarotCard } from "@/lib/types";
 import { getCardImageCandidates } from "@/lib/card-images";
 
@@ -12,7 +12,7 @@ type Props = {
   eager?: boolean;
 };
 
-export default function CardArtwork({ card, alt, className = "", fallbackClassName = "", eager = false }: Props) {
+function CardArtwork({ card, alt, className = "", fallbackClassName = "", eager = false }: Props) {
   const candidates = useMemo(() => getCardImageCandidates(card.id), [card.id]);
   const [index, setIndex] = useState(0);
 
@@ -42,3 +42,5 @@ export default function CardArtwork({ card, alt, className = "", fallbackClassNa
     />
   );
 }
+
+export default memo(CardArtwork);

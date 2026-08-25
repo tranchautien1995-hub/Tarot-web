@@ -135,6 +135,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   }
 
   function beginDrag(event: ReactPointerEvent<HTMLElement>, deckIndex: number, fromSlot: number | null = null) {
+    if (event.pointerType === "touch") return;
     if ((phase !== "fan" && phase !== "ready") || drag) return;
     if (fromSlot === null && pickedSet.has(deckIndex)) return;
     event.preventDefault();
@@ -200,6 +201,39 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     hoverSlotRef.current = null;
     setDrag(null);
     setHoverSlot(null);
+  }
+
+  function cancelDrag(event: ReactPointerEvent<HTMLElement>) {
+    if (event.pointerType === "touch") return;
+    if (dragRafRef.current !== null) {
+      window.cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+    hoverSlotRef.current = null;
+    setDrag(null);
+    setHoverSlot(null);
+  }
+
+  function touchPickFromFan(event: ReactPointerEvent<HTMLElement>, deckIndex: number) {
+    if (event.pointerType !== "touch") {
+      endDrag(event);
+      return;
+    }
+    if (phase !== "fan" && phase !== "ready") return;
+    if (pickedSet.has(deckIndex)) return;
+    const empty = firstEmptySlot(slots);
+    if (empty >= 0) placeIntoSlot(deckIndex, empty, null);
+  }
+
+  function touchUseSlot(event: ReactPointerEvent<HTMLElement>, slotIndex: number) {
+    if (event.pointerType !== "touch") {
+      endDrag(event);
+      return;
+    }
+    if (phase === "ready") flipOne(slotIndex);
   }
 
   function placeIntoSlot(deckIndex: number, targetSlot: number, fromSlot: number | null) {
@@ -350,8 +384,8 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                       aria-label={isRevealed ? `Lá ${index + 1} đã lật` : `Kéo hoặc bấm để lật lá ở vị trí ${index + 1}`}
                       onPointerDown={(event) => beginDrag(event, deckIndex, index)}
                       onPointerMove={moveDrag}
-                      onPointerUp={endDrag}
-                      onPointerCancel={endDrag}
+                      onPointerUp={(event) => touchUseSlot(event, index)}
+                      onPointerCancel={cancelDrag}
                     >
                       <span className="slot-flip-inner">
                         <span className="slot-flip-face slot-flip-back ethereal-card-back"><i>✦</i></span>
@@ -418,7 +452,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                     title="Giữ chuột và kéo lá này vào một ô phía trên"
                     key={card.id}
                     disabled={isPicked || phase === "revealing" || phase === "done"}
-                    className={`fan-card ethereal-card-back ${isPicked ? "picked" : ""} ${isDragging ? "source-dragging" : ""}`}
+                    className={`fan-card ${isPicked ? "picked" : ""} ${isDragging ? "source-dragging" : ""}`}
                     style={{
                       "--fan-bottom": `${bottom}px`,
                       left: `${left}%`,
@@ -428,10 +462,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                     } as CSSProperties}
                     onPointerDown={(event) => beginDrag(event, deckIndex)}
                     onPointerMove={moveDrag}
-                    onPointerUp={endDrag}
-                    onPointerCancel={endDrag}
+                    onPointerUp={(event) => touchPickFromFan(event, deckIndex)}
+                    onPointerCancel={cancelDrag}
                   >
-                    <span>✦</span>
+                    <span className="fan-card-visual ethereal-card-back" aria-hidden="true"><i>✦</i></span>
                   </button>
                 );
               })}

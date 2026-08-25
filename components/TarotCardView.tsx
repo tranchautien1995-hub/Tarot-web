@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import CardArtwork from "@/components/CardArtwork";
 import type { DrawnCard } from "@/lib/types";
 
@@ -9,7 +10,7 @@ type Props = {
   index: number;
 };
 
-export default function TarotCardView({ card, revealed, index }: Props) {
+function TarotCardView({ card, revealed, index }: Props) {
   const keywords = card.orientation === "upright" ? card.upright : card.reversed;
   return (
     <div className="card-slot" style={{ animationDelay: `${index * 90}ms` }}>
@@ -39,3 +40,5 @@ export default function TarotCardView({ card, revealed, index }: Props) {
     </div>
   );
 }
+
+export default memo(TarotCardView);

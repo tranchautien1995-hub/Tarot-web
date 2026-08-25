@@ -28,11 +28,11 @@ type HistoryEntry = {
 
 const HISTORY_KEY = "tarot-practice-v2.3-history";
 const HISTORY_LIMIT = 50;
-const THEME_KEY = "tarot-practice-theme";
+const THEME_KEY = "tarot-practice-theme-v2";
 
 type StarKind = "dot" | "sparkle" | "five";
 
-const STAR_FIELD = Array.from({ length: 150 }, (_, index) => {
+const STAR_FIELD = Array.from({ length: 75 }, (_, index) => {
   const kinds: StarKind[] = ["dot", "sparkle", "five", "dot", "sparkle"];
   return {
     kind: kinds[index % kinds.length],
@@ -125,8 +125,9 @@ export default function Home() {
   const [historyReady, setHistoryReady] = useState(false);
   const [drawSession, setDrawSession] = useState(0);
   const [keepInteractiveBoard, setKeepInteractiveBoard] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [theme, setTheme] = useState<ThemeMode>("dark");
   const [themeReady, setThemeReady] = useState(false);
+  const [themeHintVisible, setThemeHintVisible] = useState(true);
   const [flowStep, setFlowStep] = useState<1 | 2>(1);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [sideMenuView, setSideMenuView] = useState<"main" | "history">("main");
@@ -139,14 +140,19 @@ export default function Home() {
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem(THEME_KEY);
-      const initialTheme: ThemeMode = savedTheme === "dark" ? "dark" : "light";
+      const initialTheme: ThemeMode = savedTheme === "light" ? "light" : "dark";
       setTheme(initialTheme);
       document.documentElement.dataset.theme = initialTheme;
     } catch {
-      document.documentElement.dataset.theme = "light";
+      document.documentElement.dataset.theme = "dark";
     } finally {
       setThemeReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setThemeHintVisible(false), 5200);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -534,16 +540,24 @@ export default function Home() {
         <div className="brand">✦ TAROT PRACTICE</div>
         <div className="topbar-right">
           <div className="top-note">RIDER–WAITE · TAROT READING · TÀI KHOẢN NGƯỜI DÙNG</div>
-          <button
-            className="theme-toggle"
-            type="button"
-            onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
-            aria-label={theme === "light" ? "Chuyển sang giao diện tối" : "Chuyển sang giao diện sáng"}
-            title={theme === "light" ? "Chuyển sang Dark mode" : "Chuyển sang Light mode"}
-          >
-            <span className="theme-toggle-icon">{theme === "light" ? "☾" : "☀"}</span>
-            <span>{theme === "light" ? "Dark" : "Light"}</span>
-          </button>
+          <div className="theme-toggle-wrap">
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => {
+                setThemeHintVisible(false);
+                setTheme((current) => current === "light" ? "dark" : "light");
+              }}
+              aria-label={theme === "light" ? "Chuyển sang giao diện tối" : "Chuyển sang giao diện sáng"}
+              title={theme === "light" ? "Chuyển sang Dark mode" : "Chuyển sang Light mode"}
+            >
+              <span className="theme-toggle-icon">{theme === "light" ? "☾" : "☀"}</span>
+              <span>{theme === "light" ? "Dark" : "Light"}</span>
+            </button>
+            {themeHintVisible && theme === "dark" && (
+              <span className="theme-toggle-hint" role="status">Đổi sang giao diện Light</span>
+            )}
+          </div>
         </div>
       </header>
 

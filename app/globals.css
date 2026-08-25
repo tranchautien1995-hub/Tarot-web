@@ -839,7 +839,7 @@ body,main,.panel,.interactive-draw,.history-card,.card-picker-modal,.chat-panel,
    V2.12 — larger cards, external position labels, richer sky, cleaner light deck
    ========================= */
 
-/* 150 mixed stars: dots, sparkles and five-point stars. */
+/* 75 mixed stars: dots, sparkles and five-point stars. */
 .star-field .star-item{
   position:absolute;
   left:var(--star-left);
@@ -2603,4 +2603,295 @@ html[data-tarot-deck-busy="true"] .fan-shadow{
     backdrop-filter:none!important;
     -webkit-backdrop-filter:none!important;
   }
+}
+
+/* =========================
+   Tarot-2.0 — dark-first theme + mobile touch/scroll fixes
+   ========================= */
+.theme-toggle-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.theme-toggle-hint{
+  position:absolute;
+  top:calc(100% + 9px);
+  right:0;
+  z-index:1200;
+  width:max-content;
+  max-width:min(220px,72vw);
+  padding:8px 10px;
+  border:1px solid rgba(213,179,109,.28);
+  border-radius:8px;
+  background:rgba(15,12,20,.96);
+  color:#ead7a4;
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+  font-size:10px;
+  line-height:1.35;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  pointer-events:none;
+  animation:themeHintIn .36s cubic-bezier(.22,.72,.18,1) both;
+}
+.theme-toggle-hint::before{
+  content:"";
+  position:absolute;
+  right:14px;
+  top:-5px;
+  width:9px;
+  height:9px;
+  border-left:1px solid rgba(213,179,109,.28);
+  border-top:1px solid rgba(213,179,109,.28);
+  background:rgba(15,12,20,.96);
+  transform:rotate(45deg);
+}
+.theme-light .theme-toggle-hint{background:rgba(255,252,247,.98);color:#765328;border-color:rgba(139,96,49,.22);box-shadow:0 10px 28px rgba(64,48,67,.12)}
+.theme-light .theme-toggle-hint::before{background:rgba(255,252,247,.98);border-color:rgba(139,96,49,.22)}
+@keyframes themeHintIn{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+@media(max-width:760px){
+  /* Let the browser own native touch scrolling. Touching a card no longer traps
+     the gesture, so 6/10-card rails can swipe horizontally and the page can
+     still scroll vertically when the finger starts over a slot or the deck. */
+  .v25-table,.v26-table,.v27-table{touch-action:auto!important}
+  .v27-slots,.manual-slot-layout{
+    touch-action:pan-x pan-y pinch-zoom!important;
+    overscroll-behavior-x:auto!important;
+  }
+  .slot-flip-card,
+  .v25-fan .fan-card,
+  .v27-fan .fan-card,
+  .draggable-picked{
+    touch-action:pan-x pan-y!important;
+  }
+  .v27-deck-stage,.v27-fan,.fan-zone{
+    touch-action:pan-y!important;
+  }
+  .theme-toggle-hint{right:-2px;font-size:9.5px;padding:7px 9px}
+}
+@media(max-width:760px){
+  /* Once reveal is running/finished, the fan is decorative only. Let touch pass
+     through it completely so vertical page scrolling remains native. */
+  .phase-revealing .v27-fan .fan-card,
+  .phase-done .v27-fan .fan-card{pointer-events:none!important}
+}
+
+/* =========================
+   Tarot-2.1 — desktop fan-card hover lift without moving the hit-box
+   ========================= */
+/*
+   Keep the actual button/hit area fixed so overlapping cards do not flicker.
+   Only a pointer-events:none visual clone rises above the fan on hover.
+*/
+@media (hover:hover) and (pointer:fine){
+  .v27-fan .fan-card:not(:disabled)::after{
+    content:"✦";
+    position:absolute;
+    inset:0;
+    z-index:4;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(231,211,163,.54);
+    border-radius:inherit;
+    background-color:#172019;
+    background-image:
+      url('/cards/ethereal-visions/back.jpg'),
+      radial-gradient(circle at center,rgba(227,203,132,.22) 0 2px,transparent 3px 18px,rgba(227,203,132,.12) 19px 20px,transparent 21px),
+      linear-gradient(135deg,#263328,#121914 58%,#090d0a);
+    background-size:cover,auto,auto;
+    background-position:center;
+    background-repeat:no-repeat;
+    box-shadow:0 20px 38px rgba(0,0,0,.58),inset 0 0 0 4px #151a13,inset 0 0 0 5px rgba(213,179,109,.16),0 0 0 1px rgba(240,216,159,.26);
+    color:#dfc47f;
+    font-size:20px;
+    text-shadow:0 0 12px rgba(213,179,109,.35);
+    opacity:0;
+    transform:translateY(0);
+    transition:transform .18s cubic-bezier(.22,.72,.18,1),opacity .12s ease,filter .12s ease;
+    pointer-events:none;
+  }
+
+  .v27-fan .fan-card:hover:not(:disabled){
+    /* Keep the card in its original fan stacking order. Do NOT raise the
+       button above neighboring cards; the lifted visual must remain woven
+       inside the fan while the stationary button keeps the hit-box stable. */
+    /* Hide only the stationary artwork. The button itself stays in place and
+       continues to own the mouse hit area, preventing overlap-seam flicker. */
+    background:transparent!important;
+    border-color:transparent!important;
+    box-shadow:none!important;
+    color:transparent!important;
+    filter:none!important;
+  }
+  .v27-fan .fan-card:hover:not(:disabled)::before,
+  .v27-fan .fan-card:hover:not(:disabled)>span{
+    opacity:0!important;
+  }
+  .v27-fan .fan-card:hover:not(:disabled)::after{
+    opacity:1;
+    /* Chỉ nhô nhẹ khỏi quạt bài để nhận biết lá đang hover; không bật hẳn
+       lá ra ngoài đường cong chung của bộ bài. Hit-box thật vẫn đứng yên. */
+    transform:translateY(-13px);
+    filter:brightness(1.10);
+  }
+
+  .theme-light .v27-fan .fan-card:not(:disabled)::after{
+    background-color:#f4eee5;
+    background-image:
+      radial-gradient(circle at center,#b3864a 0 2px,transparent 3px 16px,rgba(151,112,64,.20) 17px 18px,transparent 19px),
+      linear-gradient(45deg,transparent 47%,rgba(139,98,151,.12) 48% 52%,transparent 53%),
+      linear-gradient(-45deg,transparent 47%,rgba(180,132,66,.13) 48% 52%,transparent 53%),
+      linear-gradient(145deg,#fffdf8 0%,#f1e9f4 54%,#eadfcf 100%);
+    background-size:auto,24px 24px,24px 24px,cover;
+    background-position:center;
+    border-color:rgba(142,99,48,.58);
+    color:#8b6333;
+    box-shadow:0 20px 36px rgba(83,62,87,.24),inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22),0 0 0 1px rgba(158,111,54,.20);
+    text-shadow:0 0 10px rgba(181,128,59,.20);
+  }
+}
+
+/* =========================
+   Tarot-2.4 Performance 60FPS — compositor-first fan + lighter idle animation
+   Frontend only: no shuffle/draw/orientation/Reader logic changes.
+   ========================= */
+
+/* The fan button is now only a stationary hit-box. The visible card lives in a
+   pointer-events:none child, so hover can lift the artwork without moving the
+   mouse target or creating a second full card clone for every one of 78 cards. */
+.v27-fan{
+  contain:layout paint style;
+  isolation:isolate;
+}
+.v27-fan .fan-card{
+  background:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  filter:none!important;
+  overflow:visible;
+  contain:layout style;
+  transition:opacity .14s ease!important;
+}
+.v27-fan .fan-card::before,
+.v27-fan .fan-card::after{
+  content:none!important;
+  display:none!important;
+}
+.v27-fan .fan-card-visual{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1;
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(231,211,163,.54);
+  border-radius:5px;
+  /* Dense fans do not need 78 expensive outer shadows. Keep the inset frame;
+     the single .fan-shadow supplies the shared depth underneath the deck. */
+  box-shadow:inset 0 0 0 4px #151a13,inset 0 0 0 5px rgba(213,179,109,.16);
+  transform:translate3d(0,0,0);
+  transform-origin:50% 112%;
+  transition:transform .16s cubic-bezier(.22,.72,.18,1),filter .12s ease,box-shadow .12s ease;
+  pointer-events:none;
+  will-change:auto;
+}
+.v27-fan .fan-card-visual::before{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border:1px solid rgba(213,179,109,.26);
+  background:
+    radial-gradient(circle at center,transparent 0 10px,rgba(213,179,109,.06) 11px 12px,transparent 13px),
+    linear-gradient(45deg,transparent 48%,rgba(213,179,109,.11) 49% 51%,transparent 52%),
+    linear-gradient(-45deg,transparent 48%,rgba(213,179,109,.11) 49% 51%,transparent 52%);
+  pointer-events:none;
+}
+.v27-fan .fan-card-visual>i{
+  position:relative;
+  z-index:2;
+  color:#dfc47f;
+  font-style:normal;
+  font-size:20px;
+  line-height:1;
+  text-shadow:0 0 10px rgba(213,179,109,.32);
+}
+.v27-fan .fan-card:hover:not(:disabled){
+  bottom:var(--fan-bottom)!important;
+  filter:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  border-color:transparent!important;
+  color:inherit!important;
+}
+.v27-fan .fan-card:hover:not(:disabled) .fan-card-visual{
+  transform:translate3d(0,-13px,0);
+  filter:brightness(1.08);
+  box-shadow:0 11px 22px rgba(0,0,0,.34),inset 0 0 0 4px #151a13,inset 0 0 0 5px rgba(213,179,109,.16),0 0 0 1px rgba(240,216,159,.20);
+  will-change:transform;
+}
+.v27-fan .fan-card.source-dragging .fan-card-visual{
+  opacity:.18;
+  filter:brightness(.72);
+}
+.v27-fan .fan-card.picked .fan-card-visual{
+  visibility:hidden;
+}
+
+/* Light-theme equivalent of the single visible child. */
+.theme-light .v27-fan .fan-card-visual{
+  border-color:rgba(142,99,48,.58);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22);
+}
+.theme-light .v27-fan .fan-card:hover:not(:disabled) .fan-card-visual{
+  box-shadow:0 11px 22px rgba(83,62,87,.15),inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22),0 0 0 1px rgba(158,111,54,.16);
+}
+.theme-light .v27-fan .fan-card-visual>i{color:#8b6333;text-shadow:0 0 8px rgba(181,128,59,.16)}
+
+/* Replace two animations per star (travel + brightness filter) with one
+   compositor-friendly transform/opacity animation on roughly one third of the
+   75 visible stars. The remaining stars stay visible and static. */
+.star-field .star-item{
+  animation:none!important;
+  will-change:auto!important;
+  transform:translate3d(0,0,0);
+}
+.star-field .star-item:nth-child(3n+1){
+  animation:v24StarMotion var(--star-duration) ease-in-out var(--star-delay) infinite alternate!important;
+  will-change:transform,opacity!important;
+}
+@keyframes v24StarMotion{
+  0%{transform:translate3d(0,4px,0) scale(.92);opacity:.38}
+  50%{transform:translate3d(calc(var(--star-drift-x) * .45),calc(var(--star-drift-y) * .45),0) scale(1.04);opacity:.92}
+  100%{transform:translate3d(var(--star-drift-x),var(--star-drift-y),0) scale(1.12);opacity:.52}
+}
+html[data-tarot-deck-busy="true"] .star-field .star-item:nth-child(3n+1){
+  animation-play-state:paused!important;
+}
+
+/* Mobile GPUs get an even lighter idle star workload while keeping all 75
+   stars visible: only about one in four moves. */
+@media(max-width:760px){
+  .star-field .star-item:nth-child(3n+1){animation:none!important;will-change:auto!important}
+  .star-field .star-item:nth-child(4n+1){
+    animation:v24StarMotion var(--star-duration) ease-in-out var(--star-delay) infinite alternate!important;
+    will-change:transform,opacity!important;
+  }
+  html[data-tarot-deck-busy="true"] .star-field .star-item:nth-child(4n+1){animation-play-state:paused!important}
+  .v27-fan .fan-card-visual{transition:filter .1s ease!important}
+}
+
+/* Scope/layout containment keeps fan painting from invalidating the rest of the
+   page while shuffling, hovering or dragging. */
+.v27-deck-stage{contain:layout style paint}
+.performance-drag-ghost{contain:layout style paint}
+
+@media(prefers-reduced-motion:reduce){
+  .star-field .star-item{animation:none!important}
+  .v27-fan .fan-card-visual{transition:none!important}
+}
+/* Override the legacy light card-back outer shadow specifically for the 78-card fan. */
+.theme-light .v27-fan .fan-card-visual{
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22)!important;
+}
+.theme-light .v27-fan .fan-card:hover:not(:disabled) .fan-card-visual{
+  box-shadow:0 11px 22px rgba(83,62,87,.15),inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22),0 0 0 1px rgba(158,111,54,.16)!important;
 }
