@@ -29,7 +29,6 @@ type HistoryEntry = {
 const HISTORY_KEY = "tarot-practice-v2.3-history";
 const HISTORY_LIMIT = 50;
 const THEME_KEY = "tarot-practice-theme-v2";
-const SHOPEE_AFFILIATE_URL = (process.env.NEXT_PUBLIC_SHOPEE_AFFILIATE_URL || "").trim();
 
 type StarKind = "dot" | "sparkle" | "five";
 
@@ -132,7 +131,6 @@ export default function Home() {
   const [flowStep, setFlowStep] = useState<1 | 2>(1);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [sideMenuView, setSideMenuView] = useState<"main" | "history">("main");
-  const [sponsorUnlocked, setSponsorUnlocked] = useState(false);
 
   const selectedCards = useMemo(() => cards.filter(Boolean) as DrawnCard[], [cards]);
   const selectedIds = useMemo(() => selectedCards.map((card) => card.id), [selectedCards]);
@@ -205,7 +203,6 @@ export default function Home() {
     setChat([]);
     setError("");
     setSaved(false);
-    setSponsorUnlocked(false);
   }
 
   function applyPositions(nextCards: Array<DrawnCard | undefined>, nextPreset: SpreadPreset, nextCount: number) {
@@ -330,7 +327,6 @@ export default function Home() {
     setAiReading(entry.reading || "");
     setChat(entry.chat || []);
     setError("");
-    setSponsorUnlocked(Boolean(entry.reading));
     setPickerIndex(null);
     setKeepInteractiveBoard(false);
     setDrawSession((value) => value + 1);
@@ -364,13 +360,12 @@ export default function Home() {
       setAiModalOpen(true);
       return;
     }
-    if (!sponsorUnlocked) return;
     setAiModalOpen(true);
     if (!loading) void askAI();
   }
 
   async function askAI() {
-    if (!complete || loading || (!aiReading && !sponsorUnlocked)) return;
+    if (!complete || loading) return;
     setAiModalOpen(true);
     setLoading(true);
     setError("");
@@ -432,40 +427,6 @@ export default function Home() {
     } finally {
       setChatLoading(false);
     }
-  }
-
-  function sponsorGate() {
-    const sponsorReady = complete && Boolean(SHOPEE_AFFILIATE_URL);
-    return (
-      <div className={`sponsor-gate ${sponsorUnlocked ? "is-unlocked" : ""}`}>
-        {sponsorUnlocked ? (
-          <button className="ghost-button sponsor-button sponsor-button-unlocked" type="button" disabled>
-            ✓ Đã xem quảng cáo
-          </button>
-        ) : sponsorReady ? (
-          <a
-            className="ghost-button sponsor-button"
-            href={SHOPEE_AFFILIATE_URL}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            onClick={() => setSponsorUnlocked(true)}
-          >
-            ◇ Xem quảng cáo để mở khóa
-          </a>
-        ) : (
-          <button className="ghost-button sponsor-button" type="button" disabled>
-            ◇ Xem quảng cáo để mở khóa
-          </button>
-        )}
-        <small className="sponsor-note">
-          {!SHOPEE_AFFILIATE_URL
-            ? "Chưa cấu hình liên kết Shopee."
-            : sponsorUnlocked
-              ? "Đã mở khóa Đọc bài cho trải bài này."
-              : "Liên kết Shopee tài trợ · có thể là liên kết tiếp thị liên kết."}
-        </small>
-      </div>
-    );
   }
 
   useEffect(() => {
@@ -721,9 +682,8 @@ export default function Home() {
                   <button className="ghost-button reading-copy-button" disabled={!complete} onClick={copyForChatGPT}>
                     {copied ? "✓ Đã sao chép" : "Sao chép trải bài"}
                   </button>
-                  {sponsorGate()}
-                  <button className="gold-button reading-ai-button" disabled={!complete || loading || (!aiReading && !sponsorUnlocked)} onClick={openAIReader}>
-                    {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : sponsorUnlocked ? "✦ Đọc bài" : "✦ Đọc bài · đang khóa"}
+                  <button className="gold-button reading-ai-button" disabled={!complete || loading} onClick={openAIReader}>
+                    {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : "✦ Đọc bài"}
                   </button>
                 </div>
               </section>
@@ -749,9 +709,8 @@ export default function Home() {
                 <button className="ghost-button reading-copy-button" disabled={!complete} onClick={copyForChatGPT}>
                   {copied ? "✓ Đã sao chép" : "Sao chép trải bài"}
                 </button>
-                {sponsorGate()}
-                <button className="gold-button reading-ai-button" disabled={!complete || loading || (!aiReading && !sponsorUnlocked)} onClick={openAIReader}>
-                  {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : sponsorUnlocked ? "✦ Đọc bài" : "✦ Đọc bài · đang khóa"}
+                <button className="gold-button reading-ai-button" disabled={!complete || loading} onClick={openAIReader}>
+                  {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : "✦ Đọc bài"}
                 </button>
               </div>
             </section>
