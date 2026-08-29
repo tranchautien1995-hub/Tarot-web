@@ -455,7 +455,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                     aria-label={`Kéo lá ${visualIndex + 1} vào vị trí trải bài`}
                     title="Giữ chuột và kéo lá này vào một ô phía trên"
                     key={card.id}
-                    disabled={isPicked || phase === "revealing" || phase === "done"}
+                    disabled={isPicked}
                     className={`fan-card ${isPicked ? "picked" : ""} ${isDragging ? "source-dragging" : ""}`}
                     style={{
                       "--fan-bottom": `${bottom}px`,
