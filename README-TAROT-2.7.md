@@ -17,3 +17,7 @@ Bản này tập trung giảm tải GPU/CPU khi web đứng yên hoặc khi ngư
 - Reader prompt.
 - `/api/read`, `/api/chat`, `lib/xah.ts`.
 - Sponsor Gate Shopee.
+
+## Tarot-2.7.1 build fix
+- Fixed TypeScript narrowing error in components/InteractiveDeck.tsx: inside the `phase === "fan"` branch, the fan-card `disabled` state now only checks `isPicked`.
+- No changes to shuffle/randomness/orientation/Reader/API/Sponsor logic.
