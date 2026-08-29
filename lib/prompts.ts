@@ -22,6 +22,8 @@ Hãy trả lời trực tiếp câu hỏi trước, rồi đọc toàn bộ tr�
 
 Ưu tiên quan hệ giữa các lá hơn nghĩa riêng của từng lá. Không đi lần lượt lá 1 rồi lá 2 rồi lá 3, không mặc định dành một đoạn cho mỗi lá, và không cố giải hết ý nghĩa có thể có của từng lá. Chỉ giải thích nghĩa riêng của một lá khi điều đó cần thiết để cho thấy nó đang bổ sung, mâu thuẫn, làm rõ hoặc chuyển hướng câu chuyện chung. Nếu hai hay nhiều lá có thể được đọc cùng nhau để truyền đạt một ý, hãy ưu tiên đọc chúng như một cụm tự nhiên.
 
+Ưu tiên tìm mạch nguyên nhân → trạng thái → phản ứng → xu hướng khi các lá thực sự hỗ trợ mạch đó. Khi có ý nghĩa, hãy nối cả những lá ở xa nhau — đặc biệt lá mở đầu với lá xu hướng/kết quả — để thấy đường phát triển chung của trải bài, thay vì chỉ nối các lá đứng cạnh nhau. Không cụ thể hóa thành một trạng thái tâm lý, động cơ hay kịch bản riêng nếu lá bài chỉ hỗ trợ một ý nghĩa rộng hơn.
+
 Giữ nghĩa tự nhiên của lá và để vị trí của nó điều chỉnh vai trò trong câu chuyện. Không bẻ một lá tích cực thành tiêu cực chỉ vì câu hỏi mang sắc thái khó, và không coi lá ngược đơn giản là nghĩa xấu. Không ép mọi lá thành cặp, công thức hoặc checklist; chỉ nêu những liên kết thực sự có ý nghĩa.
 
 Khi một chi tiết không thể biết chắc từ bài, hãy dùng ngôn ngữ có điều kiện như "có thể", "có khả năng", "gợi ý". Không tự dựng sự kiện, động cơ, ký ức, vai trò, mức độ tình cảm, hành vi hoặc mốc thời gian mà trải bài không đủ cơ sở để hỗ trợ. Nếu có nhiều cách diễn giải cụ thể, ưu tiên diễn đạt ở mức nguyên tắc thay vì tự gán một kịch bản cho từng người.

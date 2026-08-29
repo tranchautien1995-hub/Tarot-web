@@ -2895,3 +2895,128 @@ html[data-tarot-deck-busy="true"] .star-field .star-item:nth-child(3n+1){
 .theme-light .v27-fan .fan-card:hover:not(:disabled) .fan-card-visual{
   box-shadow:0 11px 22px rgba(83,62,87,.15),inset 0 0 0 4px rgba(255,255,255,.72),inset 0 0 0 5px rgba(157,112,56,.22),0 0 0 1px rgba(158,111,54,.16)!important;
 }
+
+/* =========================
+   Tarot-2.5 — Shopee sponsor gate before a new Reader call
+   ========================= */
+.sponsor-gate{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.sponsor-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.sponsor-button:hover{
+  border-color:var(--gold);
+  color:var(--gold2);
+}
+.sponsor-button-unlocked{
+  opacity:.72!important;
+}
+.sponsor-note{
+  display:block;
+  max-width:210px;
+  color:#817886;
+  font-size:9.5px;
+  line-height:1.35;
+}
+.sponsor-gate.is-unlocked .sponsor-note{
+  color:#9b927f;
+}
+.theme-light .sponsor-note{
+  color:#7d6d5f;
+}
+
+@media(max-width:1080px){
+  .sponsor-gate{
+    flex:1 1 100%;
+  }
+}
+
+@media(max-width:760px){
+  .sponsor-gate{
+    grid-column:1 / -1;
+    width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:5px;
+  }
+  .sponsor-button{
+    width:100%;
+    min-height:44px;
+  }
+  .sponsor-note{
+    max-width:none;
+    text-align:center;
+    padding:0 4px;
+    font-size:9px;
+  }
+}
+
+/* =========================
+   Tarot-2.7 Low GPU — idle/background resource release
+   Frontend-only: shuffle/draw/orientation/Reader data are unchanged.
+   ========================= */
+
+/* Static stars keep the same 75-star composition without forcing the GPU to
+   composite new frames forever while the user is reading or using another app. */
+.star-field .star-item,
+.star-field .star-item:nth-child(3n+1),
+.star-field .star-item:nth-child(4n+1){
+  animation:none!important;
+  transform:none!important;
+  will-change:auto!important;
+}
+
+/* Do not promote every card in the 78-card fan to a GPU layer. The fan geometry
+   is static; only the one card under the pointer moves. */
+.v27-fan .fan-card-visual{
+  transform:none!important;
+  will-change:auto!important;
+  transition:transform .15s cubic-bezier(.22,.72,.18,1),box-shadow .12s ease!important;
+  filter:none!important;
+}
+.v27-fan .fan-card:hover:not(:disabled) .fan-card-visual{
+  transform:translateY(-13px)!important;
+  filter:none!important;
+  will-change:transform;
+}
+.v27-fan .fan-card.source-dragging .fan-card-visual{
+  filter:none!important;
+  opacity:.18;
+}
+
+/* The fan only exists during card selection in 2.7. Once all slots are filled,
+   its stage is unmounted rather than leaving 78 transformed elements behind. */
+.low-gpu-deck-stage{
+  contain:layout paint style;
+}
+
+/* If the Tarot tab/window is not the active app, explicitly suspend the few
+   remaining CSS animations (shuffle/reveal/loading). This also helps when the
+   user watches YouTube or switches to another desktop application. */
+html[data-tarot-page-active="false"] .riffle-card,
+html[data-tarot-page-active="false"] .slot-flip-card,
+html[data-tarot-page-active="false"] .fan-zone,
+html[data-tarot-page-active="false"] .ai-loading-orbit,
+html[data-tarot-page-active="false"] .auth-orb,
+html[data-tarot-page-active="false"] .flow-stage,
+html[data-tarot-page-active="false"] .theme-toggle-hint{
+  animation-play-state:paused!important;
+}
+
+/* Avoid keeping expensive blur surfaces live while the page is in the
+   background. They return automatically as soon as the Tarot window is active. */
+html[data-tarot-page-active="false"] .v27-deck-actions,
+html[data-tarot-page-active="false"] .side-menu-layer,
+html[data-tarot-page-active="false"] .account-panel-backdrop{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}

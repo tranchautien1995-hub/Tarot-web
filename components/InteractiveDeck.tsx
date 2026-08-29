@@ -81,10 +81,13 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const busy = phase === "shuffling" || phase === "fan" || phase === "ready" || phase === "revealing";
+    // Only mark the deck busy while cards are actually moving/being selected.
+    // Once all slots are filled, the 78-card fan is removed from the DOM, so the
+    // browser can release those paint/compositor resources immediately.
+    const busy = phase === "shuffling" || phase === "fan" || phase === "revealing" || Boolean(drag);
     if (busy) document.documentElement.dataset.tarotDeckBusy = "true";
     else delete document.documentElement.dataset.tarotDeckBusy;
-  }, [phase]);
+  }, [phase, drag]);
 
   useEffect(() => {
     if (!preparedCards || typeof window === "undefined") return;
@@ -409,7 +412,8 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
           })}
         </div>
 
-        <div className="v27-deck-stage">
+        {(phase === "idle" || phase === "shuffling" || phase === "fan") && (
+        <div className="v27-deck-stage low-gpu-deck-stage">
           {(phase === "idle" || phase === "shuffling") && (
             <div className={`riffle-zone v27-riffle-zone ${phase === "shuffling" ? "is-shuffling" : ""} step-${shuffleStep}`} key={shuffleRound}>
               {Array.from({ length: 24 }, (_, index) => {
@@ -440,7 +444,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
             </div>
           )}
 
-          {(phase === "fan" || phase === "ready" || phase === "revealing" || phase === "done") && (
+          {phase === "fan" && (
             <div className="fan-zone v25-fan v27-fan" aria-label="Bộ bài đang được trải úp">
               {fanLayout.map(({ card, deckIndex, visualIndex, left, bottom, rotate }) => {
                 const isPicked = pickedSet.has(deckIndex);
@@ -473,6 +477,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
             </div>
           )}
         </div>
+        )}
 
         {drag && typeof document !== "undefined" && createPortal(
           <div
