@@ -24,7 +24,7 @@ function authErrorMessage(err: unknown): string {
     case "email_not_confirmed":
       return "Tài khoản chưa xác nhận email. Hãy mở thư xác nhận rồi đăng nhập lại.";
     case "provider_disabled":
-      return "Phương thức đăng nhập này chưa được bật trong Supabase Auth.";
+      return "Đăng nhập Google chưa được bật trong Supabase Auth.";
     default:
       return err instanceof Error ? err.message : "Không thể xác thực tài khoản.";
   }
@@ -80,7 +80,7 @@ export default function AuthGate({ children }: Props) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     if (!params.has("error")) return;
-    const description = params.get("error_description") ?? "Đăng nhập không thành công. Hãy thử lại.";
+    const description = params.get("error_description") ?? "Đăng nhập Google không thành công. Hãy thử lại.";
     const oauthError = new Error(description) as Error & { code?: string };
     oauthError.code = params.get("error_code") ?? undefined;
     setError(authErrorMessage(oauthError));
@@ -152,24 +152,6 @@ export default function AuthGate({ children }: Props) {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin }
-      });
-      if (oauthError) throw oauthError;
-    } catch (err) {
-      setError(authErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function signInWithFacebook() {
-    if (!supabase) return;
-    setError("");
-    setNotice("");
-    setSubmitting(true);
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "facebook",
         options: { redirectTo: window.location.origin }
       });
       if (oauthError) throw oauthError;
@@ -269,10 +251,6 @@ export default function AuthGate({ children }: Props) {
           <button className="auth-google" type="button" disabled={submitting} onClick={signInWithGoogle}>
             <svg aria-hidden="true" viewBox="0 0 48 48" width="19" height="19"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94a11.05 11.05 0 0 1-4.81 7.26l7.69 5.96c4.49-4.14 7.16-10.25 7.16-17.69Z"/><path fill="#FBBC05" d="M10.53 28.59A14.37 14.37 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.89-5.76l-7.69-5.96c-2.13 1.43-4.86 2.22-8.2 2.22-6.26 0-11.57-4.22-13.47-9.91l-7.97 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
             Tiếp tục với Google
-          </button>
-          <button className="auth-facebook" type="button" disabled={submitting} onClick={signInWithFacebook}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.23.19 2.23.19v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg>
-            Tiếp tục với Facebook
           </button>
         </div>
       </div>
