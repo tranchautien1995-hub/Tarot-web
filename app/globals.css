@@ -3651,3 +3651,23 @@ html[data-theme="light"] .card-flight.ethereal-card-back,
   .topbar .brand{font-size:11px;letter-spacing:.11em;white-space:nowrap}
   .side-menu-drawer{width:min(305px,90vw)}
 }
+
+/* 2.7.42: the closed-menu control sits below the header at the marked left slot. */
+main>.side-menu-toggle{
+  position:fixed!important;
+  left:calc((100vw - min(1180px, calc(100% - 36px)))/2 + 14px)!important;
+  top:92px!important;
+  z-index:12000;width:40px;height:40px;
+  border:1px solid rgba(213,179,109,.25);border-radius:9px;background:rgba(16,13,21,.88);
+  color:var(--gold2);display:grid;place-items:center;padding:0;box-shadow:0 10px 28px rgba(0,0,0,.2);
+  backdrop-filter:blur(12px);transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+main>.side-menu-toggle:hover{transform:none;border-color:rgba(213,179,109,.62);background:rgba(27,21,33,.96);color:#f0d89f}
+main>.side-menu-toggle svg{display:block}
+.theme-light>main>.side-menu-toggle,
+main.theme-light>.side-menu-toggle{background:rgba(255,253,248,.94);border-color:rgba(126,92,50,.22);color:#815c2f;box-shadow:0 9px 24px rgba(74,56,48,.1)}
+.theme-light>main>.side-menu-toggle:hover,
+main.theme-light>.side-menu-toggle:hover{background:#fff;border-color:rgba(126,92,50,.5);color:#68451f}
+@media(max-width:700px){
+  main>.side-menu-toggle{left:32px!important;top:82px!important;width:40px;height:40px}
+}

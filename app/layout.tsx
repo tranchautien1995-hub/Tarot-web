@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TTarot",
+  title: "TTarot Home",
   description: "Website Tarot cá nhân với Rider–Waite, Light/Dark, kéo-thả, lật bài và GPT hỗ trợ đọc trải bài."
 };
 

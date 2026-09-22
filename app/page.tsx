@@ -578,6 +578,22 @@ export default function Home() {
         ))}
       </div>
 
+      {!sideMenuOpen && (
+        <button
+          className="side-menu-toggle"
+          type="button"
+          onClick={openSideMenu}
+          aria-label="Mở menu"
+          aria-expanded={false}
+          title="Mở menu"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <rect x="3.5" y="4" width="17" height="16" rx="3" />
+            <path d="M9 4v16" />
+          </svg>
+        </button>
+      )}
+
       {sideMenuOpen && (
         <div className="side-menu-layer" role="presentation" onMouseDown={() => setSideMenuOpen(false)}>
           <aside
@@ -590,7 +606,7 @@ export default function Home() {
             <div className="side-menu-head">
               <div className="side-menu-brand">
                 <span aria-hidden="true">✦</span>
-                <strong>TTarot</strong>
+                <strong>TTarot Home</strong>
               </div>
               <button className="side-menu-close" type="button" onClick={() => setSideMenuOpen(false)} aria-label="Thu gọn menu" title="Thu gọn menu">
                 <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
@@ -666,19 +682,6 @@ export default function Home() {
       <header className="topbar shell">
         <div className="topbar-left">
           <div className="brand">✦ TAROT PRACTICE</div>
-          <button
-            className="side-menu-toggle"
-            type="button"
-            onClick={openSideMenu}
-            aria-label="Mở menu"
-            aria-expanded={sideMenuOpen}
-            title="Mở menu"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <rect x="3.5" y="4" width="17" height="16" rx="3" />
-              <path d="M9 4v16" />
-            </svg>
-          </button>
         </div>
         <div className="topbar-right">
           <div className="top-note">RIDER–WAITE · TAROT READING · TÀI KHOẢN NGƯỜI DÙNG</div>

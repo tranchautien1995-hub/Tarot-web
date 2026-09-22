@@ -1,6 +1,6 @@
 {
-  "name": "ttarot-v2-41-chatgpt-sidebar",
-  "version": "2.7.41",
+  "name": "ttarot-v2-42-home-menu-position",
+  "version": "2.7.42",
   "private": true,
   "scripts": {
     "dev": "next dev",
