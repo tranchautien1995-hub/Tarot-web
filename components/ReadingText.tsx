@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { stripDisplayedCardOrientationDash } from "@/lib/reading-display";
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -7,11 +8,15 @@ function escapeRegExp(value: string) {
 function renderInline(text: string, cardNames: string[]): ReactNode[] {
   // Some model responses may escape Markdown as \*\*Card Name\*\*.
   // Normalize it so the UI never shows the literal asterisks.
-  const normalized = text.replace(/\\\*\\\*/g, "**");
+  const normalized = stripDisplayedCardOrientationDash(
+    text.replace(/\\\*\\\*/g, "**"),
+    cardNames
+  );
   const uniqueCardNames = Array.from(new Set(cardNames.filter(Boolean))).sort(
     (a, b) => b.length - a.length
   );
   const cardPattern = uniqueCardNames.map(escapeRegExp).join("|");
+
   const tokenPattern = cardPattern
     ? new RegExp(`(\\*\\*[^*]+\\*\\*|${cardPattern})`, "g")
     : /(\*\*[^*]+\*\*)/g;
@@ -43,10 +48,12 @@ function renderInline(text: string, cardNames: string[]): ReactNode[] {
 
 export default function ReadingText({
   text,
-  cardNames = []
+  cardNames = [],
+  streaming = false
 }: {
   text: string;
   cardNames?: string[];
+  streaming?: boolean;
 }) {
   const lines = text.split("\n");
   return (
@@ -59,6 +66,7 @@ export default function ReadingText({
         if (!line.trim()) return <div className="spacer" key={i} />;
         return <p key={i}>{renderInline(line, cardNames)}</p>;
       })}
+      {streaming && <span className="reading-stream-cursor" aria-label="Đang tiếp tục đọc" />}
     </div>
   );
 }

@@ -38,6 +38,7 @@ function firstEmptySlot(slots: Array<number | undefined>) {
   return slots.findIndex((value) => value === undefined);
 }
 
+
 export default function InteractiveDeck({ count, positions, spreadLabel, onComplete, actions }: Props) {
   const [deck, setDeck] = useState<TarotCard[]>(() => shuffleDeck());
   const [phase, setPhase] = useState<Phase>("idle");
@@ -54,6 +55,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   const dragPointerRef = useRef({ x: 0, y: 0 });
   const dragRafRef = useRef<number | null>(null);
   const hoverSlotRef = useRef<number | null>(null);
+  const fanZoneRef = useRef<HTMLDivElement | null>(null);
+  const fanGuideRef = useRef<HTMLDivElement | null>(null);
+  const fanCardRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
+  const hoveredFanDeckIndexRef = useRef<number | null>(null);
 
   const pickedSet = useMemo(() => new Set(slots.filter((value): value is number => value !== undefined)), [slots]);
   // Keep all 78 Tarot cards in the spread. They overlap densely so every card remains
@@ -98,6 +103,101 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     });
   }, [preparedCards]);
 
+  useEffect(() => {
+    const clearHover = () => {
+      const index = hoveredFanDeckIndexRef.current;
+      if (index !== null) fanCardRefs.current.get(index)?.classList.remove("fan-card-targeted", "fan-card-edge-targeted");
+      hoveredFanDeckIndexRef.current = null;
+      fanGuideRef.current?.classList.remove("is-visible", "is-edge-target", "edge-left");
+    };
+    window.addEventListener("scroll", clearHover, true);
+    window.addEventListener("resize", clearHover);
+    return () => {
+      window.removeEventListener("scroll", clearHover, true);
+      window.removeEventListener("resize", clearHover);
+    };
+  }, []);
+
+  // The pointer layer can stop receiving leave events when the cursor crosses
+  // a gap or another element. Clear the lifted card wherever the pointer goes.
+  useEffect(() => {
+    if (phase !== "fan" || drag) return;
+
+    const clearHover = () => {
+      const index = hoveredFanDeckIndexRef.current;
+      if (index === null) return;
+      fanCardRefs.current.get(index)?.classList.remove("fan-card-targeted", "fan-card-edge-targeted");
+      hoveredFanDeckIndexRef.current = null;
+      fanGuideRef.current?.classList.remove("is-visible", "is-edge-target", "edge-left");
+    };
+    const clearOutsideCard = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest(".fan-pointer-card")) return;
+      clearHover();
+    };
+
+    document.addEventListener("pointermove", clearOutsideCard);
+    window.addEventListener("blur", clearHover);
+    return () => {
+      document.removeEventListener("pointermove", clearOutsideCard);
+      window.removeEventListener("blur", clearHover);
+    };
+  }, [phase, drag]);
+
+  function setFanTarget(deckIndex: number | null) {
+    const previous = hoveredFanDeckIndexRef.current;
+    if (previous === deckIndex) return;
+
+    if (previous !== null) {
+      const previousNode = fanCardRefs.current.get(previous);
+      previousNode?.classList.remove("fan-card-targeted", "fan-card-edge-targeted");
+    }
+
+    const guide = fanGuideRef.current;
+    guide?.classList.remove("is-visible", "is-edge-target", "edge-left");
+
+    if (deckIndex !== null) {
+      const item = fanLayout.find((entry) => entry.deckIndex === deckIndex);
+      const node = fanCardRefs.current.get(deckIndex);
+
+      if (item && node) {
+        const leftGhostCount = Math.min(5, fanLayout.length);
+        const isLeftGhostCard = item.visualIndex < leftGhostCount;
+
+        // Every targeted real card only moves upward. Its original stacking order
+        // is preserved so it never pops out as a separate full card.
+        node.classList.add("fan-card-targeted");
+        if (isLeftGhostCard) node.classList.add("fan-card-edge-targeted");
+
+        // The outline-only helper exists ONLY for the five hardest-to-pick cards
+        // at the far left. There is intentionally no right-edge ghost anymore.
+        if (guide && isLeftGhostCard) {
+          const zone = fanZoneRef.current;
+          if (!zone) return;
+          const rect = zone.getBoundingClientRect();
+          guide.style.left = `${rect.left + rect.width * item.left / 100}px`;
+          guide.style.top = `${rect.bottom - parseFloat(window.getComputedStyle(node).bottom) - node.offsetHeight}px`;
+          guide.style.setProperty("--ghost-width", `${node.offsetWidth}px`);
+          guide.style.setProperty("--ghost-height", `${node.offsetHeight}px`);
+          guide.style.transform = `translateX(-50%) rotate(${item.rotate}deg) translateY(-36px)`;
+          guide.classList.add("is-visible", "is-edge-target", "edge-left");
+        }
+      }
+    }
+
+    hoveredFanDeckIndexRef.current = deckIndex;
+  }
+
+  function handleFanPointerDown(event: ReactPointerEvent<HTMLElement>, deckIndex: number) {
+    if (event.pointerType === "touch") return;
+    setFanTarget(deckIndex);
+    beginDrag(event, deckIndex);
+  }
+
+  function handleFanPointerLeave() {
+    if (drag) return;
+    setFanTarget(null);
+  }
+
   function schedule(callback: () => void, delay: number) {
     const timer = window.setTimeout(callback, delay);
     timers.current.push(timer);
@@ -125,6 +225,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     setRevealed(Array(count).fill(false));
     setDrag(null);
     setHoverSlot(null);
+    setFanTarget(null);
     setShuffleStep("cut");
     setShuffleRound((value) => value + 1);
     setPhase("shuffling");
@@ -138,7 +239,6 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   }
 
   function beginDrag(event: ReactPointerEvent<HTMLElement>, deckIndex: number, fromSlot: number | null = null) {
-    if (event.pointerType === "touch") return;
     if ((phase !== "fan" && phase !== "ready") || drag) return;
     if (fromSlot === null && pickedSet.has(deckIndex)) return;
     event.preventDefault();
@@ -204,10 +304,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     hoverSlotRef.current = null;
     setDrag(null);
     setHoverSlot(null);
+    setFanTarget(null);
   }
 
   function cancelDrag(event: ReactPointerEvent<HTMLElement>) {
-    if (event.pointerType === "touch") return;
     if (dragRafRef.current !== null) {
       window.cancelAnimationFrame(dragRafRef.current);
       dragRafRef.current = null;
@@ -218,9 +318,14 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     hoverSlotRef.current = null;
     setDrag(null);
     setHoverSlot(null);
+    setFanTarget(null);
   }
 
   function touchPickFromFan(event: ReactPointerEvent<HTMLElement>, deckIndex: number) {
+    if (drag) {
+      endDrag(event);
+      return;
+    }
     if (event.pointerType !== "touch") {
       endDrag(event);
       return;
@@ -232,6 +337,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   }
 
   function touchUseSlot(event: ReactPointerEvent<HTMLElement>, slotIndex: number) {
+    if (drag) {
+      endDrag(event);
+      return;
+    }
     if (event.pointerType !== "touch") {
       endDrag(event);
       return;
@@ -329,6 +438,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     setRevealed(Array(count).fill(false));
     setDrag(null);
     setHoverSlot(null);
+    setFanTarget(null);
     setPhase("idle");
   }
 
@@ -445,7 +555,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
           )}
 
           {phase === "fan" && (
-            <div className="fan-zone v25-fan v27-fan" aria-label="Bộ bài đang được trải úp">
+            <div ref={fanZoneRef} className="fan-zone v25-fan v27-fan" aria-label="Bộ bài đang được trải úp" onPointerLeave={handleFanPointerLeave}>
               {fanLayout.map(({ card, deckIndex, visualIndex, left, bottom, rotate }) => {
                 const isPicked = pickedSet.has(deckIndex);
                 const isDragging = drag?.deckIndex === deckIndex && drag.fromSlot === null;
@@ -456,13 +566,18 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                     title="Giữ chuột và kéo lá này vào một ô phía trên"
                     key={card.id}
                     disabled={isPicked}
+                    ref={(node) => {
+                      if (node) fanCardRefs.current.set(deckIndex, node);
+                      else fanCardRefs.current.delete(deckIndex);
+                    }}
                     className={`fan-card ${isPicked ? "picked" : ""} ${isDragging ? "source-dragging" : ""}`}
                     style={{
                       "--fan-bottom": `${bottom}px`,
                       left: `${left}%`,
                       bottom: `${bottom}px`,
                       transform: `translateX(-50%) rotate(${rotate}deg)`,
-                      zIndex: visualIndex + 1
+                      zIndex: visualIndex + 1,
+                      "--fan-stack": visualIndex + 1
                     } as CSSProperties}
                     onPointerDown={(event) => beginDrag(event, deckIndex)}
                     onPointerMove={moveDrag}
@@ -473,6 +588,37 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                   </button>
                 );
               })}
+
+              {typeof document !== "undefined" && createPortal(
+                <div
+                  ref={fanGuideRef}
+                  className="fan-selection-guide fan-ghost-portal"
+                  aria-hidden="true"
+                />,
+                document.body
+              )}
+
+              <div className="fan-pointer-layer" aria-hidden="true" onPointerLeave={handleFanPointerLeave}>
+                {fanLayout.map(({ deckIndex, left, bottom, rotate, visualIndex }) => !pickedSet.has(deckIndex) && (
+                  <div
+                    key={deckIndex}
+                    className="fan-pointer-card"
+                    style={{
+                      left: `${left}%`,
+                      bottom: `${bottom}px`,
+                      "--fan-bottom": `${bottom}px`,
+                      transform: `translateX(-50%) rotate(${rotate}deg)`,
+                      zIndex: visualIndex + 1
+                    } as CSSProperties}
+                    onPointerEnter={() => { if (!drag) setFanTarget(deckIndex); }}
+                    onPointerMove={(event) => { if (drag) moveDrag(event); else setFanTarget(deckIndex); }}
+                    onPointerDown={(event) => handleFanPointerDown(event, deckIndex)}
+                    onPointerUp={endDrag}
+                    onPointerCancel={cancelDrag}
+                  />
+                ))}
+              </div>
+
               <div className="fan-shadow" />
             </div>
           )}

@@ -1282,6 +1282,8 @@ html[data-theme="light"] .drag-card-ghost span{color:#966c36!important;text-shad
 }
 .ai-reading-result .reading-text{max-width:none}
 .ai-reading-result .reading-text h3:first-child{margin-top:2px}
+.reading-stream-cursor{display:inline-block;width:8px;height:1.15em;margin-left:3px;vertical-align:-.16em;background:var(--gold2);animation:readingCursorBlink .85s steps(1,end) infinite}
+@keyframes readingCursorBlink{0%,48%{opacity:1}49%,100%{opacity:.12}}
 .ai-modal-loading{
   min-height:300px;
   display:flex;
@@ -2956,3 +2958,619 @@ html[data-tarot-page-active="false"] .account-panel-backdrop{
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
 }
+
+/* =========================================================
+   Tarot-2.7.4 — rotating question hints + stable fan pointer targeting
+   ========================================================= */
+.question-card textarea::placeholder{
+  color:#817786;
+  opacity:.72;
+  font-style:italic;
+}
+.theme-light .question-card textarea::placeholder{
+  color:#918590;
+  opacity:.76;
+}
+
+/* Desktop: one stationary pointer layer owns the entire fan. This removes the
+   78 overlapping mouse hit-boxes that caused hover flicker, lag and cursor/card
+   mismatch. Card geometry is unchanged; only the visual child lifts. */
+.fan-pointer-layer{display:none}
+
+@media (hover:hover) and (pointer:fine){
+  .v27-fan .fan-card{
+    pointer-events:none!important;
+  }
+
+  .fan-pointer-layer{
+    position:absolute;
+    inset:0;
+    z-index:1200;
+    display:block;
+    cursor:grab;
+    background:transparent;
+    touch-action:none;
+  }
+  .fan-pointer-layer:active{cursor:grabbing}
+
+  /* The real card stays in its original place; only its artwork is lifted.
+     This guarantees the hit region never moves away from the mouse. */
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled){
+    z-index:900!important;
+  }
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual{
+    transform:translate3d(0,-18px,0)!important;
+    filter:brightness(1.08)!important;
+    box-shadow:
+      0 15px 28px rgba(0,0,0,.42),
+      inset 0 0 0 4px #151a13,
+      inset 0 0 0 5px rgba(213,179,109,.20),
+      0 0 0 2px rgba(239,214,151,.56)!important;
+    will-change:transform;
+  }
+
+  /* Outline-only helper around the selected physical card. At the far left
+     and right this makes even a mostly covered card visibly selectable. */
+  .v27-fan .fan-card-visual::after{
+    content:"";
+    position:absolute;
+    inset:-4px;
+    z-index:6;
+    border:2px solid transparent;
+    border-radius:8px;
+    opacity:0;
+    pointer-events:none;
+    box-shadow:none;
+  }
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual::after{
+    opacity:1;
+    border-color:rgba(248,224,164,.90);
+    box-shadow:0 0 0 1px rgba(248,224,164,.20),0 0 18px rgba(213,179,109,.18);
+  }
+
+  .theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual{
+    filter:none!important;
+    box-shadow:
+      0 14px 26px rgba(85,62,88,.18),
+      inset 0 0 0 4px rgba(255,255,255,.80),
+      inset 0 0 0 5px rgba(157,112,56,.24),
+      0 0 0 2px rgba(139,96,48,.50)!important;
+  }
+  .theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual::after{
+    border-color:rgba(139,96,48,.82);
+    box-shadow:0 0 0 1px rgba(139,96,48,.16),0 0 16px rgba(139,96,48,.10);
+  }
+}
+
+/* =========================================================
+   Tarot-2.7.5 — contained hover + visible edge selection guide
+   ========================================================= */
+@media (hover:hover) and (pointer:fine){
+  /* Do not pull the selected card above the whole fan. Keeping the parent's
+     original z-index preserves the woven fan structure and prevents a card
+     from visually popping completely out of the deck. */
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled){
+    z-index:var(--fan-stack, auto)!important;
+  }
+
+  /* A small lift is enough to show hover while the card remains woven under
+     the neighbouring cards. */
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual{
+    transform:translate3d(0,-9px,0)!important;
+    filter:brightness(1.08)!important;
+    box-shadow:
+      0 9px 18px rgba(0,0,0,.30),
+      inset 0 0 0 4px #151a13,
+      inset 0 0 0 5px rgba(213,179,109,.20)!important;
+  }
+
+  /* The guide is the "invisible card": it never blocks the pointer and only
+     draws the outline of the currently selectable card. Because it lives above
+     the fan, even a heavily covered card at the far left/right is obvious. */
+  .fan-selection-guide{
+    position:absolute;
+    width:3cm;
+    height:4.6667cm;
+    z-index:1180;
+    display:block;
+    border:2px solid rgba(248,224,164,.92);
+    border-radius:7px;
+    background:rgba(213,179,109,.018);
+    box-shadow:
+      0 0 0 1px rgba(248,224,164,.18),
+      0 0 18px rgba(213,179,109,.16),
+      inset 0 0 0 1px rgba(248,224,164,.08);
+    opacity:0;
+    pointer-events:none;
+    transform-origin:50% 112%;
+    transition:opacity .08s linear, border-color .08s linear, box-shadow .08s linear;
+  }
+  .fan-selection-guide.is-visible{opacity:1}
+  .fan-selection-guide.is-edge-target{
+    border-color:rgba(255,232,169,1);
+    box-shadow:
+      0 0 0 1px rgba(255,232,169,.26),
+      0 0 22px rgba(213,179,109,.24),
+      inset 0 0 0 1px rgba(255,232,169,.12);
+  }
+
+  /* The guide itself provides the outline; suppress the old per-card outline
+     pseudo-element so there is no doubled border or extra paint work. */
+  .v27-fan .fan-card-visual::after,
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual::after{
+    content:none!important;
+    display:none!important;
+  }
+
+  .theme-light .fan-selection-guide{
+    border-color:rgba(139,96,48,.82);
+    background:rgba(166,122,64,.015);
+    box-shadow:0 0 0 1px rgba(139,96,48,.15),0 0 16px rgba(139,96,48,.09);
+  }
+  .theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual{
+    filter:none!important;
+    box-shadow:
+      0 8px 16px rgba(85,62,88,.12),
+      inset 0 0 0 4px rgba(255,255,255,.80),
+      inset 0 0 0 5px rgba(157,112,56,.24)!important;
+  }
+}
+
+/* Touch keeps the original per-card interaction and does not need the desktop
+   pointer guide. */
+@media (hover:none), (pointer:coarse){
+  .fan-selection-guide{display:none!important}
+}
+
+/* =========================================================
+   Tarot-2.7.6 — edge-only invisible guide + clean contained hover
+   ========================================================= */
+@media (hover:hover) and (pointer:fine){
+  /* The middle of the fan uses only the real card. This removes the doubled
+     rectangle/ghost-card artifact that appeared in 2.7.5. */
+  .v27-fan .fan-card.fan-card-targeted:not(.fan-card-edge-targeted):not(:disabled){
+    z-index:var(--fan-hover-stack,var(--fan-stack))!important;
+  }
+  .v27-fan .fan-card.fan-card-targeted:not(.fan-card-edge-targeted):not(:disabled) .fan-card-visual{
+    transform:translate3d(0,-8px,0)!important;
+    box-shadow:
+      0 8px 16px rgba(0,0,0,.28),
+      inset 0 0 0 4px #151a13,
+      inset 0 0 0 5px rgba(213,179,109,.20),
+      0 0 0 1px rgba(248,224,164,.52)!important;
+  }
+
+  /* Edge cards remain physically woven into the deck. Their separate outline
+     is the requested "invisible card" and is the only thing drawn above the fan. */
+  .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled){
+    z-index:var(--fan-stack)!important;
+  }
+  .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled) .fan-card-visual{
+    transform:none!important;
+    box-shadow:
+      inset 0 0 0 4px #151a13,
+      inset 0 0 0 5px rgba(213,179,109,.16)!important;
+  }
+
+  .fan-selection-guide{
+    width:3cm;
+    height:4.6667cm;
+    opacity:0;
+    background:transparent!important;
+    border:2px solid rgba(255,230,165,.96)!important;
+    border-radius:7px;
+    box-shadow:
+      0 0 0 1px rgba(255,230,165,.24),
+      0 0 20px rgba(213,179,109,.22),
+      inset 0 0 0 1px rgba(255,230,165,.08)!important;
+  }
+  .fan-selection-guide.is-visible.is-edge-target{opacity:1!important}
+  .fan-selection-guide.edge-left{
+    border-left-width:3px!important;
+    box-shadow:
+      -5px 0 16px rgba(213,179,109,.20),
+      0 0 0 1px rgba(255,230,165,.22)!important;
+  }
+  .fan-selection-guide.edge-right{
+    border-right-width:3px!important;
+    box-shadow:
+      5px 0 16px rgba(213,179,109,.20),
+      0 0 0 1px rgba(255,230,165,.22)!important;
+  }
+
+  .theme-light .v27-fan .fan-card.fan-card-targeted:not(.fan-card-edge-targeted):not(:disabled) .fan-card-visual{
+    box-shadow:
+      0 7px 14px rgba(85,62,88,.12),
+      inset 0 0 0 4px rgba(255,255,255,.80),
+      inset 0 0 0 5px rgba(157,112,56,.24),
+      0 0 0 1px rgba(139,96,48,.48)!important;
+  }
+  .theme-light .fan-selection-guide{
+    border-color:rgba(139,96,48,.90)!important;
+    box-shadow:0 0 0 1px rgba(139,96,48,.16),0 0 16px rgba(139,96,48,.10)!important;
+  }
+}
+
+/* =========================================================
+   Tarot-2.7.7 — five left ghost cards + lift-only hover
+   ========================================================= */
+@media (hover:hover) and (pointer:fine){
+  /* Never change stacking order on hover. The selected card remains woven into
+     the fan and ONLY moves upward. This prevents the full-card pop-out effect. */
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled),
+  .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled){
+    z-index:var(--fan-stack)!important;
+  }
+
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual,
+  .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled) .fan-card-visual{
+    transform:translate3d(0,-24px,0)!important;
+    filter:brightness(1.045)!important;
+    box-shadow:
+      0 10px 18px rgba(0,0,0,.24),
+      inset 0 0 0 4px #151a13,
+      inset 0 0 0 5px rgba(213,179,109,.16)!important;
+  }
+
+  /* The invisible-card outline is rendered only for the first five left cards.
+     It follows the exact fan angle and full card dimensions, matching the user's
+     sketched guide while keeping the card back itself completely transparent. */
+  .fan-selection-guide{
+    width:3cm!important;
+    height:4.6667cm!important;
+    z-index:1190!important;
+    opacity:0!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:7px!important;
+    box-shadow:none!important;
+    pointer-events:none!important;
+    transform-origin:50% 112%!important;
+  }
+  .fan-selection-guide.is-visible.is-edge-target.edge-left{
+    opacity:1!important;
+    border:2px solid rgba(255,231,166,.98)!important;
+    border-left-width:3px!important;
+    box-shadow:
+      0 0 0 1px rgba(255,231,166,.22),
+      -4px 1px 18px rgba(213,179,109,.22),
+      inset 0 0 0 1px rgba(255,231,166,.08)!important;
+  }
+
+  /* No right-side invisible card under any circumstance. */
+  .fan-selection-guide.edge-right{display:none!important}
+
+  /* Suppress any older pseudo-outline so only the requested left ghost frame
+     appears. */
+  .v27-fan .fan-card-visual::after,
+  .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual::after{
+    content:none!important;
+    display:none!important;
+  }
+
+  .theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual,
+  .theme-light .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled) .fan-card-visual{
+    filter:none!important;
+    box-shadow:
+      0 9px 16px rgba(85,62,88,.11),
+      inset 0 0 0 4px rgba(255,255,255,.80),
+      inset 0 0 0 5px rgba(157,112,56,.20)!important;
+  }
+  .theme-light .fan-selection-guide.is-visible.is-edge-target.edge-left{
+    border-color:rgba(139,96,48,.92)!important;
+    box-shadow:
+      0 0 0 1px rgba(139,96,48,.15),
+      -4px 1px 16px rgba(139,96,48,.11)!important;
+  }
+}
+
+/* Tarot-2.7.8 — retain the 36px lift; clipping is restored in 2.7.9. */
+@media (hover:hover) and (pointer:fine){
+  /* Match the specificity of the older 2.7.6 middle-card rule. Move only the
+     artwork; keep the stationary pointer layer, scale and stacking unchanged. */
+  .v27-fan .fan-card.fan-card-targeted:not(.fan-card-edge-targeted):not(:disabled) .fan-card-visual,
+  .v27-fan .fan-card.fan-card-edge-targeted:not(:disabled) .fan-card-visual{
+    transform:translate3d(0,-36px,0)!important;
+  }
+}
+
+/* Tarot-2.7.9 — exact stationary hit areas and a portal-based left ghost. */
+@media (hover:hover) and (pointer:fine){
+  .fan-selection-guide.fan-ghost-portal{
+    position:fixed;
+    bottom:auto;
+    width:var(--ghost-width)!important;
+    height:var(--ghost-height)!important;
+    margin:0;
+    transition:none;
+  }
+  html[data-theme="light"] .fan-selection-guide.fan-ghost-portal.is-visible.is-edge-target.edge-left{
+    border-color:rgba(139,96,48,.92)!important;
+    box-shadow:0 0 0 1px rgba(139,96,48,.15),-4px 1px 16px rgba(139,96,48,.11)!important;
+  }
+  .fan-pointer-layer{
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .fan-pointer-card{
+    position:absolute;
+    width:3cm;
+    height:4.6667cm;
+    border-radius:5px;
+    transform-origin:50% 112%;
+    pointer-events:auto;
+    touch-action:none;
+    cursor:grab;
+  }
+  .fan-pointer-card:active{cursor:grabbing}
+}
+
+/* Tarot-2.7.10 — reading-style choices below the question field. */
+.reading-style-picker{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding-top:12px;
+}
+.reading-style-picker button{
+  position:relative;
+  min-width:142px;
+  border:1px solid rgba(213,179,109,.22);
+  border-radius:3px;
+  background:rgba(255,255,255,.018);
+  color:#9c929f;
+  padding:10px 16px;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.045em;
+  transition:border-color .16s ease,color .16s ease,background .16s ease;
+}
+.reading-style-picker button:hover,
+.reading-style-picker button:focus-visible{
+  border-color:rgba(213,179,109,.66);
+  color:var(--gold2);
+  outline:0;
+}
+.reading-style-picker button.active{
+  border-color:var(--gold);
+  background:rgba(213,179,109,.08);
+  color:var(--gold2);
+}
+.reading-style-tooltip{
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 9px);
+  z-index:20;
+  width:max-content;
+  max-width:220px;
+  padding:8px 10px;
+  border:1px solid rgba(213,179,109,.34);
+  background:#17121c;
+  color:#e9d9b6;
+  box-shadow:0 8px 22px rgba(0,0,0,.34);
+  font-size:11px;
+  font-weight:500;
+  line-height:1.35;
+  letter-spacing:.025em;
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%,5px);
+  transition:opacity .14s ease,transform .14s ease;
+}
+.reading-style-picker button:hover .reading-style-tooltip,
+.reading-style-picker button:focus-visible .reading-style-tooltip{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+.theme-light .reading-style-picker button{
+  border-color:rgba(105,75,45,.22);
+  background:rgba(255,255,255,.28);
+  color:#756a73;
+}
+.theme-light .reading-style-picker button:hover,
+.theme-light .reading-style-picker button:focus-visible,
+.theme-light .reading-style-picker button.active{
+  border-color:rgba(139,96,48,.68);
+  background:rgba(166,122,64,.08);
+  color:#765328;
+}
+.theme-light .reading-style-tooltip{
+  border-color:rgba(139,96,48,.28);
+  background:#fffaf3;
+  color:#5c4635;
+  box-shadow:0 8px 20px rgba(85,62,88,.14);
+}
+@media(max-width:620px){
+  .reading-style-picker{
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+  .reading-style-picker::-webkit-scrollbar{display:none}
+  .reading-style-picker button{
+    min-width:118px;
+    padding:9px 11px;
+    font-size:12px;
+  }
+}
+
+/* Preview sizing from the user's HTML; Dark has the requested black starburst. */
+.theme-dark .ethereal-card-back,
+html[data-theme="dark"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="dark"] .card-flight.ethereal-card-back{
+  background-color:#090909!important;
+  background-image:url('/cards/custom-back/preview-black-dark-2.7.29.webp')!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:100% 100%!important;
+}
+.theme-light .ethereal-card-back,
+html[data-theme="light"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="light"] .card-flight.ethereal-card-back{
+  background-color:#fffcf4!important;
+  background-image:url('/cards/custom-back/preview-light-2.7.28.webp')!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:100% 100%!important;
+}
+.ethereal-card-back::before,
+.ethereal-card-back::after,
+.v27-fan .fan-card-visual::before,
+.v27-fan .fan-card-visual::after{
+  content:none!important;
+  display:none!important;
+}
+.ethereal-card-back>i,
+.riffle-card.ethereal-card-back>span{visibility:hidden!important}
+.ethereal-card-back,
+.theme-dark .ethereal-card-back,
+.theme-light .ethereal-card-back{
+  border:0!important;
+  box-shadow:none!important;
+}
+.v27-fan .fan-card-visual.ethereal-card-back,
+.theme-dark .v27-fan .fan-card-visual.ethereal-card-back{
+  border:0!important;
+  box-shadow:0 0 0 1px #574936!important;
+}
+.theme-light .v27-fan .fan-card-visual.ethereal-card-back{
+  border:0!important;
+  box-shadow:0 0 0 1px #c5ab82!important;
+}
+.v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 1px #574936!important;
+}
+.theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 1px #c5ab82!important;
+}
+.v27-riffle-zone .riffle-card.ethereal-card-back{box-shadow:none!important}
+.v27-riffle-zone .riffle-card.ethereal-card-back:first-child{
+  box-shadow:0 7px 16px rgba(0,0,0,.18)!important;
+}
+
+/* Tarot 2.7.32: the login and sign-up screen starts in dark mode. The Tarot
+   page keeps its own saved Light/Dark choice, and Supabase behavior is intact. */
+.auth-shell{
+  color:#f0e8ed;
+  background:
+    radial-gradient(circle at 17% 18%,rgba(102,71,116,.13),transparent 32%),
+    radial-gradient(circle at 82% 23%,rgba(161,121,72,.09),transparent 29%),
+    linear-gradient(145deg,#0c0b0f 0%,#15121a 55%,#0d0c10 100%);
+}
+.auth-shell::before{background:rgba(114,80,133,.10)}
+.auth-shell::after{background:rgba(195,147,81,.07)}
+.auth-card{
+  border-color:rgba(220,188,139,.20);
+  background:rgba(27,23,32,.94);
+  box-shadow:0 24px 80px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.auth-symbol{border-color:rgba(218,181,113,.30);background:#25202a;color:#dbaf72;box-shadow:none}
+.auth-eyebrow{color:#d9b47c}
+.auth-card h1{color:#f5edf1}
+.auth-card>p{color:#b8aeba}
+.auth-tabs{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.09)}
+.auth-tabs button{color:#b2a8b7}
+.auth-tabs button.active{background:#39303c;color:#fff4e5;box-shadow:none}
+.auth-form label>span{color:#cfbfce}
+.auth-form input{border-color:rgba(228,208,224,.19);background:#191720;color:#f5ecf2}
+.auth-form input:focus{background:#211d29;border-color:#bb9463}
+.auth-form input::placeholder{color:#8e8593}
+.auth-error{background:#36222a;border-color:rgba(223,124,139,.32);color:#f2b5c0}
+.auth-notice{background:#233025;border-color:rgba(147,190,135,.32);color:#d3ecc9}
+.auth-setup-code code{background:#201c27;color:#ded1df;border-color:rgba(255,255,255,.12)}
+.auth-setup-card small{color:#a99eac}
+.auth-loading-screen{color:#d2c4d1}
+.auth-orb{color:#dbaf72}
+
+/* Keep the full card-back artwork at its natural bounds. Cropping to 112%
+   exposed a broken chain of gold rays where the cards overlap in the fan. */
+.theme-dark .ethereal-card-back,
+.theme-light .ethereal-card-back,
+html[data-theme="dark"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="light"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="dark"] .card-flight.ethereal-card-back,
+html[data-theme="light"] .card-flight.ethereal-card-back{
+  background-size:100% 100%!important;
+}
+.v27-fan .fan-card-visual.ethereal-card-back,
+.theme-dark .v27-fan .fan-card-visual.ethereal-card-back,
+.theme-light .v27-fan .fan-card-visual.ethereal-card-back,
+.v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back,
+.theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:none!important;
+}
+
+/* One slim gold outline at the outer edge of every card back. The decorative
+   frames inside the artwork remain cropped out. */
+.theme-dark .ethereal-card-back,
+html[data-theme="dark"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="dark"] .card-flight.ethereal-card-back,
+.theme-dark .v27-fan .fan-card-visual.ethereal-card-back,
+.theme-dark .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 .7px #574936!important;
+}
+.theme-light .ethereal-card-back,
+html[data-theme="light"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="light"] .card-flight.ethereal-card-back,
+.theme-light .v27-fan .fan-card-visual.ethereal-card-back,
+.theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 .7px #c5ab82!important;
+}
+
+/* Make the isolated card during shuffle slightly larger while keeping its
+   transform-based riffle animation and its center point unchanged. */
+.v27-riffle-zone .riffle-card{
+  width:120px;
+  height:188px;
+  background-position:50% 50%!important;
+}
+
+/* Tightly overlapping cards expose only a narrow side strip. Keep the sun
+   rays out of that strip so adjacent cards cannot break them into dashes. */
+.theme-dark .v27-fan .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 18px 0 0 #090909,inset -18px 0 0 #090909,0 0 0 .7px #574936!important;
+}
+.theme-light .v27-fan .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 18px 0 0 #fffcf4,inset -18px 0 0 #fffcf4,0 0 0 .7px #c5ab82!important;
+}
+.theme-dark .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 .7px #574936!important;
+}
+.theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:0 0 0 .7px #c5ab82!important;
+}
+
+/* Cover the decorative frame baked into the artwork. The outer .7px stroke,
+   card dimensions and centered sun remain exactly as before. */
+.theme-dark .ethereal-card-back,
+html[data-theme="dark"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="dark"] .card-flight.ethereal-card-back,
+.theme-dark .v27-riffle-zone .riffle-card.ethereal-card-back{
+  box-shadow:inset 0 0 0 10px #090909,0 0 0 .7px #574936!important;
+}
+.theme-light .ethereal-card-back,
+html[data-theme="light"] .drag-card-ghost.ethereal-card-back,
+html[data-theme="light"] .card-flight.ethereal-card-back,
+.theme-light .v27-riffle-zone .riffle-card.ethereal-card-back{
+  box-shadow:inset 0 0 0 10px #fffcf4,0 0 0 .7px #c5ab82!important;
+}
+.theme-dark .v27-riffle-zone .riffle-card.ethereal-card-back:first-child{
+  box-shadow:inset 0 0 0 10px #090909,0 7px 16px rgba(0,0,0,.18),0 0 0 .7px #574936!important;
+}
+.theme-light .v27-riffle-zone .riffle-card.ethereal-card-back:first-child{
+  box-shadow:inset 0 0 0 10px #fffcf4,0 7px 16px rgba(0,0,0,.18),0 0 0 .7px #c5ab82!important;
+}
+.theme-dark .v27-fan .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 18px 0 0 #090909,inset -18px 0 0 #090909,inset 0 0 0 10px #090909,0 0 0 .7px #574936!important;
+}
+.theme-light .v27-fan .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 18px 0 0 #fffcf4,inset -18px 0 0 #fffcf4,inset 0 0 0 10px #fffcf4,0 0 0 .7px #c5ab82!important;
+}
+.theme-dark .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 0 0 0 10px #090909,0 0 0 .7px #574936!important;
+}
+.theme-light .v27-fan .fan-card.fan-card-targeted:not(:disabled) .fan-card-visual.ethereal-card-back{
+  box-shadow:inset 0 0 0 10px #fffcf4,0 0 0 .7px #c5ab82!important;
+}
+

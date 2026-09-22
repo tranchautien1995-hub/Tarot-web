@@ -7,17 +7,20 @@ import PracticeCard from "@/components/PracticeCard";
 import AuthGate from "@/components/AuthGate";
 import ReadingText from "@/components/ReadingText";
 import { makeSelectedCard } from "@/lib/deck";
+import { portableReadingPrompt } from "@/lib/prompts";
 import type { ChatMessage, DrawnCard, TarotCard } from "@/lib/types";
 import { getApiAuthHeaders } from "@/lib/supabase/auth-fetch";
 
 type DrawMode = "random" | "manual";
 type SpreadPreset = "three" | "six" | "celtic" | "custom";
 type ThemeMode = "light" | "dark";
+type ReadingStyle = "direct" | "gentle" | "companion";
 
 type HistoryEntry = {
   id: string;
   savedAt: string;
   question: string;
+  readingStyle?: ReadingStyle;
   mode: DrawMode;
   preset: SpreadPreset;
   count: number;
@@ -47,11 +50,61 @@ const STAR_FIELD = Array.from({ length: 75 }, (_, index) => {
   };
 });
 
-const EXAMPLES = [
-  "Mối quan hệ này đang muốn dạy tôi điều gì?",
-  "Điều gì đang cản tôi trong công việc hiện tại?",
-  "Tôi đang chưa nhìn thấy điều gì trong tình huống này?"
+const QUESTION_SUGGESTIONS = [
+  "Người yêu cũ hiện tại đang như thế nào?",
+  "Tôi và người yêu cũ có cơ hội quay lại với nhau không?",
+  "Người yêu cũ còn tình cảm với tôi không?",
+  "Người yêu cũ đang nghĩ gì về tôi và mối quan hệ đã qua?",
+  "Người yêu cũ có đang nhớ đến tôi không?",
+  "Điều gì khiến người yêu cũ chưa chủ động liên lạc với tôi?",
+  "Nếu tôi chủ động nhắn tin, mối quan hệ sẽ tiến triển ra sao?",
+  "Người yêu cũ có mong muốn nối lại mối quan hệ không?",
+  "Giữa tôi và người yêu cũ còn điều gì chưa được giải quyết?",
+  "Điều gì đã thực sự khiến mối quan hệ cũ kết thúc?",
+  "Người yêu cũ nhìn nhận tôi như thế nào sau chia tay?",
+  "Mối quan hệ giữa tôi và người yêu cũ sẽ thay đổi thế nào trong thời gian tới?",
+  "Nếu quay lại, chúng tôi có thể xây dựng một mối quan hệ tốt hơn không?",
+  "Điều gì cần thay đổi để tôi và người yêu cũ có thể quay lại?",
+  "Tôi có nên chờ người yêu cũ hay bước tiếp?",
+  "Người yêu cũ đã thật sự buông bỏ mối quan hệ này chưa?",
+  "Có điều gì người yêu cũ muốn nói với tôi nhưng chưa thể nói ra?",
+  "Tôi cần hiểu điều gì về cảm xúc của người yêu cũ lúc này?",
+  "Bài học lớn nhất từ mối quan hệ với người yêu cũ là gì?",
+  "Tôi cần làm gì để chữa lành sau mối quan hệ cũ?",
+  "Mối liên kết giữa tôi và người yêu cũ còn ý nghĩa gì ở hiện tại?",
+  "Tôi nên giữ liên lạc hay tạo khoảng cách với người yêu cũ?",
+  "Crush hiện tại đang nhìn nhận tôi như thế nào?",
+  "Crush và tôi có tiến triển gì trong tương lai không?",
+  "Crush có cảm xúc đặc biệt dành cho tôi không?",
+  "Điều gì đang ngăn crush và tôi tiến gần nhau hơn?",
+  "Tôi nên làm gì để mối quan hệ với crush phát triển tự nhiên hơn?",
+  "Nếu tôi chủ động bày tỏ, crush sẽ phản ứng như thế nào?",
+  "Giữa tôi và crush có tiềm năng trở thành người yêu không?",
+  "Crush đang mong đợi điều gì ở mối quan hệ giữa chúng tôi?",
+  "Tôi có đang hiểu đúng tín hiệu mà crush dành cho mình không?",
+  "Mối quan hệ giữa tôi và crush sẽ thay đổi thế nào trong thời gian tới?",
+  "Tình yêu sắp tới của tôi có năng lượng như thế nào?",
+  "Tôi cần thay đổi điều gì để đón nhận một mối quan hệ lành mạnh?",
+  "Người phù hợp với tôi lúc này sẽ mang đến điều gì?",
+  "Tôi cần hiểu điều gì về chuyện tình cảm hiện tại của mình?"
 ];
+
+const READING_STYLES: Array<{ id: ReadingStyle; label: string; fullLabel: string }> = [
+  { id: "direct", label: "Thẳng thắn", fullLabel: "Thẳng thắn, lạnh lùng, sâu sắc" },
+  { id: "gentle", label: "Nhẹ nhàng", fullLabel: "Nhẹ nhàng, thấu hiểu" },
+  { id: "companion", label: "Tâm sự", fullLabel: "Tâm sự, lắng nghe" }
+];
+
+function readingStyleFullLabel(style?: ReadingStyle | null) {
+  return READING_STYLES.find((item) => item.id === style)?.fullLabel || "Cách đọc mặc định";
+}
+
+const QUESTION_HINT_KEY = "tarot-practice-question-hint";
+
+function pickQuestionSuggestion(exclude?: string) {
+  const pool = QUESTION_SUGGESTIONS.filter((item) => item !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)] || QUESTION_SUGGESTIONS[0];
+}
 
 const PRESETS: Array<{ id: SpreadPreset; count: number | null; title: string; description: string }> = [
   { id: "three", count: 3, title: "3 lá", description: "Bản chất · Ảnh hưởng · Hướng phát triển" },
@@ -106,6 +159,8 @@ function createId() {
 
 export default function Home() {
   const [question, setQuestion] = useState("");
+  const [questionHint, setQuestionHint] = useState(QUESTION_SUGGESTIONS[0]);
+  const [readingStyle, setReadingStyle] = useState<ReadingStyle | null>(null);
   const [mode, setMode] = useState<DrawMode>("random");
   const [preset, setPreset] = useState<SpreadPreset>("three");
   const [count, setCount] = useState(3);
@@ -136,6 +191,27 @@ export default function Home() {
   const selectedIds = useMemo(() => selectedCards.map((card) => card.id), [selectedCards]);
   const complete = selectedCards.length === count;
   const presetLabel = PRESETS.find((item) => item.id === preset)?.title || `${count} lá`;
+
+  useEffect(() => {
+    try {
+      const previous = window.sessionStorage.getItem(QUESTION_HINT_KEY) || undefined;
+      const next = pickQuestionSuggestion(previous);
+      setQuestionHint(next);
+      window.sessionStorage.setItem(QUESTION_HINT_KEY, next);
+    } catch {
+      setQuestionHint(pickQuestionSuggestion());
+    }
+  }, []);
+
+  function refreshQuestionHint() {
+    const next = pickQuestionSuggestion(questionHint);
+    setQuestionHint(next);
+    try {
+      window.sessionStorage.setItem(QUESTION_HINT_KEY, next);
+    } catch {
+      // The hint still changes even when sessionStorage is unavailable.
+    }
+  }
 
   useEffect(() => {
     try {
@@ -203,6 +279,11 @@ export default function Home() {
     setChat([]);
     setError("");
     setSaved(false);
+  }
+
+  function selectReadingStyle(style: ReadingStyle) {
+    setReadingStyle((current) => current === style ? null : style);
+    resetAnalysis();
   }
 
   function applyPositions(nextCards: Array<DrawnCard | undefined>, nextPreset: SpreadPreset, nextCount: number) {
@@ -282,8 +363,12 @@ export default function Home() {
 
   function copyForChatGPT() {
     if (!complete) return;
-    const lines = selectedCards.map((card, index) => `${index + 1}. ${card.position}: ${card.name} — ${card.orientation === "upright" ? "xuôi" : "ngược"}`);
-    const spreadText = `Câu hỏi: ${question || "Không có câu hỏi cụ thể"}\n\nKiểu trải: ${presetLabel}\n\nTrải bài:\n${lines.join("\n")}\n\nHãy đọc trải bài như một Tarot Reader thực sự. Trả lời trực tiếp câu hỏi, sau đó kết nối toàn bộ các lá thành một câu chuyện chung dựa trên vị trí, chiều xuôi/ngược, sự hỗ trợ/mâu thuẫn/chuyển tiếp và những tổ hợp nổi bật. Dùng vị trí để phân tích nhưng không cần lặp lại tên vị trí trong câu văn nếu không cần thiết. Không chỉ liệt kê nghĩa từng lá riêng lẻ. Với câu hỏi về người khác, hãy trả lời về người đó trước; lời khuyên cho người hỏi chỉ nên đến sau. Không khẳng định chắc chắn tương lai hoặc suy nghĩ của người khác. Khi nhắc tên lá Tarot trong bài đọc, luôn giữ nguyên tên tiếng Anh chuẩn như trong trải bài; không dịch tên lá sang tiếng Việt.\n\nSau khi kết thúc phân tích, hãy thêm phần “Tóm lại” gồm 5–7 dòng văn ngắn tóm tắt phân tích.`;
+    const spreadText = portableReadingPrompt(
+      question,
+      selectedCards,
+      preset === "celtic" ? "celtic" : undefined,
+      readingStyle || "default"
+    );
     void navigator.clipboard.writeText(spreadText).then(() => {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
@@ -304,6 +389,7 @@ export default function Home() {
       id: createId(),
       savedAt: new Date().toISOString(),
       question: question.trim(),
+      readingStyle: readingStyle || undefined,
       mode,
       preset,
       count,
@@ -320,6 +406,7 @@ export default function Home() {
     setSideMenuOpen(false);
     setSideMenuView("main");
     setQuestion(entry.question);
+    setReadingStyle(entry.readingStyle || null);
     setMode(entry.mode);
     setPreset(entry.preset);
     setCount(entry.count);
@@ -375,17 +462,35 @@ export default function Home() {
       const response = await fetch("/api/read", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ question, cards: selectedCards, preset })
+        body: JSON.stringify({ question, cards: selectedCards, preset, readingStyle })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Không thể phân tích trải bài.");
-      const reading = data.reading || "";
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Không thể phân tích trải bài.");
+      }
+      if (!response.body) throw new Error("Không nhận được luồng đọc bài từ máy chủ.");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let reading = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        reading += decoder.decode(value, { stream: true });
+        setAiReading(reading);
+      }
+      reading += decoder.decode();
+      reading = reading.trim();
       setAiReading(reading);
+      if (!reading) throw new Error("GPT đã phản hồi nhưng không có nội dung để hiển thị.");
+
       if (reading) {
         const entry: HistoryEntry = {
           id: createId(),
           savedAt: new Date().toISOString(),
           question: question.trim(),
+          readingStyle: readingStyle || undefined,
           mode,
           preset,
           count,
@@ -417,7 +522,7 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ question, cards: selectedCards, preset, reading: aiReading, history: previous, followup: text })
+        body: JSON.stringify({ question, cards: selectedCards, preset, readingStyle, reading: aiReading, history: previous, followup: text })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Không thể trả lời.");
@@ -537,7 +642,7 @@ export default function Home() {
                       <article className="history-card side-history-card" key={entry.id}>
                         <div className="history-card-top">
                           <div>
-                            <span>{formatSavedAt(entry.savedAt)} · {PRESETS.find((item) => item.id === entry.preset)?.title || `${entry.count} lá`}</span>
+                            <span>{formatSavedAt(entry.savedAt)} · {PRESETS.find((item) => item.id === entry.preset)?.title || `${entry.count} lá`}{entry.readingStyle ? ` · ${readingStyleFullLabel(entry.readingStyle)}` : ""}</span>
                             <h3>{entry.question || "Không có câu hỏi cụ thể"}</h3>
                           </div>
                         </div>
@@ -605,8 +710,28 @@ export default function Home() {
 
             <div className="panel question-card">
               <div className="panel-kicker">01 · CÂU HỎI</div>
-              <textarea value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Bạn đang muốn hiểu điều gì? Có thể để trống nếu muốn một trải bài mở." />
-              <div className="chips">{EXAMPLES.map((x) => <button key={x} onClick={() => setQuestion(x)}>{x}</button>)}</div>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder={questionHint}
+                aria-label="Câu hỏi cho trải bài Tarot"
+              />
+              <div className="reading-style-picker" aria-label="Phong cách đọc bài">
+                {READING_STYLES.map((style) => (
+                  <button
+                    key={style.id}
+                    type="button"
+                    className={readingStyle === style.id ? "active" : ""}
+                    aria-pressed={readingStyle === style.id}
+                    aria-label={style.fullLabel}
+                    title={style.fullLabel}
+                    onClick={() => selectReadingStyle(style.id)}
+                  >
+                    <span className="reading-style-short">{style.label}</span>
+                    <span className="reading-style-tooltip" role="tooltip">{style.fullLabel}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="control-grid v23-controls">
@@ -659,7 +784,15 @@ export default function Home() {
             <div className="flow-stage-head flow-stage-head-spread flow-stage-head-nav-only">
               <div className="flow-stage-nav">
                 <span className="flow-step-indicator">2 / 3</span>
-                <button className="ghost-button" type="button" onClick={() => setFlowStep(1)}>← Quay lại</button>
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => {
+                    refreshQuestionHint();
+                    setFlowStep(1);
+                    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+                  }}
+                >← Quay lại</button>
               </div>
             </div>
 
@@ -750,13 +883,13 @@ export default function Home() {
               <div>
                 <span className="panel-kicker">TAROT READING</span>
                 <h2 id="ai-reading-title">Đọc trải bài</h2>
-                <p>{presetLabel} · {selectedCards.length}/{count} lá{question.trim() ? ` · ${question.trim()}` : ""}</p>
+                <p>{presetLabel}{readingStyle ? ` · ${readingStyleFullLabel(readingStyle)}` : ""} · {selectedCards.length}/{count} lá{question.trim() ? ` · ${question.trim()}` : ""}</p>
               </div>
               <button className="ai-modal-close" type="button" onClick={() => setAiModalOpen(false)} aria-label="Đóng cửa sổ đọc bài">×</button>
             </header>
 
             <div className="ai-reading-modal-body">
-              {loading && (
+              {loading && !aiReading && (
                 <div className="ai-modal-loading">
                   <span className="ai-loading-orbit" aria-hidden="true">✦</span>
                   <div>
@@ -774,13 +907,13 @@ export default function Home() {
                 </div>
               )}
 
-              {aiReading && !loading && (
+              {aiReading && (
                 <>
                   <div className="ai-reading-result">
-                    <ReadingText text={aiReading} cardNames={selectedCards.map((card) => card.name)} />
+                    <ReadingText text={aiReading} cardNames={selectedCards.map((card) => card.name)} streaming={loading} />
                   </div>
 
-                  <div className="chat-panel ai-modal-chat">
+                  {!loading && <div className="chat-panel ai-modal-chat">
                     <div className="chat-heading"><b>Hỏi tiếp</b><small>Ngữ cảnh của trải bài hiện tại vẫn được giữ.</small></div>
                     {chat.length > 0 && <div className="chat-history">
                       {chat.map((message, index) => <div className={`message ${message.role}`} key={index}><span>{message.role === "user" ? "BẠN" : "READER"}</span><p>{message.content}</p></div>)}
@@ -790,7 +923,7 @@ export default function Home() {
                       <input value={followup} onChange={(e) => setFollowup(e.target.value)} placeholder="Hỏi sâu hơn về một lá hoặc mối liên hệ giữa các lá..." />
                       <button disabled={!followup.trim() || chatLoading}>Gửi →</button>
                     </form>
-                  </div>
+                  </div>}
                 </>
               )}
             </div>

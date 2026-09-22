@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { ChatMessage, DrawnCard } from "@/lib/types";
 import { xahChat, type XahMessage } from "@/lib/xah";
-import { readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
+import { normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
 
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     const followup = String(body.followup || "").trim();
     const cards = body.cards as DrawnCard[];
     const spreadPreset = body.preset === "celtic" ? "celtic" : undefined;
+    const readingStyle = normalizeReadingStyle(body.readingStyle);
     const history = (body.history || []) as ChatMessage[];
 
     if (
@@ -51,11 +52,11 @@ export async function POST(request: Request) {
     const messages: XahMessage[] = [
       {
         role: "system",
-        content: tarotSystemPrompt(spreadPreset),
+        content: tarotSystemPrompt(spreadPreset, readingStyle),
       },
       {
         role: "user",
-        content: readingPrompt(question, cards, spreadPreset),
+        content: readingPrompt(question, cards, spreadPreset, readingStyle),
       },
       {
         role: "assistant",
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error
         ? error.message
-        : "Không thể kết nối GPT-5.6 Sol.";
+        : "Không thể kết nối GPT-6 Astra.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
