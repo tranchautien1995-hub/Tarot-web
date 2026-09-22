@@ -1,6 +1,6 @@
 {
-  "name": "tarot-practice-v2-37-clean-frame-hover",
-  "version": "2.7.37",
+  "name": "tarot-practice-v2-38-google-auth",
+  "version": "2.7.38",
   "private": true,
   "scripts": {
     "dev": "next dev",

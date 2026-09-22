@@ -10,6 +10,26 @@ type Props = {
   children: ReactNode;
 };
 
+function authErrorMessage(err: unknown): string {
+  const code = typeof err === "object" && err !== null && "code" in err ? String(err.code) : "";
+  switch (code) {
+    case "email_address_not_authorized":
+      return "Supabase chưa cho phép gửi email xác nhận tới địa chỉ này. Chủ website cần cấu hình SMTP riêng trong Supabase Auth.";
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return "Supabase đang giới hạn số lần gửi hoặc yêu cầu. Hãy thử lại sau; nếu nhiều người gặp lỗi, chủ website cần kiểm tra giới hạn email trong Supabase.";
+    case "email_provider_disabled":
+    case "signup_disabled":
+      return "Đăng ký bằng email đang bị tắt trong Supabase. Chủ website cần bật đăng ký ở Auth → Providers → Email.";
+    case "email_not_confirmed":
+      return "Tài khoản chưa xác nhận email. Hãy mở thư xác nhận rồi đăng nhập lại.";
+    case "provider_disabled":
+      return "Đăng nhập Google chưa được bật trong Supabase Auth.";
+    default:
+      return err instanceof Error ? err.message : "Không thể xác thực tài khoản.";
+  }
+}
+
 export default function AuthGate({ children }: Props) {
   const configured = isSupabaseConfigured();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -57,6 +77,16 @@ export default function AuthGate({ children }: Props) {
     return () => window.removeEventListener("tarot-open-account", openAccount);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (!params.has("error")) return;
+    const description = params.get("error_description") ?? "Đăng nhập Google không thành công. Hãy thử lại.";
+    const oauthError = new Error(description) as Error & { code?: string };
+    oauthError.code = params.get("error_code") ?? undefined;
+    setError(authErrorMessage(oauthError));
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }, []);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -93,7 +123,7 @@ export default function AuthGate({ children }: Props) {
         if (data.session) {
           setUser(data.user ?? null);
         } else {
-          setNotice("Đăng ký thành công. Hãy mở email và xác nhận tài khoản, sau đó quay lại đăng nhập.");
+          setNotice("Yêu cầu đăng ký đã được gửi. Nếu bật xác nhận email, hãy mở thư xác nhận rồi đăng nhập. Không thấy thư? Kiểm tra Spam hoặc liên hệ chủ website để kiểm tra cấu hình gửi email.");
           setMode("login");
           setPassword("");
           setConfirmPassword("");
@@ -108,7 +138,25 @@ export default function AuthGate({ children }: Props) {
         setUser(data.user ?? null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể xác thực tài khoản.");
+      setError(authErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function signInWithGoogle() {
+    if (!supabase) return;
+    setError("");
+    setNotice("");
+    setSubmitting(true);
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin }
+      });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(authErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -199,6 +247,11 @@ export default function AuthGate({ children }: Props) {
               {submitting ? "Đang xử lý…" : mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
             </button>
           </form>
+          <div className="auth-divider"><span>hoặc</span></div>
+          <button className="auth-google" type="button" disabled={submitting} onClick={signInWithGoogle}>
+            <svg aria-hidden="true" viewBox="0 0 48 48" width="19" height="19"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94a11.05 11.05 0 0 1-4.81 7.26l7.69 5.96c4.49-4.14 7.16-10.25 7.16-17.69Z"/><path fill="#FBBC05" d="M10.53 28.59A14.37 14.37 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.89-5.76l-7.69-5.96c-2.13 1.43-4.86 2.22-8.2 2.22-6.26 0-11.57-4.22-13.47-9.91l-7.97 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
+            Tiếp tục với Google
+          </button>
         </div>
       </div>
     );
