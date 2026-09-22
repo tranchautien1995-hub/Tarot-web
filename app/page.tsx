@@ -578,19 +578,6 @@ export default function Home() {
         ))}
       </div>
 
-      <button
-        className="side-menu-toggle"
-        type="button"
-        onClick={openSideMenu}
-        aria-label="Mở menu"
-        aria-expanded={sideMenuOpen}
-        title="Menu"
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
       {sideMenuOpen && (
         <div className="side-menu-layer" role="presentation" onMouseDown={() => setSideMenuOpen(false)}>
           <aside
@@ -601,17 +588,25 @@ export default function Home() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="side-menu-head">
-              <div>
-                <span className="panel-kicker">TAROT PRACTICE</span>
-                <h2>{sideMenuView === "history" ? "Lịch sử trải bài" : "Menu"}</h2>
+              <div className="side-menu-brand">
+                <span aria-hidden="true">✦</span>
+                <strong>TTarot</strong>
               </div>
-              <button className="side-menu-close" type="button" onClick={() => setSideMenuOpen(false)} aria-label="Đóng menu">×</button>
+              <button className="side-menu-close" type="button" onClick={() => setSideMenuOpen(false)} aria-label="Thu gọn menu" title="Thu gọn menu">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <rect x="3.5" y="4" width="17" height="16" rx="3" />
+                  <path d="M9 4v16" />
+                </svg>
+              </button>
             </div>
 
             {sideMenuView === "main" ? (
               <nav className="side-menu-nav" aria-label="Điều hướng">
+                <span className="side-menu-section-label">Menu</span>
                 <button type="button" onClick={openAccountFromMenu}>
-                  <span className="side-menu-item-icon">◎</span>
+                  <span className="side-menu-item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"/></svg>
+                  </span>
                   <span>
                     <strong>Tài khoản</strong>
                     <small>Thông tin đăng nhập và đăng xuất</small>
@@ -619,7 +614,9 @@ export default function Home() {
                   <b>›</b>
                 </button>
                 <button type="button" onClick={() => setSideMenuView("history")}>
-                  <span className="side-menu-item-icon">↺</span>
+                  <span className="side-menu-item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 12a8 8 0 1 0 2.35-5.65L4 8.7"/><path d="M4 4v4.7h4.7"/><path d="M12 8v4.5l3 1.8"/></svg>
+                  </span>
                   <span>
                     <strong>Lịch sử trải bài</strong>
                     <small>{history.length > 0 ? `${history.length} trải bài đã lưu` : "Chưa có trải bài đã lưu"}</small>
@@ -667,7 +664,22 @@ export default function Home() {
       )}
 
       <header className="topbar shell">
-        <div className="brand">✦ TAROT PRACTICE</div>
+        <div className="topbar-left">
+          <div className="brand">✦ TAROT PRACTICE</div>
+          <button
+            className="side-menu-toggle"
+            type="button"
+            onClick={openSideMenu}
+            aria-label="Mở menu"
+            aria-expanded={sideMenuOpen}
+            title="Mở menu"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <rect x="3.5" y="4" width="17" height="16" rx="3" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
         <div className="topbar-right">
           <div className="top-note">RIDER–WAITE · TAROT READING · TÀI KHOẢN NGƯỜI DÙNG</div>
           <div className="theme-toggle-wrap">

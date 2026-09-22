@@ -1,6 +1,6 @@
 {
-  "name": "tarot-practice-v2-38-google-auth",
-  "version": "2.7.38",
+  "name": "ttarot-v2-41-chatgpt-sidebar",
+  "version": "2.7.41",
   "private": true,
   "scripts": {
     "dev": "next dev",
