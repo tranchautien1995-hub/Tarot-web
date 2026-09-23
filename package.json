@@ -1,6 +1,6 @@
 {
-  "name": "ttarot-v2-42-home-menu-position",
-  "version": "2.7.42",
+  "name": "ttarot-v2-48-mobile-card-rail",
+  "version": "2.7.48",
   "private": true,
   "scripts": {
     "dev": "next dev",

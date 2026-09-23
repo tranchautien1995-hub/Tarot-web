@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TTarot · Preview typography</title>
+  <style>
+    :root{--bg:#0b0910;--panel:#17121d;--ink:#f4eee5;--muted:#978d9a;--gold:#d5b36d;--gold2:#f0d89f;--line:rgba(213,179,109,.25);--font:Cambria,"Times New Roman",serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);min-height:100vh}
+    body.light{--bg:#f5f0e8;--panel:#fffaf3;--ink:#352d34;--muted:#756c74;--gold:#986d35;--gold2:#765328;--line:rgba(105,75,45,.24)}
+    .page{min-height:100vh;position:relative;overflow:hidden;background:radial-gradient(circle at 50% -10%,#321b34 0,#121019 35%,#09080e 72%)}
+    body.light .page{background:radial-gradient(circle at 50% -10%,#eee0ef 0,#f8f3ed 42%,#efe9e2 100%)}
+    .stars{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#fff8e7 0 1px,transparent 1.6px),radial-gradient(circle,#d5b36d 0 1.2px,transparent 1.8px);background-size:173px 191px,281px 247px;opacity:.32;animation:drift 10s ease-in-out infinite alternate}
+    @keyframes drift{to{transform:translateY(-12px);opacity:.42}}
+    .shell{width:min(1180px,calc(100% - 36px));margin:auto;position:relative;z-index:1}.top{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.brand{font-size:13px;letter-spacing:.15em;color:var(--gold2);font-weight:700}.right{display:flex;gap:12px;align-items:center}.link{border:0;background:none;color:var(--muted);font:inherit;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.theme{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:30px;padding:9px 14px}
+    .nav{display:flex;align-items:center;gap:12px;margin-top:12px}.hamb{width:42px;height:42px;display:grid;place-content:center;gap:4px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.02)}.hamb i{display:block;width:18px;height:1px;background:var(--gold2)}.tabs{display:flex;gap:7px}.tabs button{min-height:44px;padding:0 20px;border:0;border-bottom:1px solid transparent;background:transparent;color:#7e7682;font:inherit;font-size:13px}.tabs .active{color:var(--ink);border-color:var(--gold);background:rgba(213,179,109,.04)}.tabs button:disabled{opacity:.58}
+    .hero{text-align:center;padding:70px 0 42px}.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}.hero h1{font-size:clamp(50px,7vw,82px);line-height:1;margin:22px 0 20px}.hero h1 em{font-style:normal;color:var(--gold2);font-weight:400}.hero p{color:#b2a8b5;font-size:17px}.body-light .hero p{color:var(--muted)}
+    .stage-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.stage-head h2{font-size:31px;margin:8px 0 0}.step{border:1px solid var(--line);padding:9px 14px;color:var(--gold2);font-size:11px}.panel{border:1px solid var(--line);background:rgba(24,19,30,.91);padding:22px}.light .panel{background:rgba(255,250,243,.86)}textarea{width:100%;min-height:100px;resize:none;border:0;border-bottom:1px solid rgba(255,255,255,.09);background:transparent;color:var(--ink);font:20px/1.5 var(--font);padding:16px 0;outline:none}textarea::placeholder{color:#706875;font-style:italic}.style-title{margin-top:8px}.styles{display:flex;gap:10px;margin-top:9px}.styles button{min-width:145px;padding:11px 17px;border:1px solid var(--line);background:transparent;color:#a49aa7;font:400 normal 16px var(--font)}.styles .active{border-color:var(--gold);color:var(--gold2);background:rgba(213,179,109,.07)}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.option{min-height:94px;border:1px solid rgba(255,255,255,.09);padding:16px;color:#bfb5c1}.option.active{border-color:var(--gold);background:rgba(101,52,86,.18)}.option b{display:block;font-size:16px}.option small{display:block;margin-top:10px;color:#857b89;line-height:1.45}
+    .drawer{position:fixed;inset:0 auto 0 0;width:min(305px,90vw);z-index:5;background:#0d0d0f;border-right:1px solid rgba(255,255,255,.1);transform:translateX(-102%);transition:.25s;padding:18px}.drawer.open{transform:none}.drawer h2{margin:10px 0 25px}.drawer button{width:100%;text-align:left;padding:15px;border:0;border-radius:8px;background:transparent;color:#eee;font:inherit}.drawer button:hover{background:#222}.close{font-size:20px!important;width:auto!important;float:right}
+    @media(max-width:700px){.brand{display:none}.shell{width:calc(100% - 22px)}.link{font-size:9px}.nav{overflow:hidden}.tabs{overflow:auto}.tabs button{font-size:11px;padding:0 10px;white-space:nowrap}.hero{padding-top:55px}.hero p{font-size:14px}.controls{grid-template-columns:1fr}.styles{overflow:auto}.styles button{min-width:120px;font-size:14px}.kicker{font-size:10px}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <div class="stars"></div>
+  <header class="top shell"><div class="brand">✦ TAROT PRACTICE</div><div class="right"><button class="link" onclick="openMenu()">Lịch sử trải bài</button><span>·</span><button class="link" onclick="openMenu()">Tài khoản người dùng</button><button class="theme" onclick="toggleTheme()">☀ Light</button></div></header>
+  <div class="nav shell"><button class="hamb" onclick="openMenu()" aria-label="Mở menu"><i></i><i></i><i></i></button><div class="tabs"><button class="active">Trải bài Tarot</button><button disabled>Trải bài Lenormand</button><button disabled>Bản đồ sao</button></div></div>
+  <section class="hero shell"><div class="kicker">KHÔNG GIAN TRẢI BÀI TAROT CÁ NHÂN</div><h1>Tự trải, tự bốc.<br><em>Hiểu sâu hơn.</em></h1><p>Trải nghiệm tự trải, tự bốc các lá bài cho bản thân để hiểu sâu hơn về vấn đề bạn đang gặp</p></section>
+  <section class="shell">
+    <div class="stage-head"><div><div class="kicker">PHẦN 1 · THIẾT LẬP</div><h2>Câu hỏi &amp; cách lấy bài</h2></div><div class="step">1 / 3</div></div>
+    <div class="panel"><div class="kicker">01 · CÂU HỎI</div><textarea placeholder="Tôi có nên chờ người yêu cũ hay bước tiếp?"></textarea><div class="kicker style-title">PHONG CÁCH ĐỌC BÀI</div><div class="styles"><button class="active">Thẳng thắn</button><button>Nhẹ nhàng</button><button>Tâm sự</button></div></div>
+    <div class="controls"><div class="panel"><div class="kicker">02 · CÁCH LẤY BÀI</div><div class="options"><div class="option active"><b>✦ &nbsp;Xáo &amp; bốc bài</b><small>Xáo bộ bài, trải 78 lá úp rồi kéo từng lá vào vị trí bạn muốn.</small></div><div class="option"><b>🃏 &nbsp;Tự chọn bài</b><small>Mở thư viện Rider–Waite và chọn từng vị trí.</small></div></div></div><div class="panel"><div class="kicker">03 · KIỂU TRẢI</div><div class="options"><div class="option active"><b>3 lá</b><small>Bản chất · Ảnh hưởng · Hướng phát triển</small></div><div class="option"><b>6 lá</b><small>Phân tích tình huống sâu hơn</small></div></div></div></div>
+  </section>
+</main>
+<aside class="drawer" id="drawer"><button class="close" onclick="closeMenu()">×</button><h2>TTarot Home</h2><button>Tài khoản</button><button>Lịch sử trải bài</button></aside>
+<script>
+  function openMenu(){document.getElementById('drawer').classList.add('open')}
+  function closeMenu(){document.getElementById('drawer').classList.remove('open')}
+  function toggleTheme(){document.body.classList.toggle('light');document.querySelector('.theme').textContent=document.body.classList.contains('light')?'☾ Dark':'☀ Light'}
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import PracticeCard from "@/components/PracticeCard";
@@ -15,6 +15,7 @@ type DrawMode = "random" | "manual";
 type SpreadPreset = "three" | "six" | "celtic" | "custom";
 type ThemeMode = "light" | "dark";
 type ReadingStyle = "direct" | "gentle" | "companion";
+type SpeechStatus = "idle" | "speaking" | "paused";
 
 type HistoryEntry = {
   id: string;
@@ -152,6 +153,47 @@ function formatSavedAt(value: string) {
   }
 }
 
+function readingForSpeech(value: string) {
+  return value
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/[*_`#>]/g, "")
+    .replace(/^\s*[-•]\s+/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function splitSpeechText(value: string, limit = 230) {
+  const sentences = readingForSpeech(value).match(/[^.!?…\n]+[.!?…]+|[^.!?…\n]+$/gm) || [];
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const sentence of sentences.map((item) => item.trim()).filter(Boolean)) {
+    if (sentence.length > limit) {
+      if (current) chunks.push(current);
+      for (let index = 0; index < sentence.length; index += limit) {
+        chunks.push(sentence.slice(index, index + limit).trim());
+      }
+      current = "";
+      continue;
+    }
+    const next = current ? `${current} ${sentence}` : sentence;
+    if (next.length > limit) {
+      chunks.push(current);
+      current = sentence;
+    } else {
+      current = next;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function isVietnameseVoice(voice: SpeechSynthesisVoice) {
+  const language = voice.lang.toLowerCase().replace("_", "-");
+  return language === "vi" || language.startsWith("vi-")
+    || /vietnamese|tiếng việt|viet nam/i.test(`${voice.name} ${voice.voiceURI}`);
+}
+
 function createId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -186,6 +228,14 @@ export default function Home() {
   const [flowStep, setFlowStep] = useState<1 | 2>(1);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [sideMenuView, setSideMenuView] = useState<"main" | "history">("main");
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [speechStatus, setSpeechStatus] = useState<SpeechStatus>("idle");
+  const [speechRate, setSpeechRate] = useState(0.95);
+  const [speechError, setSpeechError] = useState("");
+  const [vietnameseVoices, setVietnameseVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [speechVoiceURI, setSpeechVoiceURI] = useState("");
+  const [speechVoicesReady, setSpeechVoicesReady] = useState(false);
+  const speechRunRef = useRef(0);
 
   const selectedCards = useMemo(() => cards.filter(Boolean) as DrawnCard[], [cards]);
   const selectedIds = useMemo(() => selectedCards.map((card) => card.id), [selectedCards]);
@@ -273,7 +323,114 @@ export default function Home() {
     };
   }, [aiModalOpen]);
 
+  useEffect(() => {
+    const supported = typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    setSpeechSupported(supported);
+    if (!supported) return;
+
+    const synthesis = window.speechSynthesis;
+    const loadVoices = () => {
+      const voices = synthesis.getVoices();
+      if (voices.length === 0) return;
+
+      const nextVietnameseVoices = voices.filter(isVietnameseVoice);
+      setVietnameseVoices(nextVietnameseVoices);
+      setSpeechVoiceURI((current) => {
+        if (current && nextVietnameseVoices.some((voice) => voice.voiceURI === current)) return current;
+        return nextVietnameseVoices[0]?.voiceURI || "";
+      });
+      setSpeechVoicesReady(true);
+    };
+
+    loadVoices();
+    synthesis.addEventListener("voiceschanged", loadVoices);
+    const retryTimers = [120, 400, 1000, 2200].map((delay) => window.setTimeout(loadVoices, delay));
+    const readyTimer = window.setTimeout(() => setSpeechVoicesReady(true), 2600);
+
+    return () => {
+      speechRunRef.current += 1;
+      retryTimers.forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(readyTimer);
+      synthesis.removeEventListener("voiceschanged", loadVoices);
+      synthesis.cancel();
+    };
+  }, []);
+
+  function stopReadingAloud() {
+    speechRunRef.current += 1;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeechStatus("idle");
+  }
+
+  function startReadingAloud() {
+    if (!speechSupported || !aiReading || typeof window === "undefined") return;
+    const synthesis = window.speechSynthesis;
+
+    if (speechStatus === "speaking") {
+      synthesis.pause();
+      setSpeechStatus("paused");
+      return;
+    }
+    if (speechStatus === "paused") {
+      synthesis.resume();
+      setSpeechStatus("speaking");
+      return;
+    }
+
+    const availableVoices = synthesis.getVoices().filter(isVietnameseVoice);
+    const vietnameseVoice = availableVoices.find((voice) => voice.voiceURI === speechVoiceURI)
+      || vietnameseVoices.find((voice) => voice.voiceURI === speechVoiceURI)
+      || availableVoices[0]
+      || vietnameseVoices[0];
+
+    if (!vietnameseVoice) {
+      setSpeechStatus("idle");
+      setSpeechError("Thiết bị chưa có giọng tiếng Việt. Hãy dùng Chrome hoặc Edge mới nhất và cài thêm giọng tiếng Việt trong phần Language/Speech của hệ điều hành.");
+      return;
+    }
+
+    const chunks = splitSpeechText(aiReading);
+    if (chunks.length === 0) return;
+
+    speechRunRef.current += 1;
+    const runId = speechRunRef.current;
+    synthesis.cancel();
+    setSpeechError("");
+    setSpeechStatus("speaking");
+
+    const speakChunk = (index: number) => {
+      if (runId !== speechRunRef.current) return;
+      if (index >= chunks.length) {
+        setSpeechStatus("idle");
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(chunks[index]);
+      utterance.lang = "vi-VN";
+      utterance.rate = speechRate;
+      utterance.pitch = 1;
+      utterance.voice = vietnameseVoice;
+      utterance.onend = () => speakChunk(index + 1);
+      utterance.onerror = (event) => {
+        if (runId !== speechRunRef.current || event.error === "canceled" || event.error === "interrupted") return;
+        setSpeechStatus("idle");
+        setSpeechError("Trình duyệt không phát được giọng đọc. Hãy thử Chrome hoặc Edge và kiểm tra âm lượng thiết bị.");
+      };
+      synthesis.speak(utterance);
+    };
+
+    speakChunk(0);
+  }
+
+  function closeAIReader() {
+    stopReadingAloud();
+    setAiModalOpen(false);
+  }
+
   function resetAnalysis() {
+    stopReadingAloud();
     setAiModalOpen(false);
     setAiReading("");
     setChat([]);
@@ -435,6 +592,11 @@ export default function Home() {
     setSideMenuOpen(true);
   }
 
+  function openHistoryMenu() {
+    setSideMenuView("history");
+    setSideMenuOpen(true);
+  }
+
   function openAccountFromMenu() {
     setSideMenuOpen(false);
     setSideMenuView("main");
@@ -453,6 +615,7 @@ export default function Home() {
 
   async function askAI() {
     if (!complete || loading) return;
+    stopReadingAloud();
     setAiModalOpen(true);
     setLoading(true);
     setError("");
@@ -578,21 +741,27 @@ export default function Home() {
         ))}
       </div>
 
-      {!sideMenuOpen && (
-        <button
-          className="side-menu-toggle"
-          type="button"
-          onClick={openSideMenu}
-          aria-label="Mở menu"
-          aria-expanded={false}
-          title="Mở menu"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
-            <rect x="3.5" y="4" width="17" height="16" rx="3" />
-            <path d="M9 4v16" />
-          </svg>
-        </button>
-      )}
+      <nav className="product-navigation shell" aria-label="Các công cụ TTarot">
+        {!sideMenuOpen && (
+          <button
+            className="side-menu-toggle"
+            type="button"
+            onClick={openSideMenu}
+            aria-label="Mở menu"
+            aria-expanded={false}
+            title="Mở menu"
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
+        )}
+        <div className="product-tabs" role="tablist" aria-label="Loại công cụ">
+          <button className="active" type="button" role="tab" aria-selected="true">Trải bài Tarot</button>
+          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Trải bài Lenormand</button>
+          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Bản đồ sao</button>
+        </div>
+      </nav>
 
       {sideMenuOpen && (
         <div className="side-menu-layer" role="presentation" onMouseDown={() => setSideMenuOpen(false)}>
@@ -609,10 +778,9 @@ export default function Home() {
                 <strong>TTarot Home</strong>
               </div>
               <button className="side-menu-close" type="button" onClick={() => setSideMenuOpen(false)} aria-label="Thu gọn menu" title="Thu gọn menu">
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7">
-                  <rect x="3.5" y="4" width="17" height="16" rx="3" />
-                  <path d="M9 4v16" />
-                </svg>
+                <span aria-hidden="true" />
+                <span aria-hidden="true" />
+                <span aria-hidden="true" />
               </button>
             </div>
 
@@ -684,7 +852,17 @@ export default function Home() {
           <div className="brand">✦ TAROT PRACTICE</div>
         </div>
         <div className="topbar-right">
-          <div className="top-note">RIDER–WAITE · TAROT READING · TÀI KHOẢN NGƯỜI DÙNG</div>
+          <nav className="topbar-quick-links" aria-label="Lối tắt tài khoản và lịch sử">
+            <button type="button" onClick={openHistoryMenu}>
+              <span className="quick-label-full">Lịch sử trải bài</span>
+              <span className="quick-label-short">Lịch sử</span>
+            </button>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={openSideMenu}>
+              <span className="quick-label-full">Tài khoản người dùng</span>
+              <span className="quick-label-short">Tài khoản</span>
+            </button>
+          </nav>
           <div className="theme-toggle-wrap">
             <button
               className="theme-toggle"
@@ -731,6 +909,7 @@ export default function Home() {
                 placeholder={questionHint}
                 aria-label="Câu hỏi cho trải bài Tarot"
               />
+              <div className="panel-kicker reading-style-label">PHONG CÁCH ĐỌC BÀI</div>
               <div className="reading-style-picker" aria-label="Phong cách đọc bài">
                 {READING_STYLES.map((style) => (
                   <button
@@ -886,7 +1065,7 @@ export default function Home() {
       <footer className="shell"><span>✦ TAROT PRACTICE · TAROT-1.8</span><p>Xáo kiểu riffle · Kéo-thả · Lật tại chỗ · Rider–Waite · Đăng nhập sẵn sàng cho host.</p></footer>
 
       {aiModalOpen && (
-        <div className="ai-reading-modal-backdrop" role="presentation" onMouseDown={() => setAiModalOpen(false)}>
+        <div className="ai-reading-modal-backdrop" role="presentation" onMouseDown={closeAIReader}>
           <section
             className="ai-reading-modal"
             role="dialog"
@@ -900,7 +1079,7 @@ export default function Home() {
                 <h2 id="ai-reading-title">Đọc trải bài</h2>
                 <p>{presetLabel}{readingStyle ? ` · ${readingStyleFullLabel(readingStyle)}` : ""} · {selectedCards.length}/{count} lá{question.trim() ? ` · ${question.trim()}` : ""}</p>
               </div>
-              <button className="ai-modal-close" type="button" onClick={() => setAiModalOpen(false)} aria-label="Đóng cửa sổ đọc bài">×</button>
+              <button className="ai-modal-close" type="button" onClick={closeAIReader} aria-label="Đóng cửa sổ đọc bài">×</button>
             </header>
 
             <div className="ai-reading-modal-body">
@@ -924,6 +1103,74 @@ export default function Home() {
 
               {aiReading && (
                 <>
+                  {!loading && (
+                    <section className="voice-reader" aria-label="Điều khiển giọng đọc">
+                      <div className="voice-reader-main">
+                        <span className={`voice-reader-status ${speechStatus}`} aria-hidden="true">◉</span>
+                        <span>
+                          <b>Nghe bài đọc</b>
+                          <small>Giọng tiếng Việt trên thiết bị · không tốn phí</small>
+                        </span>
+                      </div>
+
+                      {speechSupported ? (
+                        <div className="voice-reader-controls">
+                          {vietnameseVoices.length > 0 ? (
+                            <label className="voice-reader-voice-select">
+                              <span>Giọng Việt</span>
+                              <select
+                                value={speechVoiceURI}
+                                onChange={(event) => {
+                                  stopReadingAloud();
+                                  setSpeechVoiceURI(event.target.value);
+                                  setSpeechError("");
+                                }}
+                                disabled={speechStatus !== "idle"}
+                                aria-label="Chọn giọng đọc tiếng Việt"
+                              >
+                                {vietnameseVoices.map((voice) => (
+                                  <option value={voice.voiceURI} key={voice.voiceURI}>
+                                    {voice.name} ({voice.lang})
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          ) : (
+                            <span className="voice-reader-voice-state">
+                              {speechVoicesReady ? "Chưa tìm thấy giọng Việt" : "Đang tải giọng Việt…"}
+                            </span>
+                          )}
+                          <label>
+                            <span>Tốc độ</span>
+                            <select
+                              value={speechRate}
+                              onChange={(event) => setSpeechRate(Number(event.target.value))}
+                              disabled={speechStatus !== "idle"}
+                              aria-label="Tốc độ đọc"
+                            >
+                              <option value={0.85}>Chậm</option>
+                              <option value={0.95}>Tự nhiên</option>
+                              <option value={1.1}>Nhanh</option>
+                            </select>
+                          </label>
+                          <button className="voice-reader-play" type="button" onClick={startReadingAloud} disabled={vietnameseVoices.length === 0}>
+                            {speechStatus === "idle" ? "▶ Nghe bài" : speechStatus === "speaking" ? "Ⅱ Tạm dừng" : "▶ Tiếp tục"}
+                          </button>
+                          <button className="voice-reader-stop" type="button" onClick={stopReadingAloud} disabled={speechStatus === "idle"}>
+                            ■ Dừng
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="voice-reader-unavailable">Trình duyệt này chưa hỗ trợ giọng đọc.</span>
+                      )}
+
+                      {speechError && <p className="voice-reader-error">{speechError}</p>}
+                      {speechSupported && speechVoicesReady && vietnameseVoices.length === 0 && !speechError && (
+                        <p className="voice-reader-error">Thiết bị chưa có giọng tiếng Việt. Hãy cài giọng Việt trong phần Language/Speech của hệ điều hành rồi tải lại trang.</p>
+                      )}
+                    </section>
+                  )}
+
                   <div className="ai-reading-result">
                     <ReadingText text={aiReading} cardNames={selectedCards.map((card) => card.name)} streaming={loading} />
                   </div>
@@ -952,7 +1199,7 @@ export default function Home() {
                   <button className="ghost-button" type="button" onClick={() => void askAI()}>Đọc lại</button>
                 </>
               )}
-              <button className="gold-button" type="button" onClick={() => setAiModalOpen(false)}>Đóng</button>
+              <button className="gold-button" type="button" onClick={closeAIReader}>Đóng</button>
             </footer>
           </section>
         </div>

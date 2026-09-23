@@ -3671,3 +3671,317 @@ main.theme-light>.side-menu-toggle:hover{background:#fff;border-color:rgba(126,9
 @media(max-width:700px){
   main>.side-menu-toggle{left:32px!important;top:82px!important;width:40px;height:40px}
 }
+
+/* 2.7.43: free on-device/browser voice reader for completed readings. */
+.voice-reader{
+  max-width:880px;margin:0 auto 18px;padding:13px 14px;border:1px solid rgba(213,179,109,.28);
+  border-radius:12px;background:linear-gradient(135deg,rgba(213,179,109,.075),rgba(255,255,255,.018));
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.voice-reader-main{display:flex;align-items:center;gap:10px;min-width:190px}
+.voice-reader-main>span:last-child{display:grid;gap:2px}
+.voice-reader-main b{color:#eee7dc;font-family:var(--font-heading);font-size:14px;font-weight:600}
+.voice-reader-main small{color:#918994;font-size:10px;line-height:1.35}
+.voice-reader-status{
+  width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border:1px solid rgba(213,179,109,.3);
+  border-radius:50%;color:#756445;background:rgba(0,0,0,.17);font-size:9px;
+}
+.voice-reader-status.speaking{color:#e7c778;box-shadow:0 0 0 0 rgba(213,179,109,.28);animation:voice-reader-pulse 1.45s ease-out infinite}
+.voice-reader-status.paused{color:#b9a77f}
+.voice-reader-controls{display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.voice-reader-controls label{display:grid;gap:4px;color:#8f8791;font-size:9px;letter-spacing:.07em;text-transform:uppercase}
+.voice-reader-controls select,
+.voice-reader-controls button{
+  min-height:34px;border:1px solid rgba(213,179,109,.25);border-radius:7px;background:#121016;color:#d9d2dc;
+  padding:0 11px;font:inherit;font-size:11px;cursor:pointer;transition:border-color .16s ease,background .16s ease,color .16s ease;
+}
+.voice-reader-controls select{min-width:92px;color-scheme:dark}
+.voice-reader-controls .voice-reader-voice-select select{min-width:190px;max-width:260px}
+.voice-reader-voice-state{align-self:center;color:#b99d9d;font-size:10px;white-space:nowrap}
+.voice-reader-controls button:hover:not(:disabled){border-color:rgba(213,179,109,.65);color:#f4e4bd;background:#1b1720}
+.voice-reader-controls .voice-reader-play{border-color:rgba(213,179,109,.58);background:rgba(213,179,109,.13);color:#efd38f;font-weight:700}
+.voice-reader-controls button:disabled{opacity:.38;cursor:not-allowed}
+.voice-reader-unavailable{color:#b99d9d;font-size:11px}
+.voice-reader-error{width:100%;margin:0;color:#d7a2aa;font-size:11px;line-height:1.45}
+@keyframes voice-reader-pulse{
+  0%{box-shadow:0 0 0 0 rgba(213,179,109,.3)}
+  75%,100%{box-shadow:0 0 0 8px rgba(213,179,109,0)}
+}
+.theme-light .voice-reader{border-color:rgba(126,92,50,.24);background:linear-gradient(135deg,rgba(178,132,70,.09),rgba(255,255,255,.64))}
+.theme-light .voice-reader-main b{color:#3c3237}
+.theme-light .voice-reader-main small{color:#82777e}
+.theme-light .voice-reader-status{border-color:rgba(126,92,50,.25);background:rgba(255,255,255,.7);color:#8e795c}
+.theme-light .voice-reader-status.speaking{color:#9a681f}
+.theme-light .voice-reader-controls label{color:#7d7178}
+.theme-light .voice-reader-controls select,
+.theme-light .voice-reader-controls button{border-color:rgba(126,92,50,.22);background:#fffaf3;color:#53474d}
+.theme-light .voice-reader-controls select{color-scheme:light}
+.theme-light .voice-reader-voice-state{color:#956b70}
+.theme-light .voice-reader-controls button:hover:not(:disabled){border-color:rgba(126,92,50,.52);background:#fff;color:#704d21}
+.theme-light .voice-reader-controls .voice-reader-play{border-color:rgba(151,105,44,.48);background:#f7ead2;color:#704913}
+@media(max-width:700px){
+  .voice-reader{align-items:stretch;padding:12px;margin-bottom:14px}
+  .voice-reader-main{width:100%}
+  .voice-reader-controls{width:100%;display:grid;grid-template-columns:1fr 1fr;align-items:end}
+  .voice-reader-controls select,.voice-reader-controls button{width:100%;padding:0 7px;font-size:10px}
+  .voice-reader-controls .voice-reader-voice-select select{min-width:0;max-width:none}
+  .voice-reader-voice-state{grid-column:1/-1;white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){.voice-reader-status.speaking{animation:none}}
+
+/* =========================
+   Tarot 2.7.44 — navigation + reading-style polish
+   ========================= */
+.product-navigation{
+  position:absolute;
+  top:88px;
+  left:50%;
+  z-index:1100;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  pointer-events:none;
+}
+.product-navigation>*{pointer-events:auto}
+main>.product-navigation>.side-menu-toggle{
+  position:static!important;
+  inset:auto!important;
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  border:1px solid rgba(213,179,109,.25);
+  border-radius:9px;
+  background:rgba(16,13,21,.88);
+  color:var(--gold2);
+  display:grid;
+  align-content:center;
+  justify-items:center;
+  gap:4px;
+  padding:0;
+  box-shadow:0 10px 28px rgba(0,0,0,.2);
+  backdrop-filter:blur(12px);
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+main>.product-navigation>.side-menu-toggle:hover{
+  transform:none;
+  border-color:rgba(213,179,109,.62);
+  background:rgba(27,21,33,.96);
+  color:#f0d89f;
+}
+main>.product-navigation>.side-menu-toggle span,
+.side-menu-close span{
+  display:block;
+  width:17px;
+  height:1px;
+  background:currentColor;
+  border-radius:2px;
+}
+.product-tabs{display:flex;align-items:center;gap:4px;min-width:0}
+.product-tabs button{
+  min-height:38px;
+  border:0;
+  border-bottom:1px solid transparent;
+  background:transparent;
+  color:#817985;
+  padding:0 15px;
+  font-size:11px;
+  letter-spacing:.025em;
+  white-space:nowrap;
+  transition:color .16s ease,border-color .16s ease,background .16s ease;
+}
+.product-tabs button:hover:not(:disabled){color:var(--gold2);background:rgba(213,179,109,.045)}
+.product-tabs button.active{color:#eee5d6;border-bottom-color:var(--gold);background:rgba(213,179,109,.035)}
+.product-tabs button:disabled{opacity:.55;cursor:not-allowed}
+
+.topbar-quick-links{display:flex;align-items:center;gap:9px;color:#746d78}
+.topbar-quick-links>span{font-size:9px;color:#625b66}
+.topbar-quick-links button{
+  border:0;
+  background:transparent;
+  color:#8d8491;
+  padding:7px 2px;
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  transition:color .16s ease;
+}
+.topbar-quick-links button:hover{color:var(--gold2)}
+.quick-label-short{display:none}
+
+.side-menu-close{align-content:center;justify-items:center;gap:4px}
+.side-menu-close span{width:16px}
+
+.reading-style-label{margin-top:13px}
+.reading-style-picker{padding-top:8px}
+.reading-style-picker button{
+  font-family:var(--font-heading);
+  font-size:17px;
+  font-weight:600;
+  letter-spacing:0;
+}
+
+.theme-light .product-navigation>.side-menu-toggle{
+  background:rgba(255,253,248,.94);
+  border-color:rgba(126,92,50,.22);
+  color:#815c2f;
+  box-shadow:0 9px 24px rgba(74,56,48,.1);
+}
+.theme-light .product-navigation>.side-menu-toggle:hover{background:#fff;border-color:rgba(126,92,50,.5);color:#68451f}
+.theme-light .product-tabs button{color:#8b8189}
+.theme-light .product-tabs button:hover:not(:disabled){color:#765328;background:rgba(139,96,48,.045)}
+.theme-light .product-tabs button.active{color:#5d4429;border-bottom-color:#986d35;background:rgba(139,96,48,.04)}
+.theme-light .topbar-quick-links{color:#8b818d}
+.theme-light .topbar-quick-links>span{color:#aaa0a7}
+.theme-light .topbar-quick-links button{color:#81757e}
+.theme-light .topbar-quick-links button:hover{color:#765328}
+
+@media(max-width:820px){
+  .product-navigation{top:80px;gap:7px}
+  .product-tabs{gap:0;overflow-x:auto;scrollbar-width:none}
+  .product-tabs::-webkit-scrollbar{display:none}
+  .product-tabs button{padding:0 10px;font-size:10px}
+  .quick-label-full{display:none}
+  .quick-label-short{display:inline}
+  .topbar-quick-links{gap:6px}
+  .topbar-quick-links button{font-size:8.5px;letter-spacing:.07em}
+}
+@media(max-width:620px){
+  .product-navigation{top:72px;width:calc(100% - 22px)}
+  main>.product-navigation>.side-menu-toggle{width:38px;height:38px;flex-basis:38px}
+  .product-tabs button{padding:0 8px;font-size:9px}
+  .product-tabs button:nth-child(2){max-width:120px;overflow:hidden;text-overflow:ellipsis}
+  .topbar{padding-left:0}
+  .topbar-left{display:none}
+  .topbar-right{width:100%;justify-content:flex-end}
+  .reading-style-picker button{font-size:15px}
+}
+@media(max-width:420px){
+  .product-navigation{gap:4px}
+  .product-tabs button{padding:0 6px;font-size:8.5px}
+  .topbar-quick-links button{font-size:8px}
+}
+
+/* Tarot 2.7.48 — compact, horizontally scrollable card rail on phones only. */
+.mobile-fan-scroll{display:none}
+
+@media(max-width:760px){
+  .phase-fan .v27-deck-stage{
+    position:relative!important;
+    height:142px!important;
+    min-height:142px!important;
+    overflow:hidden!important;
+  }
+
+  .phase-fan .v27-fan{
+    position:absolute!important;
+    inset:8px 0 8px!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:0!important;
+    padding:12px 44px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    scroll-behavior:smooth;
+    scroll-snap-type:x proximity;
+    scroll-padding-inline:44px;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain!important;
+    touch-action:pan-x!important;
+    contain:layout paint style;
+  }
+  .phase-fan .v27-fan::-webkit-scrollbar{display:none}
+
+  .phase-fan .v27-fan .fan-card{
+    position:relative!important;
+    inset:auto!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    flex:0 0 56px!important;
+    width:56px!important;
+    height:87px!important;
+    min-width:56px!important;
+    min-height:87px!important;
+    max-width:56px!important;
+    max-height:87px!important;
+    margin:0 0 0 -24px!important;
+    transform:none!important;
+    transform-origin:center!important;
+    scroll-snap-align:center;
+    touch-action:pan-x!important;
+  }
+  .phase-fan .v27-fan .fan-card:first-child{margin-left:0!important}
+  .phase-fan .v27-fan .fan-card-visual{
+    transform:none!important;
+    transform-origin:center!important;
+  }
+  .phase-fan .v27-fan .fan-card-visual>i{font-size:13px}
+  .phase-fan .v27-fan .fan-card-visual::before{inset:6px}
+  .phase-fan .v27-fan .fan-pointer-layer,
+  .phase-fan .v27-fan .fan-shadow{display:none!important}
+
+  .phase-fan .mobile-fan-scroll{
+    position:absolute;
+    top:50%;
+    z-index:1300;
+    display:grid;
+    place-items:center;
+    width:32px;
+    height:48px;
+    padding:0;
+    border:1px solid rgba(213,179,109,.3);
+    border-radius:8px;
+    background:rgba(10,8,14,.82);
+    color:#e5c875;
+    box-shadow:0 6px 18px rgba(0,0,0,.28);
+    backdrop-filter:blur(8px);
+    font-family:Georgia,serif;
+    font-size:28px;
+    line-height:1;
+    transform:translateY(-50%);
+  }
+  .phase-fan .mobile-fan-scroll-left{left:6px}
+  .phase-fan .mobile-fan-scroll-right{right:6px}
+  .theme-light .phase-fan .mobile-fan-scroll{
+    border-color:rgba(126,92,50,.28);
+    background:rgba(255,252,247,.88);
+    color:#855f2e;
+    box-shadow:0 6px 18px rgba(74,56,48,.14);
+  }
+}
+
+/* Tarot 2.7.46 — approved typography and navigation sizing. */
+.product-tabs{gap:7px}
+.product-tabs button{
+  min-height:44px;
+  padding:0 20px;
+  font-size:13px;
+}
+.eyebrow,
+.panel-kicker{font-size:11px}
+.mini-label,
+.account-panel-kicker{font-size:10px}
+.reading-style-label{margin-top:8px}
+.reading-style-picker button{
+  font-family:var(--font-ui);
+  font-size:16px;
+  font-weight:400;
+  font-style:normal;
+  letter-spacing:0;
+}
+.reading-style-picker .reading-style-short{font-style:normal;font-weight:400}
+@media(max-width:820px){
+  .product-tabs button{min-height:42px;padding:0 14px;font-size:12px}
+}
+@media(max-width:620px){
+  .product-tabs button{padding:0 10px;font-size:11px}
+  .eyebrow,.panel-kicker{font-size:10px}
+  .reading-style-picker button{font-size:14px}
+}

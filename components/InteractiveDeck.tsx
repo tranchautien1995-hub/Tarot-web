@@ -59,6 +59,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   const fanGuideRef = useRef<HTMLDivElement | null>(null);
   const fanCardRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const hoveredFanDeckIndexRef = useRef<number | null>(null);
+  const fanTouchStartRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
 
   const pickedSet = useMemo(() => new Set(slots.filter((value): value is number => value !== undefined)), [slots]);
   // Keep all 78 Tarot cards in the spread. They overlap densely so every card remains
@@ -193,6 +194,27 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
     beginDrag(event, deckIndex);
   }
 
+  function handleFanCardPointerDown(event: ReactPointerEvent<HTMLElement>, deckIndex: number) {
+    if (event.pointerType === "touch") {
+      fanTouchStartRef.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY
+      };
+      return;
+    }
+    beginDrag(event, deckIndex);
+  }
+
+  function scrollMobileFan(direction: -1 | 1) {
+    const zone = fanZoneRef.current;
+    if (!zone) return;
+    zone.scrollBy({
+      left: direction * Math.max(180, zone.clientWidth * 0.72),
+      behavior: "smooth"
+    });
+  }
+
   function handleFanPointerLeave() {
     if (drag) return;
     setFanTarget(null);
@@ -308,6 +330,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
   }
 
   function cancelDrag(event: ReactPointerEvent<HTMLElement>) {
+    fanTouchStartRef.current = null;
     if (dragRafRef.current !== null) {
       window.cancelAnimationFrame(dragRafRef.current);
       dragRafRef.current = null;
@@ -330,6 +353,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
       endDrag(event);
       return;
     }
+    const touchStart = fanTouchStartRef.current;
+    fanTouchStartRef.current = null;
+    if (!touchStart || touchStart.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y) > 9) return;
     if (phase !== "fan" && phase !== "ready") return;
     if (pickedSet.has(deckIndex)) return;
     const empty = firstEmptySlot(slots);
@@ -579,7 +606,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
                       zIndex: visualIndex + 1,
                       "--fan-stack": visualIndex + 1
                     } as CSSProperties}
-                    onPointerDown={(event) => beginDrag(event, deckIndex)}
+                    onPointerDown={(event) => handleFanCardPointerDown(event, deckIndex)}
                     onPointerMove={moveDrag}
                     onPointerUp={(event) => touchPickFromFan(event, deckIndex)}
                     onPointerCancel={cancelDrag}
@@ -621,6 +648,22 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
 
               <div className="fan-shadow" />
             </div>
+          )}
+          {phase === "fan" && (
+            <>
+              <button
+                type="button"
+                className="mobile-fan-scroll mobile-fan-scroll-left"
+                aria-label="Xem các lá phía trước"
+                onClick={() => scrollMobileFan(-1)}
+              >‹</button>
+              <button
+                type="button"
+                className="mobile-fan-scroll mobile-fan-scroll-right"
+                aria-label="Xem các lá tiếp theo"
+                onClick={() => scrollMobileFan(1)}
+              >›</button>
+            </>
           )}
         </div>
         )}
