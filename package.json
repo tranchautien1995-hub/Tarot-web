@@ -1,6 +1,6 @@
 {
-  "name": "ttarot-v2-48-mobile-card-rail",
-  "version": "2.7.48",
+  "name": "ttarot-webver1",
+  "version": "2.7.50",
   "private": true,
   "scripts": {
     "dev": "next dev",

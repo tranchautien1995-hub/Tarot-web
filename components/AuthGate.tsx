@@ -3,6 +3,8 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import PricingModal from "@/components/PricingModal";
+import { hasAdminRole, normalizePlan } from "@/lib/plans";
 
 type AuthMode = "login" | "register";
 
@@ -44,6 +46,18 @@ export default function AuthGate({ children }: Props) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [localHostPreview, setLocalHostPreview] = useState(false);
+  // Local preview has no Supabase token/app_metadata. Grant a development-only
+  // admin role so the owner can inspect every paid feature before deployment.
+  // Online builds still require the protected Supabase app_metadata role.
+  const isAdmin = localHostPreview || (configured ? hasAdminRole(user?.app_metadata) : localPreview);
+  const currentPlan = isAdmin ? "pro_max" : normalizePlan(user?.app_metadata?.subscription_plan);
+
+  useEffect(() => {
+    const hostname = window.location.hostname.toLowerCase();
+    setLocalHostPreview(hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1");
+  }, []);
 
   useEffect(() => {
     if (!configured || !supabase) {
@@ -75,6 +89,12 @@ export default function AuthGate({ children }: Props) {
     const openAccount = () => setAccountPanelOpen(true);
     window.addEventListener("tarot-open-account", openAccount);
     return () => window.removeEventListener("tarot-open-account", openAccount);
+  }, []);
+
+  useEffect(() => {
+    const openPricing = () => setPricingOpen(true);
+    window.addEventListener("tarot-open-pricing", openPricing);
+    return () => window.removeEventListener("tarot-open-pricing", openPricing);
   }, []);
 
   useEffect(() => {
@@ -303,6 +323,14 @@ export default function AuthGate({ children }: Props) {
                     <span>Email</span>
                     <strong>{user.email}</strong>
                   </div>
+                  <div className="account-info-row">
+                    <span>Gói dịch vụ</span>
+                    <strong>{isAdmin ? "Admin · Toàn quyền" : currentPlan === "pro_max" ? "Pro Max" : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</strong>
+                  </div>
+                  {isAdmin && (
+                    <div className="account-admin-note">Tài khoản quản trị được mở toàn bộ dịch vụ để quản lý và thử nghiệm.</div>
+                  )}
+                  <button className="account-plan-button" type="button" onClick={() => { setAccountPanelOpen(false); setPricingOpen(true); }}>Xem và nâng cấp gói</button>
                   <button className="account-signout" type="button" onClick={signOut}>Đăng xuất</button>
                 </>
               ) : (
@@ -311,13 +339,20 @@ export default function AuthGate({ children }: Props) {
                     <span>Trạng thái</span>
                     <strong>Chế độ local</strong>
                   </div>
-                  <p className="account-local-note">Bản local đang bỏ qua đăng nhập để phục vụ chỉnh giao diện. Khi cấu hình Supabase, thông tin tài khoản sẽ hiển thị tại đây.</p>
+                  <div className="account-info-row">
+                    <span>Quyền thử nghiệm</span>
+                    <strong>Admin · Toàn quyền</strong>
+                  </div>
+                  <div className="account-admin-note">Quyền Admin này chỉ dùng để kiểm tra trên máy local. Khi đưa lên web, tài khoản vẫn phải được cấp quyền bằng Supabase.</div>
+                  <button className="account-plan-button" type="button" onClick={() => { setAccountPanelOpen(false); setPricingOpen(true); }}>Xem các gói dịch vụ</button>
+                  <p className="account-local-note">Bản local đang bỏ qua đăng nhập để phục vụ chỉnh giao diện và thử nghiệm toàn bộ dịch vụ.</p>
                 </>
               )}
             </div>
           </section>
         </div>
       )}
+      <PricingModal open={pricingOpen} currentPlan={currentPlan} isAdmin={isAdmin} onClose={() => setPricingOpen(false)} />
     </>
   );
 }

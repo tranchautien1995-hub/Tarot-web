@@ -603,6 +603,12 @@ export default function Home() {
     window.dispatchEvent(new Event("tarot-open-account"));
   }
 
+  function openPricingFromMenu() {
+    setSideMenuOpen(false);
+    setSideMenuView("main");
+    window.dispatchEvent(new Event("tarot-open-pricing"));
+  }
+
   function openAIReader() {
     if (!complete) return;
     if (aiReading) {
@@ -807,6 +813,16 @@ export default function Home() {
                   </span>
                   <b>›</b>
                 </button>
+                <button type="button" onClick={openPricingFromMenu}>
+                  <span className="side-menu-item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 7.5h16v11H4z"/><path d="M4 10.5h16M8 15h4"/><path d="M7 4.5h10"/></svg>
+                  </span>
+                  <span>
+                    <strong>Gói dịch vụ</strong>
+                    <small>Free, Plus, Pro và Pro Max</small>
+                  </span>
+                  <b>›</b>
+                </button>
               </nav>
             ) : (
               <div className="side-history-view">
@@ -898,7 +914,10 @@ export default function Home() {
                 <div className="panel-kicker">PHẦN 1 · THIẾT LẬP</div>
                 <h2>Câu hỏi & cách lấy bài</h2>
               </div>
-              <span className="flow-step-indicator">1 / 3</span>
+              <div className="flow-stage-head-actions">
+                <button className="upgrade-glow-button" type="button" onClick={openPricingFromMenu}>Nâng cấp</button>
+                <span className="flow-step-indicator">1 / 3</span>
+              </div>
             </div>
 
             <div className="panel question-card">
