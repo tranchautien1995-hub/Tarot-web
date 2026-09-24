@@ -358,7 +358,14 @@ export default function Home() {
 
     const synthesis = window.speechSynthesis;
     const loadVoices = () => {
-      const voices = synthesis.getVoices();
+      let voices: SpeechSynthesisVoice[] = [];
+      try {
+        voices = synthesis.getVoices();
+      } catch {
+        // Safari/iOS cũ có thể có speechSynthesis nhưng chưa triển khai đầy đủ.
+        setSpeechVoicesReady(true);
+        return;
+      }
       if (voices.length === 0) return;
 
       const nextVietnameseVoices = voices.filter(isVietnameseVoice);
@@ -371,7 +378,12 @@ export default function Home() {
     };
 
     loadVoices();
-    synthesis.addEventListener("voiceschanged", loadVoices);
+    const canListenForVoiceChanges =
+      typeof synthesis.addEventListener === "function" &&
+      typeof synthesis.removeEventListener === "function";
+    if (canListenForVoiceChanges) {
+      synthesis.addEventListener("voiceschanged", loadVoices);
+    }
     const retryTimers = [120, 400, 1000, 2200].map((delay) => window.setTimeout(loadVoices, delay));
     const readyTimer = window.setTimeout(() => setSpeechVoicesReady(true), 2600);
 
@@ -379,8 +391,14 @@ export default function Home() {
       speechRunRef.current += 1;
       retryTimers.forEach((timer) => window.clearTimeout(timer));
       window.clearTimeout(readyTimer);
-      synthesis.removeEventListener("voiceschanged", loadVoices);
-      synthesis.cancel();
+      if (canListenForVoiceChanges) {
+        synthesis.removeEventListener("voiceschanged", loadVoices);
+      }
+      try {
+        synthesis.cancel();
+      } catch {
+        // Không để lỗi Web Speech API trên Safari cũ làm sập toàn bộ trang.
+      }
     };
   }, []);
 
