@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { DrawnCard } from "@/lib/types";
-import { xahChatStream } from "@/lib/xah";
-import { normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
+import { getXahModel, xahChatStream } from "@/lib/xah";
+import { freeTarotSystemPrompt, normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
+import { getPlanAccess, validatePlanReading } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const question = String(body.question || "").trim();
     const cards = body.cards as DrawnCard[];
+    const preset = String(body.preset || "");
     const spreadPreset = body.preset === "celtic" ? "celtic" : undefined;
     const readingStyle = normalizeReadingStyle(body.readingStyle);
 
@@ -26,16 +28,24 @@ export async function POST(request: Request) {
       );
     }
 
+    const { access } = getPlanAccess(auth.user?.app_metadata, auth.localMode);
+    const accessError = validatePlanReading(access, preset, cards.length, body.readingStyle);
+    if (accessError) {
+      return NextResponse.json({ error: accessError }, { status: 403 });
+    }
+
     const stream = await xahChatStream([
       {
         role: "system",
-        content: tarotSystemPrompt(spreadPreset, readingStyle),
+        content: access.modelTier === "free"
+          ? freeTarotSystemPrompt()
+          : tarotSystemPrompt(spreadPreset, readingStyle),
       },
       {
         role: "user",
         content: readingPrompt(question, cards, spreadPreset, readingStyle),
       },
-    ]);
+    ], getXahModel(access.modelTier));
 
     return new Response(stream, {
       headers: {

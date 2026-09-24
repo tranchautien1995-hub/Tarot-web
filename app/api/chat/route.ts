@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { ChatMessage, DrawnCard } from "@/lib/types";
-import { xahChat, type XahMessage } from "@/lib/xah";
-import { normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
+import { getXahModel, xahChat, type XahMessage } from "@/lib/xah";
+import { freeTarotSystemPrompt, normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
+import { getPlanAccess, validatePlanReading } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
     const reading = String(body.reading || "").trim();
     const followup = String(body.followup || "").trim();
     const cards = body.cards as DrawnCard[];
+    const preset = String(body.preset || "");
     const spreadPreset = body.preset === "celtic" ? "celtic" : undefined;
     const readingStyle = normalizeReadingStyle(body.readingStyle);
     const history = (body.history || []) as ChatMessage[];
@@ -33,6 +35,12 @@ export async function POST(request: Request) {
         { error: "Thiếu dữ liệu hội thoại." },
         { status: 400 }
       );
+    }
+
+    const { access } = getPlanAccess(auth.user?.app_metadata, auth.localMode);
+    const accessError = validatePlanReading(access, preset, cards.length, body.readingStyle);
+    if (accessError) {
+      return NextResponse.json({ error: accessError }, { status: 403 });
     }
 
     const recentHistory: XahMessage[] = history
@@ -52,7 +60,9 @@ export async function POST(request: Request) {
     const messages: XahMessage[] = [
       {
         role: "system",
-        content: tarotSystemPrompt(spreadPreset, readingStyle),
+        content: access.modelTier === "free"
+          ? freeTarotSystemPrompt()
+          : tarotSystemPrompt(spreadPreset, readingStyle),
       },
       {
         role: "user",
@@ -69,7 +79,7 @@ export async function POST(request: Request) {
       },
     ];
 
-    const answer = await xahChat(messages);
+    const answer = await xahChat(messages, getXahModel(access.modelTier));
 
     return NextResponse.json({ answer });
   } catch (error) {

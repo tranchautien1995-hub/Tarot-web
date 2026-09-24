@@ -32,10 +32,18 @@ const XAH_BASE_URL = (
   process.env.XAH_BASE_URL?.trim() || "https://api.xah.io/v1"
 ).replace(/\/$/, "");
 
-const XAH_MODEL =
-  process.env.XAH_MODEL?.trim() || "gpt-6-astra";
+export type XahModelTier = "free" | "premium";
 
-function friendlyXahError(status: number, detail: string) {
+export function getXahModel(tier: XahModelTier) {
+  if (tier === "free") {
+    return process.env.XAH_FREE_MODEL?.trim() || "gpt-5.6-sol";
+  }
+  return process.env.XAH_PREMIUM_MODEL?.trim()
+    || process.env.XAH_MODEL?.trim()
+    || "gpt-6-astra";
+}
+
+function friendlyXahError(status: number, detail: string, model: string) {
   if (status === 401) {
     return "API key không hợp lệ. Hãy kiểm tra XAH_API_KEY trong file .env.local.";
   }
@@ -43,7 +51,7 @@ function friendlyXahError(status: number, detail: string) {
     return "API từ chối quyền truy cập. Hãy kiểm tra API key và quyền sử dụng model.";
   }
   if (status === 404) {
-    return `Không tìm thấy model ${XAH_MODEL} trên XAH hoặc endpoint /chat/completions không tồn tại.`;
+    return `Không tìm thấy model ${model} trên XAH hoặc endpoint /chat/completions không tồn tại.`;
   }
   if (status === 429) {
     return "API đang giới hạn lượt gọi hoặc tài khoản không đủ số dư. Hãy kiểm tra tài khoản API rồi thử lại.";
@@ -51,7 +59,7 @@ function friendlyXahError(status: number, detail: string) {
   return detail || `API trả về lỗi HTTP ${status}.`;
 }
 
-export async function xahChat(messages: XahMessage[]) {
+export async function xahChat(messages: XahMessage[], model = getXahModel("premium")) {
   const apiKey = process.env.XAH_API_KEY?.trim();
 
   if (!apiKey) {
@@ -69,7 +77,7 @@ export async function xahChat(messages: XahMessage[]) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: XAH_MODEL,
+        model,
         messages,
       }),
       cache: "no-store",
@@ -87,7 +95,7 @@ export async function xahChat(messages: XahMessage[]) {
 
     if (!response.ok) {
       const detail = data.error?.message || raw || `HTTP ${response.status}`;
-      throw new Error(friendlyXahError(response.status, detail));
+      throw new Error(friendlyXahError(response.status, detail, model));
     }
 
     const text = responseText(data).trim();
@@ -106,7 +114,7 @@ export async function xahChat(messages: XahMessage[]) {
   }
 }
 
-export async function xahChatStream(messages: XahMessage[]) {
+export async function xahChatStream(messages: XahMessage[], model = getXahModel("premium")) {
   const apiKey = process.env.XAH_API_KEY?.trim();
 
   if (!apiKey) {
@@ -125,7 +133,7 @@ export async function xahChatStream(messages: XahMessage[]) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: XAH_MODEL,
+        model,
         messages,
         stream: true,
       }),
@@ -150,7 +158,7 @@ export async function xahChatStream(messages: XahMessage[]) {
       // Giữ raw để trả lỗi provider rõ hơn.
     }
     const detail = data.error?.message || raw || `HTTP ${response.status}`;
-    throw new Error(friendlyXahError(response.status, detail));
+    throw new Error(friendlyXahError(response.status, detail, model));
   }
 
   if (!response.body) {

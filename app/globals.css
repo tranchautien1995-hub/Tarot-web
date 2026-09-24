@@ -3344,6 +3344,30 @@ html[data-tarot-page-active="false"] .account-panel-backdrop{
   background:rgba(213,179,109,.08);
   color:var(--gold2);
 }
+.reading-style-picker button.plan-locked,
+.preset-grid button.plan-locked{
+  position:relative;
+  opacity:.58;
+}
+.reading-style-picker button.plan-locked:hover,
+.preset-grid button.plan-locked:hover{
+  opacity:.82;
+}
+.plan-lock{
+  position:absolute;
+  top:6px;
+  right:7px;
+  padding:2px 5px;
+  border:1px solid rgba(213,179,109,.32);
+  border-radius:999px;
+  color:var(--gold2);
+  font-family:var(--font-body);
+  font-size:8px;
+  font-weight:600;
+  letter-spacing:.05em;
+  line-height:1.2;
+  text-transform:uppercase;
+}
 .reading-style-tooltip{
   position:absolute;
   left:50%;
@@ -4101,8 +4125,47 @@ main>.product-navigation>.side-menu-toggle span,
   font-weight:700;
 }
 .pricing-action:disabled{opacity:1;cursor:default}
+.pricing-action:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px)}
 .pricing-action.current-action{border:1px solid rgba(255,255,255,.12);background:transparent;color:#aaa5ae}
 .pricing-footnote{margin:0;padding:0 28px 25px;color:#77727c;font-size:10px;line-height:1.55;text-align:center}
+.upgrade-page{min-height:100dvh;background:#08090b;color:#f4f2f5}
+.pricing-page-shell{min-height:100dvh;padding:32px 24px;display:grid;place-items:start center;background:#08090b}
+.pricing-page{max-height:none}
+.payment-status-banner{
+  margin:18px 28px 0;padding:12px 14px;border:1px solid rgba(213,179,109,.35);border-radius:10px;
+  background:rgba(213,179,109,.08);color:#ead69f;font-size:12px;line-height:1.5;text-align:center;
+}
+.payment-status-banner.error{border-color:rgba(220,112,127,.38);background:rgba(173,63,79,.1);color:#efb6c0}
+.sepay-checkout-backdrop{
+  position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(10px);
+}
+.sepay-checkout{
+  position:relative;width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;
+  padding:28px;border:1px solid rgba(219,185,108,.42);border-radius:20px;
+  background:linear-gradient(180deg,#111217,#090a0d);color:#f4f2f5;
+  box-shadow:0 30px 90px rgba(0,0,0,.66),0 0 40px rgba(219,185,108,.08);text-align:center;
+}
+.sepay-checkout h3{margin:7px 0 0;font-family:var(--font-heading);font-size:27px;font-weight:600}
+.sepay-intro{margin:8px auto 18px;color:#aaa5ae;font-size:11.5px;line-height:1.55}
+.sepay-close{
+  position:absolute;top:14px;right:14px;width:34px;height:34px;border:1px solid rgba(255,255,255,.12);
+  border-radius:50%;background:rgba(255,255,255,.035);color:#d7d1da;font-size:22px;
+}
+.sepay-qr-frame{width:min(268px,78vw);margin:0 auto;padding:10px;border-radius:14px;background:#fff;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.sepay-qr-frame img{display:block;width:100%;height:auto;border-radius:8px}
+.sepay-details{display:grid;gap:0;margin:19px 0 13px;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;text-align:left}
+.sepay-details>div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.075)}
+.sepay-details>div:last-child{border-bottom:0}
+.sepay-details dt{color:#8f8b93;font-size:10.5px}
+.sepay-details dd{margin:0;color:#f0edf1;font-size:11px;font-weight:650;text-align:right;overflow-wrap:anywhere}
+.sepay-details .sepay-content-row dd{color:#f1d188;font-size:13px;letter-spacing:.04em}
+.sepay-copy{width:100%;min-height:42px;border:0;border-radius:999px;background:#f0d38c;color:#17120b;font-size:11px;font-weight:750}
+.sepay-waiting{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:#d7c898;font-size:10.5px;line-height:1.45}
+.sepay-waiting span{width:8px;height:8px;border-radius:50%;background:#e7c775;box-shadow:0 0 12px rgba(231,199,117,.7);animation:sepayPulse 1.1s ease-in-out infinite}
+.sepay-waiting.error{color:#efb6c0}.sepay-waiting.error span{background:#dc7080;box-shadow:none;animation:none}
+.sepay-warning{margin:11px 0 0;color:#77727c;font-size:9.5px;line-height:1.45}
+@keyframes sepayPulse{50%{opacity:.35;transform:scale(.72)}}
 .account-plan-button{border:1px solid rgba(213,179,109,.4);background:rgba(213,179,109,.08);color:var(--gold2);padding:11px 13px;font-size:11px}
 
 .theme-light .pricing-backdrop{background:rgba(66,57,65,.34)}
@@ -4123,6 +4186,16 @@ main>.product-navigation>.side-menu-toggle span,
 .theme-light .pricing-action{background:#302a31;color:#fff}
 .theme-light .pricing-action.current-action{border-color:rgba(99,75,56,.18);background:transparent;color:#817881}
 .theme-light .pricing-footnote{color:#817881}
+.theme-light.upgrade-page,.theme-light .pricing-page-shell{background:#eeeae7;color:#362f36}
+.theme-light .payment-status-banner{border-color:rgba(139,96,48,.28);background:rgba(139,96,48,.07);color:#765328}
+.theme-light .payment-status-banner.error{border-color:rgba(155,70,81,.28);background:rgba(155,70,81,.06);color:#8a414b}
+.theme-light .sepay-checkout-backdrop{background:rgba(71,61,69,.45)}
+.theme-light .sepay-checkout{border-color:rgba(139,96,48,.3);background:linear-gradient(180deg,#fffdfa,#f4efec);color:#362f36;box-shadow:0 30px 90px rgba(69,53,64,.25)}
+.theme-light .sepay-intro{color:#786f78}.theme-light .sepay-close{border-color:rgba(99,75,56,.16);background:#fff;color:#765328}
+.theme-light .sepay-details{border-color:rgba(99,75,56,.17)}
+.theme-light .sepay-details>div{border-color:rgba(99,75,56,.1)}
+.theme-light .sepay-details dt{color:#817881}.theme-light .sepay-details dd{color:#362f36}.theme-light .sepay-details .sepay-content-row dd{color:#805a2d}
+.theme-light .sepay-warning{color:#817881}.theme-light .sepay-waiting{color:#765328}
 .theme-light .account-plan-button{border-color:rgba(139,96,48,.34);background:rgba(139,96,48,.06);color:#765328}
 .account-admin-note{
   padding:11px 12px;
@@ -4151,8 +4224,14 @@ main>.product-navigation>.side-menu-toggle span,
   .pricing-card-head p{min-height:0}
   .pricing-price{margin-top:20px}
   .pricing-footnote{padding:0 17px 22px}
+  .pricing-page-shell{padding:0}
+  .pricing-page{min-height:100dvh}
+  .payment-status-banner{margin:14px 14px 0}
+  .sepay-checkout-backdrop{padding:0;place-items:stretch}
+  .sepay-checkout{width:100%;max-height:100dvh;padding:23px 18px;border:0;border-radius:0}
+  .sepay-qr-frame{width:min(248px,72vw)}
 }
-@media(prefers-reduced-motion:reduce){.pricing-backdrop{animation:none}}
+@media(prefers-reduced-motion:reduce){.pricing-backdrop{animation:none}.sepay-waiting span{animation:none}}
 
 /* WebVer1.1 — visible upgrade entry + flexible/week/month pricing. */
 .flow-stage-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:13px}

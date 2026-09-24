@@ -4,7 +4,8 @@ import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import PricingModal from "@/components/PricingModal";
-import { hasAdminRole, normalizePlan } from "@/lib/plans";
+import { AccessProvider } from "@/components/AccessContext";
+import { getPlanAccess } from "@/lib/plans";
 
 type AuthMode = "login" | "register";
 
@@ -47,17 +48,10 @@ export default function AuthGate({ children }: Props) {
   const [notice, setNotice] = useState("");
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
-  const [localHostPreview, setLocalHostPreview] = useState(false);
-  // Local preview has no Supabase token/app_metadata. Grant a development-only
-  // admin role so the owner can inspect every paid feature before deployment.
-  // Online builds still require the protected Supabase app_metadata role.
-  const isAdmin = localHostPreview || (configured ? hasAdminRole(user?.app_metadata) : localPreview);
-  const currentPlan = isAdmin ? "pro_max" : normalizePlan(user?.app_metadata?.subscription_plan);
-
-  useEffect(() => {
-    const hostname = window.location.hostname.toLowerCase();
-    setLocalHostPreview(hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1");
-  }, []);
+  // Chỉ local hoàn toàn không cấu hình Supabase mới có quyền thử nghiệm.
+  // Khi Supabase đã cấu hình, localhost cũng phải dùng đúng quyền của tài khoản.
+  const localMode = !configured && localPreview;
+  const { isAdmin, plan: currentPlan, access } = getPlanAccess(user?.app_metadata, localMode);
 
   useEffect(() => {
     if (!configured || !supabase) {
@@ -301,7 +295,15 @@ export default function AuthGate({ children }: Props) {
 
   return (
     <>
-      {children}
+      <AccessProvider value={{
+        plan: currentPlan,
+        isAdmin,
+        access,
+        userId: user?.id || (localMode ? "local-preview" : "guest"),
+        localMode
+      }}>
+        {children}
+      </AccessProvider>
       {accountPanelOpen && (
         <div className="account-panel-backdrop" role="presentation" onMouseDown={() => setAccountPanelOpen(false)}>
           <section className="account-panel" role="dialog" aria-modal="true" aria-labelledby="account-panel-title" onMouseDown={(event) => event.stopPropagation()}>

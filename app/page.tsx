@@ -4,8 +4,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } f
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import PracticeCard from "@/components/PracticeCard";
-import AuthGate from "@/components/AuthGate";
 import ReadingText from "@/components/ReadingText";
+import { usePlanAccess } from "@/components/AccessContext";
+import { isPresetAllowed } from "@/lib/plans";
 import { makeSelectedCard } from "@/lib/deck";
 import { portableReadingPrompt } from "@/lib/prompts";
 import type { ChatMessage, DrawnCard, TarotCard } from "@/lib/types";
@@ -31,7 +32,6 @@ type HistoryEntry = {
 };
 
 const HISTORY_KEY = "tarot-practice-v2.3-history";
-const HISTORY_LIMIT = 50;
 const THEME_KEY = "tarot-practice-theme-v2";
 
 type StarKind = "dot" | "sparkle" | "five";
@@ -200,6 +200,9 @@ function createId() {
 }
 
 export default function Home() {
+  const { access, userId } = usePlanAccess();
+  const historyLimit = access.historyLimit ?? 50;
+  const historyStorageKey = `${HISTORY_KEY}:${userId}`;
   const [question, setQuestion] = useState("");
   const [questionHint, setQuestionHint] = useState(QUESTION_SUGGESTIONS[0]);
   const [readingStyle, setReadingStyle] = useState<ReadingStyle | null>(null);
@@ -293,26 +296,51 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(HISTORY_KEY);
+      setHistory([]);
+      if (historyLimit === 0) {
+        return;
+      }
+      const raw = window.localStorage.getItem(historyStorageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as HistoryEntry[];
-        if (Array.isArray(parsed)) setHistory(parsed.slice(0, HISTORY_LIMIT));
+        if (Array.isArray(parsed)) setHistory(parsed.slice(0, historyLimit));
       }
     } catch {
       // History is optional. Ignore malformed localStorage and start clean.
     } finally {
       setHistoryReady(true);
     }
-  }, []);
+  }, [historyLimit, historyStorageKey]);
 
   useEffect(() => {
     if (!historyReady) return;
     try {
-      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)));
+      if (historyLimit === 0) {
+        window.localStorage.removeItem(historyStorageKey);
+        return;
+      }
+      window.localStorage.setItem(historyStorageKey, JSON.stringify(history.slice(0, historyLimit)));
     } catch {
       // Storage can be unavailable in private mode; the rest of the app still works.
     }
-  }, [history, historyReady]);
+  }, [history, historyLimit, historyReady, historyStorageKey]);
+
+  useEffect(() => {
+    if (isPresetAllowed(access, preset)) return;
+    setPreset("three");
+    setCount(3);
+    setCards(Array(3).fill(undefined));
+    setReadingStyle(null);
+    setKeepInteractiveBoard(false);
+    setDrawSession((value) => value + 1);
+    resetAnalysis();
+  // access changes only when the signed-in user's plan changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [access, preset]);
+
+  useEffect(() => {
+    if (!access.canUseReadingStyles && readingStyle) setReadingStyle(null);
+  }, [access.canUseReadingStyles, readingStyle]);
 
   useEffect(() => {
     if (!aiModalOpen) return;
@@ -439,6 +467,10 @@ export default function Home() {
   }
 
   function selectReadingStyle(style: ReadingStyle) {
+    if (!access.canUseReadingStyles) {
+      openPricingFromMenu();
+      return;
+    }
     setReadingStyle((current) => current === style ? null : style);
     resetAnalysis();
   }
@@ -462,6 +494,10 @@ export default function Home() {
   }
 
   function selectPreset(nextPreset: SpreadPreset) {
+    if (!isPresetAllowed(access, nextPreset)) {
+      openPricingFromMenu();
+      return;
+    }
     if (nextPreset === "custom") {
       setKeepInteractiveBoard(false);
       setDrawSession((value) => value + 1);
@@ -542,6 +578,10 @@ export default function Home() {
 
   function saveHistory(readingOverride?: string) {
     if (!complete) return;
+    if (historyLimit === 0) {
+      openPricingFromMenu();
+      return;
+    }
     const entry: HistoryEntry = {
       id: createId(),
       savedAt: new Date().toISOString(),
@@ -554,12 +594,16 @@ export default function Home() {
       reading: readingOverride ?? aiReading,
       chat: [...chat]
     };
-    setHistory((current) => [entry, ...current].slice(0, HISTORY_LIMIT));
+    setHistory((current) => [entry, ...current].slice(0, historyLimit));
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1800);
   }
 
   function restoreHistory(entry: HistoryEntry) {
+    if (!isPresetAllowed(access, entry.preset)) {
+      openPricingFromMenu();
+      return;
+    }
     setSideMenuOpen(false);
     setSideMenuView("main");
     setQuestion(entry.question);
@@ -593,6 +637,10 @@ export default function Home() {
   }
 
   function openHistoryMenu() {
+    if (historyLimit === 0) {
+      openPricingFromMenu();
+      return;
+    }
     setSideMenuView("history");
     setSideMenuOpen(true);
   }
@@ -606,7 +654,7 @@ export default function Home() {
   function openPricingFromMenu() {
     setSideMenuOpen(false);
     setSideMenuView("main");
-    window.dispatchEvent(new Event("tarot-open-pricing"));
+    window.location.assign("/upgrade");
   }
 
   function openAIReader() {
@@ -654,7 +702,7 @@ export default function Home() {
       setAiReading(reading);
       if (!reading) throw new Error("GPT đã phản hồi nhưng không có nội dung để hiển thị.");
 
-      if (reading) {
+      if (reading && historyLimit > 0) {
         const entry: HistoryEntry = {
           id: createId(),
           savedAt: new Date().toISOString(),
@@ -667,7 +715,7 @@ export default function Home() {
           reading,
           chat: []
         };
-        setHistory((current) => [entry, ...current].slice(0, HISTORY_LIMIT));
+        setHistory((current) => [entry, ...current].slice(0, historyLimit));
         setSaved(true);
         window.setTimeout(() => setSaved(false), 1800);
       }
@@ -725,7 +773,6 @@ export default function Home() {
   }, []);
 
   return (
-    <AuthGate>
       <main className={`theme-${theme}`} data-theme={theme}>
       <div className="ambient" aria-hidden="true" />
       <div className="star-field" aria-hidden="true">
@@ -803,7 +850,7 @@ export default function Home() {
                   </span>
                   <b>›</b>
                 </button>
-                <button type="button" onClick={() => setSideMenuView("history")}>
+                <button type="button" onClick={openHistoryMenu}>
                   <span className="side-menu-item-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 12a8 8 0 1 0 2.35-5.65L4 8.7"/><path d="M4 4v4.7h4.7"/><path d="M12 8v4.5l3 1.8"/></svg>
                   </span>
@@ -934,13 +981,14 @@ export default function Home() {
                   <button
                     key={style.id}
                     type="button"
-                    className={readingStyle === style.id ? "active" : ""}
+                    className={`${readingStyle === style.id ? "active" : ""} ${!access.canUseReadingStyles ? "plan-locked" : ""}`.trim()}
                     aria-pressed={readingStyle === style.id}
                     aria-label={style.fullLabel}
                     title={style.fullLabel}
                     onClick={() => selectReadingStyle(style.id)}
                   >
                     <span className="reading-style-short">{style.label}</span>
+                    {!access.canUseReadingStyles && <span className="plan-lock" aria-hidden="true">Khóa</span>}
                     <span className="reading-style-tooltip" role="tooltip">{style.fullLabel}</span>
                   </button>
                 ))}
@@ -960,9 +1008,10 @@ export default function Home() {
                 <div className="panel-kicker">03 · KIỂU TRẢI</div>
                 <div className="preset-grid">
                   {PRESETS.map((item) => (
-                    <button key={item.id} className={preset === item.id ? "active" : ""} onClick={() => selectPreset(item.id)}>
+                    <button key={item.id} className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()} onClick={() => selectPreset(item.id)}>
                       <b>{item.title}</b>
                       <small>{item.description}</small>
+                      {!isPresetAllowed(access, item.id) && <span className="plan-lock" aria-hidden="true">Khóa</span>}
                     </button>
                   ))}
                 </div>
@@ -1020,7 +1069,7 @@ export default function Home() {
               <section className="reading-actions-panel reading-actions-inside" aria-label="Công cụ trải bài">
                 <div className="spread-management-actions">
                   <button className="ghost-button" disabled={!complete} onClick={() => saveHistory()}>
-                    {saved ? "✓ Đã lưu" : "Lưu trải bài"}
+                    {saved ? "✓ Đã lưu" : historyLimit === 0 ? "Nâng cấp để lưu" : "Lưu trải bài"}
                   </button>
                   <button className="ghost-button danger-action" onClick={clearSpread}>Xóa trải bài</button>
                 </div>
@@ -1046,7 +1095,7 @@ export default function Home() {
             <section className="reading-actions-panel reading-actions-inside manual-reading-actions" aria-label="Công cụ trải bài">
               <div className="spread-management-actions">
                 <button className="ghost-button" disabled={!complete} onClick={() => saveHistory()}>
-                  {saved ? "✓ Đã lưu" : "Lưu trải bài"}
+                  {saved ? "✓ Đã lưu" : historyLimit === 0 ? "Nâng cấp để lưu" : "Lưu trải bài"}
                 </button>
                 <button className="ghost-button danger-action" onClick={clearSpread}>Xóa trải bài</button>
                 <button className="ghost-button" onClick={() => setPickerIndex(cards.findIndex((card) => !card) >= 0 ? cards.findIndex((card) => !card) : 0)}>🃏 Chọn lá</button>
@@ -1232,6 +1281,5 @@ export default function Home() {
         onClose={() => setPickerIndex(null)}
       />
       </main>
-    </AuthGate>
   );
 }
