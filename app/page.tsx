@@ -1018,7 +1018,7 @@ export default function Home() {
                 <div className="panel-kicker">02 · CÁCH LẤY BÀI</div>
                 <div className="mode-switch">
                   <button className={mode === "random" ? "active" : ""} onClick={() => { setMode("random"); setKeepInteractiveBoard(false); setDrawSession((value) => value + 1); }}><span>✦</span><b>Xáo & bốc bài</b><small>Xáo bộ bài, trải 78 lá úp rồi kéo từng lá vào vị trí bạn muốn.</small></button>
-                  <button className={mode === "manual" ? "active" : ""} onClick={() => { setMode("manual"); setKeepInteractiveBoard(false); }}><span>🃏</span><b>Tự chọn bài</b><small>Mở thư viện Rider–Waite và chọn từng vị trí.</small></button>
+                  <button className={mode === "manual" ? "active" : ""} onClick={() => { setMode("manual"); setKeepInteractiveBoard(false); }}><span>🃏</span><b>Tự rút bài</b><small>Dành cho các bạn đang học Tarot và có sẵn bài.</small></button>
                 </div>
               </div>
 
@@ -1043,7 +1043,7 @@ export default function Home() {
               <div className="flow-continue-summary">
                 <span>{presetLabel}</span>
                 <span>·</span>
-                <span>{mode === "random" ? "Xáo & bốc bài" : "Tự chọn bài"}</span>
+                <span>{mode === "random" ? "Xáo & bốc bài" : "Tự rút bài"}</span>
               </div>
               <button
                 className="gold-button flow-continue-button"
