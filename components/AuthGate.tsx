@@ -332,6 +332,7 @@ export default function AuthGate({ children }: Props) {
                   {isAdmin && (
                     <div className="account-admin-note">Tài khoản quản trị được mở toàn bộ dịch vụ để quản lý và thử nghiệm.</div>
                   )}
+                  {isAdmin && <button className="account-plan-button" type="button" onClick={() => window.location.assign("/prompt-lab")}>Mở Prompt Lab</button>}
                   <button className="account-plan-button" type="button" onClick={() => { setAccountPanelOpen(false); setPricingOpen(true); }}>Xem và nâng cấp gói</button>
                   <button className="account-signout" type="button" onClick={signOut}>Đăng xuất</button>
                 </>
@@ -346,6 +347,7 @@ export default function AuthGate({ children }: Props) {
                     <strong>Admin · Toàn quyền</strong>
                   </div>
                   <div className="account-admin-note">Quyền Admin này chỉ dùng để kiểm tra trên máy local. Khi đưa lên web, tài khoản vẫn phải được cấp quyền bằng Supabase.</div>
+                  <button className="account-plan-button" type="button" onClick={() => window.location.assign("/prompt-lab")}>Mở Prompt Lab</button>
                   <button className="account-plan-button" type="button" onClick={() => { setAccountPanelOpen(false); setPricingOpen(true); }}>Xem các gói dịch vụ</button>
                   <p className="account-local-note">Bản local đang bỏ qua đăng nhập để phục vụ chỉnh giao diện và thử nghiệm toàn bộ dịch vụ.</p>
                 </>
