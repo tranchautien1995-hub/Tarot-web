@@ -4044,9 +4044,9 @@ main>.product-navigation>.side-menu-toggle span,
   background:rgba(8,9,11,.94);
   backdrop-filter:blur(14px);
 }
-.pricing-kicker{color:#d9b86f;font-size:11px;letter-spacing:.18em}
-.pricing-header h2{margin:6px 0 0;font-family:var(--font-heading);font-size:32px;font-weight:600}
-.pricing-header p{margin:7px 0 0;color:#aaa5ae;font-size:13px;line-height:1.5}
+.pricing-kicker{color:#d9b86f;font-size:12px;letter-spacing:.18em}
+.pricing-header h2{margin:6px 0 0;font-family:var(--font-heading);font-size:33px;font-weight:600}
+.pricing-header p{margin:7px 0 0;color:#aaa5ae;font-size:15px;line-height:1.5}
 .pricing-close{
   flex:0 0 40px;
   width:40px;
@@ -4068,7 +4068,7 @@ main>.product-navigation>.side-menu-toggle span,
   border-radius:999px;
   background:#141519;
   color:#8f8b93;
-  font-size:12px;
+  font-size:14px;
 }
 .pricing-status strong{color:#f3d58d;font-weight:600}
 .pricing-grid{
@@ -4079,7 +4079,7 @@ main>.product-navigation>.side-menu-toggle span,
 }
 .pricing-card{
   position:relative;
-  min-height:480px;
+  min-height:600px;
   display:flex;
   flex-direction:column;
   padding:27px 25px 24px;
@@ -4098,17 +4098,18 @@ main>.product-navigation>.side-menu-toggle span,
   border-radius:999px;
   background:#dfbd72;
   color:#17120b;
-  font-size:9px;
-  font-weight:800;
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:700;
   letter-spacing:.12em;
 }
-.pricing-card-head h3{margin:0;font-family:var(--font-heading);font-size:27px;font-weight:650}
-.pricing-card-head p{min-height:46px;margin:8px 0 0;color:#aaa5ae;font-size:13px;line-height:1.6}
-.pricing-price{margin-top:27px;color:#fafafa;font-family:var(--font-heading);font-size:31px;font-weight:650;line-height:1.1}
+.pricing-card-head h3{margin:0;font-family:var(--font-heading);font-size:29px;font-weight:650}
+.pricing-card-head p{min-height:58px;margin:8px 0 0;color:#aaa5ae;font-size:15px;line-height:1.6}
+.pricing-price{margin-top:27px;color:#fafafa;font-family:var(--font-heading);font-size:33px;font-weight:650;line-height:1.1}
 .pricing-price.pending-price{font-size:22px;color:#ddd8df}
-.pricing-model{min-height:33px;margin-top:10px;color:#d7bd7e;font-size:11px;line-height:1.45}
+.pricing-model{min-height:38px;margin-top:10px;color:#d7bd7e;font-size:12px;line-height:1.45}
 .pricing-features{display:grid;gap:11px;margin:22px 0 26px;padding:0;list-style:none}
-.pricing-features li{display:grid;grid-template-columns:16px 1fr;gap:7px;color:#e2dfe4;font-size:12.5px;line-height:1.45}
+.pricing-features li{display:grid;grid-template-columns:17px 1fr;gap:7px;color:#e2dfe4;font-size:15px;line-height:1.45}
 .pricing-features li span{font-size:14px;line-height:1.15}
 .pricing-features .included span{color:#dfc47f}
 .pricing-features .excluded{color:#77727b}
@@ -4121,13 +4122,13 @@ main>.product-navigation>.side-menu-toggle span,
   border-radius:999px;
   background:#f2f2f3;
   color:#111216;
-  font-size:12px;
-  font-weight:700;
+  font-size:17px;
+  font-weight:400;
 }
 .pricing-action:disabled{opacity:1;cursor:default}
 .pricing-action:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px)}
 .pricing-action.current-action{border:1px solid rgba(255,255,255,.12);background:transparent;color:#aaa5ae}
-.pricing-footnote{margin:0;padding:0 28px 25px;color:#77727c;font-size:11px;line-height:1.55;text-align:center}
+.pricing-footnote{margin:0;padding:0 28px 25px;color:#77727c;font-size:13px;line-height:1.55;text-align:center}
 .upgrade-page{min-height:100dvh;background:#08090b;color:#f4f2f5}
 .pricing-page-shell{min-height:100dvh;padding:32px 24px;display:grid;place-items:start center;background:#08090b}
 .pricing-page{max-height:none}
@@ -4167,6 +4168,68 @@ main>.product-navigation>.side-menu-toggle span,
 .sepay-warning{margin:11px 0 0;color:#77727c;font-size:10.5px;line-height:1.45}
 @keyframes sepayPulse{50%{opacity:.35;transform:scale(.72)}}
 .account-plan-button{border:1px solid rgba(213,179,109,.4);background:rgba(213,179,109,.08);color:var(--gold2);padding:11px 13px;font-size:12px}
+
+/* Trang nâng cấp phải dùng đúng bảng màu Dark của trang chính. */
+.theme-dark.upgrade-page,
+.theme-dark .pricing-page-shell{
+  background:
+    radial-gradient(circle at 50% -10%,#321b34 0,#121019 35%,#09080e 72%),
+    #0b0910;
+  color:var(--ink);
+}
+.theme-dark .pricing-backdrop{
+  background:rgba(7,5,10,.78);
+}
+.theme-dark .pricing-modal{
+  border-color:var(--line);
+  background:linear-gradient(180deg,rgba(28,22,35,.98),rgba(13,10,18,.99));
+  color:var(--ink);
+  box-shadow:0 34px 120px rgba(0,0,0,.52),0 0 55px rgba(72,39,76,.12);
+}
+.theme-dark .pricing-header{
+  border-color:rgba(213,179,109,.16);
+  background:linear-gradient(180deg,rgba(28,22,35,.97),rgba(22,17,29,.94));
+}
+.theme-dark .pricing-header p,
+.theme-dark .pricing-card-head p{color:#b9afbd}
+.theme-dark .pricing-close{
+  border-color:rgba(213,179,109,.23);
+  background:rgba(255,255,255,.035);
+  color:var(--gold2);
+}
+.theme-dark .pricing-status{
+  border-color:rgba(213,179,109,.2);
+  background:rgba(255,255,255,.025);
+  color:#a69daa;
+}
+.theme-dark .pricing-card{
+  border-color:rgba(213,179,109,.2);
+  background:linear-gradient(155deg,rgba(34,26,42,.96),rgba(17,14,23,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.theme-dark .pricing-card.featured{
+  border-color:rgba(218,182,103,.64);
+  box-shadow:0 0 0 1px rgba(218,182,103,.08),0 22px 58px rgba(0,0,0,.24),0 0 34px rgba(213,179,109,.055);
+}
+.theme-dark .pricing-card.current{
+  background:linear-gradient(155deg,rgba(42,31,49,.98),rgba(18,14,24,.99));
+}
+.theme-dark .pricing-price{color:#f4eee5}
+.theme-dark .pricing-features li{color:#e5dfe7}
+.theme-dark .pricing-features .excluded{color:#83798a}
+.theme-dark .pricing-action{background:#f4eee5;color:#211924}
+.theme-dark .pricing-action.current-action{
+  border-color:rgba(213,179,109,.2);
+  background:rgba(255,255,255,.025);
+  color:#b9afbd;
+}
+.theme-dark .pricing-footnote{color:#8e8492}
+.theme-dark .payment-status-banner{border-color:rgba(213,179,109,.35);background:rgba(213,179,109,.08);color:#ead69f}
+.theme-dark .sepay-checkout{
+  border-color:rgba(219,185,108,.42);
+  background:linear-gradient(155deg,#211927,#0f0c14);
+  color:var(--ink);
+}
 
 .theme-light .pricing-backdrop{background:rgba(66,57,65,.34)}
 .theme-light .pricing-modal{border-color:rgba(99,75,56,.18);background:#f8f5f2;color:#362f36;box-shadow:0 30px 90px rgba(69,53,64,.24)}
@@ -4210,14 +4273,14 @@ main>.product-navigation>.side-menu-toggle span,
 
 @media(max-width:1050px){
   .pricing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .pricing-card{min-height:430px}
+  .pricing-card{min-height:540px}
 }
 @media(max-width:620px){
   .pricing-backdrop{padding:0;place-items:stretch}
   .pricing-modal{max-height:100dvh;border:0;border-radius:0}
   .pricing-header{padding:18px 17px 15px}
-  .pricing-header h2{font-size:25px}
-  .pricing-header p{font-size:12px}
+  .pricing-header h2{font-size:28px}
+  .pricing-header p{font-size:14px}
   .pricing-status{margin-top:15px}
   .pricing-grid{grid-template-columns:1fr;padding:18px 14px;gap:16px}
   .pricing-card{min-height:0;padding:23px 20px 20px;border-radius:18px}
@@ -4232,6 +4295,120 @@ main>.product-navigation>.side-menu-toggle span,
   .sepay-qr-frame{width:min(248px,72vw)}
 }
 @media(prefers-reduced-motion:reduce){.pricing-backdrop{animation:none}.sepay-waiting span{animation:none}}
+
+/* WebVer1.8 — danh sách trải bài chuyên sâu. */
+.preset-panel{position:relative;overflow:visible}
+.more-spreads-trigger small{white-space:normal}
+.more-spreads-panel{
+  position:relative;
+  z-index:30;
+  margin-top:12px;
+  padding:14px;
+  border:1px solid rgba(213,179,109,.24);
+  border-radius:8px;
+  background:linear-gradient(155deg,rgba(31,24,38,.98),rgba(16,13,22,.99));
+  box-shadow:0 18px 48px rgba(0,0,0,.3);
+}
+.more-spreads-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.more-spreads-head>b{color:var(--gold2);font-family:var(--font-heading);font-size:16px;font-weight:600}
+.more-spreads-head>button{
+  width:30px;
+  height:30px;
+  border:1px solid rgba(213,179,109,.2);
+  border-radius:50%;
+  background:rgba(255,255,255,.025);
+  color:#b8afbc;
+  font-size:19px;
+  line-height:1;
+}
+.more-spreads-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.more-spreads-grid>button{
+  position:relative;
+  min-height:76px;
+  padding:13px;
+  border:1px solid rgba(255,255,255,.085);
+  border-radius:3px;
+  background:rgba(0,0,0,.13);
+  color:#b8afbc;
+  text-align:left;
+}
+.more-spreads-grid>button:hover,
+.more-spreads-grid>button:focus-visible{z-index:40;border-color:rgba(213,179,109,.62);color:var(--gold2);outline:0}
+.more-spreads-grid>button.active{border-color:var(--gold);background:rgba(98,55,87,.24);color:var(--gold2)}
+.more-spreads-grid b{display:block;padding-right:34px;font-family:var(--font-heading);font-size:16px;font-weight:600}
+.more-spreads-grid small{display:block;margin-top:5px;color:#817886;font-size:11.5px;line-height:1.4}
+.more-spreads-hint{margin:11px 1px 0;color:#817886;font-size:10.5px;line-height:1.45}
+.spread-info-tooltip{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 8px);
+  z-index:60;
+  width:min(310px,calc(100vw - 70px));
+  padding:10px 12px;
+  border:1px solid rgba(213,179,109,.38);
+  border-radius:6px;
+  background:#17121c;
+  color:#eadfca;
+  box-shadow:0 12px 30px rgba(0,0,0,.46);
+  font-size:12px;
+  font-weight:400;
+  line-height:1.5;
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%,-4px);
+  transition:opacity .14s ease,transform .14s ease;
+}
+.more-spreads-grid>button:hover .spread-info-tooltip,
+.more-spreads-grid>button:focus-visible .spread-info-tooltip{opacity:1;transform:translate(-50%,0)}
+.theme-light .more-spreads-panel{border-color:rgba(105,75,45,.2);background:linear-gradient(155deg,#fffdfa,#f2ece9);box-shadow:0 18px 42px rgba(78,61,72,.14)}
+.theme-light .more-spreads-head>b{color:#765328}
+.theme-light .more-spreads-head>button{border-color:rgba(105,75,45,.17);background:rgba(255,255,255,.58);color:#765328}
+.theme-light .more-spreads-grid>button{border-color:rgba(105,75,45,.16);background:rgba(255,255,255,.54);color:#756a73}
+.theme-light .more-spreads-grid>button:hover,
+.theme-light .more-spreads-grid>button:focus-visible,
+.theme-light .more-spreads-grid>button.active{border-color:rgba(139,96,48,.66);background:rgba(166,122,64,.08);color:#765328}
+.theme-light .more-spreads-grid small,
+.theme-light .more-spreads-hint{color:#8a7f88}
+.theme-light .spread-info-tooltip{border-color:rgba(139,96,48,.28);background:#fffaf3;color:#5c4635;box-shadow:0 10px 25px rgba(85,62,88,.16)}
+
+/* Bố cục có ý nghĩa riêng trên màn hình lớn; mobile vẫn dùng thanh kéo ngang hiện có. */
+.v27-slots.count-many.spread-layout-matrix_3x3,
+.manual-slot-layout.count-many.spread-layout-matrix_3x3{grid-template-columns:repeat(3,var(--spread-card-width));max-width:none}
+.v27-slots.count-many.spread-layout-zodiac_houses,
+.manual-slot-layout.count-many.spread-layout-zodiac_houses{grid-template-columns:repeat(4,var(--spread-card-width));max-width:none}
+.v27-slots.count-many.spread-layout-tree_of_life,
+.manual-slot-layout.count-many.spread-layout-tree_of_life{grid-template-columns:repeat(5,var(--spread-card-width));max-width:none}
+
+@media(max-width:820px){
+  .more-spreads-grid{grid-template-columns:1fr}
+  .spread-info-tooltip{left:8px;right:8px;width:auto;transform:translateY(-4px)}
+  .more-spreads-grid>button:hover .spread-info-tooltip,
+  .more-spreads-grid>button:focus-visible .spread-info-tooltip{transform:none}
+}
+@media(max-width:620px){
+  .more-spreads-panel{padding:12px 10px}
+  .more-spreads-grid>button{min-height:70px;padding:11px}
+  .more-spreads-hint{font-size:10px}
+}
+
+.question-card.question-not-required textarea:disabled{
+  opacity:1;
+  cursor:not-allowed;
+  color:#8d8491;
+  background:linear-gradient(90deg,rgba(213,179,109,.025),transparent 72%);
+  -webkit-text-fill-color:#8d8491;
+}
+.question-card.question-not-required textarea:disabled::placeholder{
+  color:#a59aa8;
+  opacity:1;
+  font-style:normal;
+}
+.theme-light .question-card.question-not-required textarea:disabled{
+  color:#877d87;
+  background:linear-gradient(90deg,rgba(139,96,48,.035),transparent 72%);
+  -webkit-text-fill-color:#877d87;
+}
+.theme-light .question-card.question-not-required textarea:disabled::placeholder{color:#877d87}
 
 /* WebVer1.1 — visible upgrade entry + flexible/week/month pricing. */
 .flow-stage-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:13px}
@@ -4308,7 +4485,7 @@ main>.product-navigation>.side-menu-toggle span,
   background:transparent;
   color:#8d8991;
   font-family:var(--font-ui);
-  font-size:13px;
+  font-size:17px;
   font-weight:600;
 }
 .billing-switch button.active{background:#f3f3f4;color:#111216;box-shadow:0 4px 13px rgba(0,0,0,.24)}
@@ -4373,3 +4550,79 @@ main>.product-navigation>.side-menu-toggle span,
   .upgrade-glow-button{min-width:96px;font-size:14px}
 }
 @media(prefers-reduced-motion:reduce){.upgrade-glow-button{animation:none}}
+
+/* WebVer1.8 hotfix — remove the disabled-question seam and keep every
+   spread-position label readable without colliding with its neighbours. */
+.question-card.question-not-required textarea:disabled{
+  border-bottom:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  resize:none;
+}
+.question-not-required-message{
+  display:flex;
+  align-items:flex-start;
+  width:100%;
+  min-height:96px;
+  padding:18px 0;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:transparent;
+  color:#a59aa8;
+  font-family:var(--font-ui);
+  font-size:20px;
+  line-height:1.55;
+  font-style:normal;
+}
+.theme-light .question-not-required-message{
+  color:#877d87;
+  border-bottom-color:rgba(91,70,52,.14);
+}
+
+.spread-slot-item{
+  min-width:0;
+}
+.slot-position-heading{
+  display:grid!important;
+  grid-template-columns:22px minmax(0,1fr);
+  align-items:start!important;
+  column-gap:6px!important;
+  width:var(--spread-card-width);
+  height:58px!important;
+  min-height:58px!important;
+  padding:2px 2px 8px!important;
+  overflow:visible!important;
+  text-align:left;
+}
+.slot-position-heading>span:first-child{
+  grid-column:1;
+  min-width:0;
+  padding-top:2px;
+  white-space:nowrap;
+  text-align:left;
+  line-height:1.25!important;
+}
+.slot-position-heading>.slot-position-name{
+  grid-column:2;
+  min-width:0;
+  width:100%;
+  white-space:normal!important;
+  overflow:visible!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  text-overflow:clip;
+  line-height:1.28!important;
+  text-align:left;
+}
+
+@media(max-width:700px){
+  .slot-position-heading{
+    grid-template-columns:18px minmax(0,1fr);
+    column-gap:5px!important;
+    height:62px!important;
+    min-height:62px!important;
+    padding:1px 1px 7px!important;
+  }
+  .slot-position-heading>span:first-child{padding-top:1px}
+  .slot-position-heading>.slot-position-name{line-height:1.22!important}
+}

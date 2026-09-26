@@ -84,13 +84,50 @@ function cardList(cards: DrawnCard[]) {
     .join("\n");
 }
 
+const SPREAD_NAMES: Record<string, string> = {
+  three: "3 lá",
+  six: "6 lá",
+  celtic: "10 lá · Celtic Cross",
+  future_love: "6 lá · Người yêu tương lai",
+  zodiac_houses: "12 lá · 12 Nhà Hoàng Đạo",
+  health_overview: "6 lá · Tổng quan sức khỏe",
+  tree_of_life: "10 lá · Cây Sự Sống",
+  matrix_3x3: "9 lá · Ma trận 3×3"
+};
+
+function spreadSpecificInstruction(spreadPreset?: string) {
+  if (spreadPreset === "celtic") {
+    return `\n\nRiêng với Celtic Cross 10 lá, hãy dùng cấu trúc riêng của trải bài để suy luận trước khi viết nhưng vẫn giữ giọng Reader tự nhiên, không biến câu trả lời thành 10 mục giải nghĩa từng lá. Đọc 1–2 như lõi hiện tại và lực cản trực tiếp; 3–4 như điều người hỏi đang ý thức hoặc mong muốn so với nền tảng sâu hơn; 5 → 1/2 → 6 như chuyển động từ quá khứ qua hiện tại đến xu hướng sắp tới; 7–8–9 như mối quan hệ giữa người hỏi, môi trường và hy vọng hoặc nỗi sợ; rồi đọc lá 10 như hướng phát triển nảy sinh từ toàn bộ các lực trước đó. Ưu tiên liên kết xuyên trục khi chúng thật sự làm sáng câu chuyện. Không tự suy ra vai trò, động cơ hay lỗi của từng người nếu bài chưa đủ căn cứ. Lá kết quả là xu hướng có điều kiện, không phải kết cục chắc chắn.`;
+  }
+
+  if (spreadPreset === "future_love") {
+    return `\n\nRiêng với trải Người yêu tương lai 6 lá, phải trình bày theo đúng thứ tự sáu vị trí để người hỏi dễ theo dõi. Mở đầu bằng một đoạn ngắn nêu chân dung chung và mạch phát triển chính, sau đó dùng sáu đề mục theo mẫu “### 1. Người yêu tương lai của bạn là người như thế nào?” đến “### 6. Tiềm năng gắn bó lâu dài”. Mỗi mục trả lời trực tiếp vị trí đó bằng một đoạn ngắn, nêu tên lá làm căn cứ và nối với vị trí khác khi mối liên hệ giúp câu trả lời rõ hơn; không viết như sáu định nghĩa lá bài rời rạc. Kết nối vị trí 1 với 3 để mô tả phẩm chất và dấu hiệu nhận ra; đọc vị trí 2 thật thận trọng vì Tarot không thể xác minh chắc chắn một người cụ thể đã xuất hiện hay chưa; nối vị trí 4–5 để thấy cách hai người tác động lên nhau và điều mới mối quan hệ có thể mở ra; dùng vị trí 6 để nói về tiềm năng gắn bó có điều kiện. Không bỏ sót hoặc đảo thứ tự vị trí. Không tự bịa ngoại hình, nghề nghiệp, cung hoàng đạo, địa điểm gặp gỡ, danh tính hoặc mốc thời gian. Nếu bài không xác nhận một chi tiết, nói giới hạn đó ngắn gọn rồi tiếp tục với phần có căn cứ. Dùng từ đời thường, không dùng giọng sách vở.`;
+  }
+
+  if (spreadPreset === "zodiac_houses") {
+    return `\n\nRiêng với trải 12 Nhà Hoàng Đạo, phải kể lần lượt từ Nhà 1 đến Nhà 12 để người hỏi có thể theo dõi toàn bộ đời sống của mình mà không bị nhảy ý. Mở đầu bằng một đoạn “## Tổng quan” nêu 2–4 chủ đề nổi bật xuyên suốt, sau đó viết đủ mười hai đề mục theo đúng mẫu “### Nhà 1 — Bản thân, tính cách, tham vọng và cơ thể” cho tới “### Nhà 12 — Nội tâm, điều kín, giới hạn và tiềm thức”. Trong mỗi nhà, trả lời trước lĩnh vực đó đang ở trạng thái nào, rồi dùng lá bài, chiều xuôi/ngược và quan hệ với các nhà khác để làm rõ. Mỗi nhà chỉ cần một đoạn vừa đủ; không bỏ nhà, không đổi thứ tự và không biến mười hai mục thành mười hai định nghĩa lá bài rời rạc. Khi hai nhà cùng nói về một vấn đề, hãy chỉ ra mối liên hệ ngay ở nhà đang đọc và có thể nhắc lại ngắn ở phần tổng hợp, nhưng không ép tất cả thành cặp. Sau Nhà 12, thêm phần “## Mối liên hệ nổi bật” để nối những chủ đề quan trọng giữa các nhà và nêu mặt nào đang thuận, mặt nào cần chú ý, điều gì có thể làm trong thực tế. Nhà 1–4 là nền tảng bản thân, tài chính, giao tiếp và gia đình; Nhà 5–8 là sáng tạo, thói quen, quan hệ và nguồn lực chung; Nhà 9–12 là niềm tin, sự nghiệp, cộng đồng và đời sống bên trong. Dùng từ quen thuộc, tránh thuật ngữ chiêm tinh khó hiểu, tránh giọng sách giáo khoa và không dự đoán sự kiện cụ thể khi bài không đủ căn cứ.`;
+  }
+
+  if (spreadPreset === "health_overview") {
+    return `\n\nRiêng với trải Tổng quan sức khỏe 6 lá, phải trình bày theo đúng thứ tự sáu vị trí: Thể trạng hiện tại; Mức năng lượng và sức bền; Tinh thần và áp lực đang ảnh hưởng; Thói quen đang hỗ trợ sức khỏe; Điều cần chú ý hoặc thay đổi; Hướng chăm sóc bản thân. Mở đầu bằng một đoạn tổng quan ngắn, sau đó dùng sáu đề mục đánh số từ 1 đến 6; mỗi mục trả lời trực tiếp lĩnh vực của vị trí bằng một đoạn ngắn và có thể nối sang vị trí khác khi cần. Kết nối vị trí 1–3 để thấy cơ thể, sức bền và tinh thần đang ảnh hưởng lẫn nhau ra sao; đọc vị trí 4–5 như điều đang hỗ trợ so với điều cần chú ý; dùng vị trí 6 để đưa ra hướng chăm sóc cụ thể, vừa sức. Không bỏ sót, đảo thứ tự hoặc viết thành sáu định nghĩa lá bài. Chỉ đọc ở mức phản chiếu về thể trạng, năng lượng, áp lực, thói quen và hướng tự chăm sóc. Không chẩn đoán bệnh, không khẳng định người hỏi mắc hoặc sẽ mắc bệnh, không dự đoán tuổi thọ, không chỉ định thuốc, chế độ điều trị hoặc yêu cầu ngừng điều trị. Nếu có triệu chứng, nguy cơ hoặc quyết định y tế, nói rõ Tarot không thay thế bác sĩ và khuyên người hỏi tìm chuyên gia y tế phù hợp. Dùng ngôn ngữ đời thường, không dùng giọng y khoa hoặc thuật ngữ khó hiểu.`;
+  }
+
+  if (spreadPreset === "tree_of_life") {
+    return `\n\nRiêng với trải Cây Sự Sống 10 lá, hãy đọc như bản đồ bên trong của người hỏi và trình bày đủ mười vị trí theo đúng thứ tự. Mở đầu bằng một đoạn ngắn nêu cốt lõi, mâu thuẫn chính và nguồn lực nổi bật. Sau đó dùng các đề mục đánh số từ 1 đến 10 theo đúng tên vị trí: Cốt lõi con người bạn; Nguồn lực bên trong; Điều đang thúc đẩy bạn; Điều đang cản trở bạn; Niềm tin và cách bạn suy nghĩ; Cảm xúc sâu bên trong; Bài học từ quá khứ; Cách bạn đang thể hiện ra ngoài; Hướng phát triển phù hợp; Điều cần kết nối và đưa vào hành động. Mỗi mục trả lời trực tiếp vị trí đó bằng một đoạn ngắn, đồng thời nối vị trí 1–2 để xác định cốt lõi và nguồn lực; 3–4 để thấy lực thúc đẩy và lực cản; 5–6 để thấy suy nghĩ và cảm xúc đang hỗ trợ hay mâu thuẫn; 7–8 để nối bài học cũ với biểu hiện bên ngoài; 9–10 để chuyển hướng phát triển thành hành động thực tế. Không bỏ sót hoặc đảo thứ tự, nhưng cũng không viết như mười định nghĩa lá bài rời nhau. Tập trung vào điều người hỏi có thể nhận ra và kiểm chứng trong đời sống. Không biến bài thành bài giảng tâm lý, không gắn nhãn tính cách hoặc chẩn đoán con người từ một lá. Dùng từ đời thường, rõ và tự nhiên.`;
+  }
+
+  if (spreadPreset === "matrix_3x3") {
+    return `\n\nRiêng với trải Ma trận 3×3, phải trình bày theo đúng bố cục của ma trận để người hỏi dễ nhìn ra diễn biến. Mở đầu bằng một đoạn ngắn nêu mạch Quá khứ → Hiện tại → Hướng phát triển. Sau đó viết ba phần theo đúng thứ tự: “## Hàng 1 — Quá khứ” gồm vị trí 1, 2, 3; “## Hàng 2 — Hiện tại” gồm vị trí 4, 5, 6; “## Hàng 3 — Hướng phát triển” gồm vị trí 7, 8, 9. Trong mỗi phần, lần lượt nói rõ từng vị trí bằng đề mục đánh số và một đoạn ngắn, rồi chốt mối liên hệ của cả hàng. Hàng đầu xác định nền tảng và phần quá khứ còn tác động; hàng giữa tìm trọng tâm, nút thắt và nguồn lực hiện tại; hàng cuối mô tả điều đang hình thành, việc cần làm và kết quả có điều kiện. Lá số 5 là điểm xoay của toàn ma trận; nối nó với các lá ở cùng hàng, cùng cột hoặc đường chéo chỉ khi mối liên hệ thật sự rõ. Không bỏ sót hoặc đảo vị trí, không biến chín mục thành chín định nghĩa lá bài, và không biến hàng tương lai thành lời bảo đảm. Dùng lời văn tự nhiên, gần với cách nói hằng ngày.`;
+  }
+
+  return "";
+}
+
 export function tarotSystemPrompt(
   spreadPreset?: string,
   readingStyle: ReadingStyle = "default"
 ) {
-  const celticCrossInstruction = spreadPreset === "celtic"
-    ? `\n\nRiêng với Celtic Cross 10 lá, hãy dùng cấu trúc riêng của trải bài để suy luận trước khi viết nhưng vẫn giữ giọng Reader tự nhiên, không biến câu trả lời thành 10 mục giải nghĩa từng lá. Đọc 1–2 như lõi hiện tại và lực cản trực tiếp; 3–4 như điều người hỏi đang ý thức/mong muốn so với nền tảng sâu hơn; 5 → 1/2 → 6 như chuyển động từ quá khứ qua hiện tại đến xu hướng sắp tới; 7–8–9 như mối quan hệ giữa người hỏi, môi trường/người xung quanh và hy vọng/nỗi sợ; rồi đọc lá 10 như hướng phát triển nảy sinh từ toàn bộ các lực trước đó. Ưu tiên những liên kết xuyên trục khi chúng thực sự làm sáng câu chuyện. Khi nhiều vị trí tạo thành một chuỗi nguyên nhân → diễn biến → hệ quả, hãy ưu tiên đọc chuỗi đó như một mạch chung thay vì tách thành các ý riêng. Không tự suy ra ai là người gánh nhiều hơn, ai theo đuổi, ai né tránh, ai tổn thương ai hoặc động cơ cụ thể của từng người nếu các lá và vị trí chưa đủ hỗ trợ; khi chưa rõ, hãy mô tả động lực của mối quan hệ ở cấp độ trung tính. Với lá kết quả, đặc biệt khi ngược, trước hết hãy diễn giải xu hướng mà lá thực sự chỉ ra; chỉ sau đó mới rút ra bài học hoặc cách người hỏi có thể phản ứng, và không biến một lá kết quả ngược thành phiên bản xuôi chỉ để kết bài tích cực. Không bắt buộc nêu tên các trục hoặc chia heading theo cấu trúc này. Celtic Cross có thể được đọc đầy đủ hơn trải 3 hoặc 6 lá để không làm mất vai trò của các vị trí, nhưng vẫn tránh kéo dài bằng cách giải nghĩa từng lá riêng lẻ.`
-    : "";
+  const spreadInstruction = spreadSpecificInstruction(spreadPreset);
 
   const styleInstruction = readingStyleInstruction(readingStyle);
   const uncertaintyInstruction = readingStyle === "direct"
@@ -122,7 +159,7 @@ Với câu hỏi về người khác, hãy trả lời về người đó trư�
 
 ${yesNoInstruction}
 
-${voiceInstruction}${celticCrossInstruction}${styleInstruction}
+${voiceInstruction}${spreadInstruction}${styleInstruction}
 
 
 ${summaryInstruction}
@@ -150,8 +187,9 @@ export function readingPrompt(
   spreadPreset?: string,
   readingStyle: ReadingStyle = "default"
 ) {
-  const spreadLabel =
-    spreadPreset === "celtic" ? "10 lá · Celtic Cross" : `${cards.length} lá`;
+  const spreadLabel = spreadPreset && SPREAD_NAMES[spreadPreset]
+    ? SPREAD_NAMES[spreadPreset]
+    : `${cards.length} lá`;
   const readingStyleLine = readingStyle === "default"
     ? ""
     : `\n\nPhong cách đọc đã chọn: ${READING_STYLE_NAMES[readingStyle]}`;

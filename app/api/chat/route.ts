@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const followup = String(body.followup || "").trim();
     const cards = body.cards as DrawnCard[];
     const preset = String(body.preset || "");
-    const spreadPreset = body.preset === "celtic" ? "celtic" : undefined;
+    const spreadPreset = preset || undefined;
     const readingStyle = normalizeReadingStyle(body.readingStyle);
     const history = (body.history || []) as ChatMessage[];
 

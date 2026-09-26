@@ -12,6 +12,7 @@ type Props = {
   count: number;
   positions: string[];
   spreadLabel?: string;
+  spreadPreset?: string;
   onComplete: (cards: DrawnCard[]) => void;
   actions?: ReactNode;
 };
@@ -39,7 +40,7 @@ function firstEmptySlot(slots: Array<number | undefined>) {
 }
 
 
-export default function InteractiveDeck({ count, positions, spreadLabel, onComplete, actions }: Props) {
+export default function InteractiveDeck({ count, positions, spreadLabel, spreadPreset, onComplete, actions }: Props) {
   const [deck, setDeck] = useState<TarotCard[]>(() => shuffleDeck());
   const [phase, setPhase] = useState<Phase>("idle");
   const [shuffleStep, setShuffleStep] = useState<ShuffleStep>("cut");
@@ -500,7 +501,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, onCompl
       </div>
 
       <div className={`draw-table v25-table v26-table v27-table phase-${phase}`}>
-        <div className={`picked-slots draggable-slots v26-slots v27-slots count-${count > 6 ? "many" : count}`}>
+        <div className={`picked-slots draggable-slots v26-slots v27-slots count-${count > 6 ? "many" : count} spread-layout-${spreadPreset || "default"}`}>
           {Array.from({ length: count }, (_, index) => {
             const deckIndex = slots[index];
             const drawn = preparedCards?.[index];

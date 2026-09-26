@@ -1,9 +1,22 @@
 export type PlanId = "free" | "plus" | "pro" | "pro_max";
-export type SpreadAccess = "three" | "six" | "celtic" | "custom";
+export type SpreadAccess = "three" | "six" | "celtic" | "future_love" | "zodiac_houses" | "health_overview" | "tree_of_life" | "matrix_3x3";
+
+const SPECIALIZED_PRESETS: SpreadAccess[] = [
+  "future_love",
+  "zodiac_houses",
+  "health_overview",
+  "tree_of_life",
+  "matrix_3x3"
+];
 
 export type PlanAccess = {
   allowedPresets: SpreadAccess[];
   canUseReadingStyles: boolean;
+  canUseLenormand: boolean;
+  canUseAstrology: boolean;
+  canUseSpecializedSpreads: boolean;
+  unlimitedReadings: boolean;
+  dailyReadingLimits: Partial<Record<SpreadAccess, number>>;
   historyLimit: number | null;
   modelTier: "free" | "premium";
 };
@@ -27,30 +40,55 @@ export const PLAN_ACCESS: Record<PlanId | "admin", PlanAccess> = {
   free: {
     allowedPresets: ["three"],
     canUseReadingStyles: false,
+    canUseLenormand: false,
+    canUseAstrology: false,
+    canUseSpecializedSpreads: false,
+    unlimitedReadings: false,
+    dailyReadingLimits: {},
     historyLimit: 0,
     modelTier: "free"
   },
   plus: {
     allowedPresets: ["three", "six", "celtic"],
     canUseReadingStyles: true,
+    canUseLenormand: false,
+    canUseAstrology: false,
+    canUseSpecializedSpreads: false,
+    unlimitedReadings: false,
+    dailyReadingLimits: { six: 3, celtic: 1 },
     historyLimit: 5,
     modelTier: "premium"
   },
   pro: {
-    allowedPresets: ["three", "six", "celtic", "custom"],
+    allowedPresets: ["three", "six", "celtic"],
     canUseReadingStyles: true,
+    canUseLenormand: true,
+    canUseAstrology: false,
+    canUseSpecializedSpreads: false,
+    unlimitedReadings: false,
+    dailyReadingLimits: { six: 5, celtic: 3 },
     historyLimit: 10,
     modelTier: "premium"
   },
   pro_max: {
-    allowedPresets: ["three", "six", "celtic", "custom"],
+    allowedPresets: ["three", "six", "celtic", ...SPECIALIZED_PRESETS],
     canUseReadingStyles: true,
+    canUseLenormand: true,
+    canUseAstrology: true,
+    canUseSpecializedSpreads: true,
+    unlimitedReadings: true,
+    dailyReadingLimits: {},
     historyLimit: 25,
     modelTier: "premium"
   },
   admin: {
-    allowedPresets: ["three", "six", "celtic", "custom"],
+    allowedPresets: ["three", "six", "celtic", ...SPECIALIZED_PRESETS],
     canUseReadingStyles: true,
+    canUseLenormand: true,
+    canUseAstrology: true,
+    canUseSpecializedSpreads: true,
+    unlimitedReadings: true,
+    dailyReadingLimits: {},
     historyLimit: null,
     modelTier: "premium"
   }
@@ -63,14 +101,14 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     shortDescription: "Trải nghiệm Tarot với những tính năng cơ bản.",
     weeklyPriceLabel: "0đ",
     monthlyPriceLabel: "0đ",
-    modelLabel: "GPT-5.6 Sol hoặc model tiêu chuẩn",
+    modelLabel: "Đọc bài Sol hoặc model tiêu chuẩn",
     historyLabel: "Không lưu lịch sử",
     features: [
       "Trải bài 3 lá",
       "Đọc bài bằng model tiêu chuẩn",
       "Tốc độ xử lý chậm"
     ],
-    unavailable: ["Phong cách đọc bài", "Trải bài 6, 10 lá và tùy chọn"]
+    unavailable: ["Phong cách đọc bài", "Trải bài 6, 10 lá và chuyên sâu"]
   },
   plus: {
     id: "plus",
@@ -81,30 +119,31 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     modelLabel: "Đọc bài bằng model hiện đại nhất",
     historyLabel: "Lưu 5 trải bài",
     features: [
-      "Trải bài 3, 6 và 10 lá",
-      "Đọc bài bằng model hiện đại nhất",
+      "Trải bài 3 lá",
+      "Trải bài 6 lá (3 trải/ngày)",
+      "Trải bài 10 lá (1 trải/ngày)",
       "Đầy đủ phong cách đọc bài",
       "Lưu 5 lịch sử trải bài"
     ],
-    unavailable: ["Trải bài tùy chọn", "Lenormand và công cụ chuyên sâu"],
+    unavailable: ["Các trải bài chuyên sâu", "Lenormand"],
     featured: true
   },
   pro: {
     id: "pro",
     name: "Pro",
-    shortDescription: "Bộ công cụ đầy đủ cho nhu cầu đọc bài thường xuyên.",
+    shortDescription: "Bộ công cụ mở rộng cho nhu cầu đọc bài thường xuyên.",
     weeklyPriceLabel: "39.000đ/tuần",
     monthlyPriceLabel: "119.900đ/tháng",
-    modelLabel: "GPT-6 Astra",
+    modelLabel: "Đọc bài bằng model hiện đại nhất",
     historyLabel: "Lưu 10 trải bài",
     features: [
       "Toàn bộ quyền lợi Plus",
-      "Trải bài tùy chọn từ 1 đến 78 lá",
-      "Trải bài Lenormand khi phát hành",
-      "Các ứng dụng mở rộng",
+      "Trải bài 6 lá (5 trải/ngày)",
+      "Trải bài 10 lá (3 trải/ngày)",
+      "Trải bài Lenormand",
       "Lưu 10 lịch sử trải bài"
     ],
-    unavailable: []
+    unavailable: ["Các trải bài chuyên sâu", "Không giới hạn lượt trải bài"]
   },
   pro_max: {
     id: "pro_max",
@@ -112,14 +151,14 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     shortDescription: "Mở toàn bộ dịch vụ hiện tại và các công cụ cao cấp.",
     weeklyPriceLabel: "59.000đ/tuần",
     monthlyPriceLabel: "239.990đ/tháng",
-    modelLabel: "GPT-6 Astra · ưu tiên cao nhất",
+    modelLabel: "Đọc bài bằng model hiện đại nhất",
     historyLabel: "Lưu trên 20 trải bài",
     features: [
       "Toàn bộ quyền lợi Pro",
-      "Tất cả dịch vụ trên TTarot",
-      "Lưu trên 20 lịch sử trải bài",
-      "Bản đồ sao khi phát hành",
-      "Tử vi và công cụ mới khi phát hành"
+      "Các trải bài chuyên sâu",
+      "Bản đồ sao",
+      "Ưu tiên sử dụng các dịch vụ mới trước",
+      "Không giới hạn lượt trải bài"
     ],
     unavailable: []
   }
@@ -160,29 +199,37 @@ export function isPresetAllowed(access: PlanAccess, preset: SpreadAccess) {
   return access.allowedPresets.includes(preset);
 }
 
+export function getDailyReadingLimit(access: PlanAccess, preset: SpreadAccess) {
+  if (access.unlimitedReadings) return null;
+  const limit = access.dailyReadingLimits[preset];
+  return typeof limit === "number" && limit > 0 ? limit : null;
+}
+
 export function validatePlanReading(
   access: PlanAccess,
   preset: unknown,
   cardCount: number,
   readingStyle: unknown
 ) {
-  const normalizedPreset = typeof preset === "string" && ["three", "six", "celtic", "custom"].includes(preset)
+  const normalizedPreset = typeof preset === "string" && ["three", "six", "celtic", ...SPECIALIZED_PRESETS].includes(preset as SpreadAccess)
     ? preset as SpreadAccess
     : null;
   const expectedCounts: Partial<Record<SpreadAccess, number>> = {
     three: 3,
     six: 6,
-    celtic: 10
+    celtic: 10,
+    future_love: 6,
+    zodiac_houses: 12,
+    health_overview: 6,
+    tree_of_life: 10,
+    matrix_3x3: 9
   };
 
   if (!normalizedPreset || !access.allowedPresets.includes(normalizedPreset)) {
     return "Gói hiện tại không hỗ trợ kiểu trải bài này. Hãy nâng cấp gói để tiếp tục.";
   }
-  if (normalizedPreset !== "custom" && expectedCounts[normalizedPreset] !== cardCount) {
+  if (expectedCounts[normalizedPreset] !== cardCount) {
     return "Số lá không khớp với kiểu trải bài đã chọn.";
-  }
-  if (normalizedPreset === "custom" && (cardCount < 1 || cardCount > 78)) {
-    return "Trải bài tùy chọn phải có từ 1 đến 78 lá.";
   }
   if (!access.canUseReadingStyles && typeof readingStyle === "string" && readingStyle.trim()) {
     return "Gói Free không hỗ trợ phong cách đọc bài. Hãy nâng cấp gói để sử dụng tính năng này.";

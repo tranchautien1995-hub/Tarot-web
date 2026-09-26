@@ -13,7 +13,7 @@ import type { ChatMessage, DrawnCard, TarotCard } from "@/lib/types";
 import { getApiAuthHeaders } from "@/lib/supabase/auth-fetch";
 
 type DrawMode = "random" | "manual";
-type SpreadPreset = "three" | "six" | "celtic" | "custom";
+type SpreadPreset = "three" | "six" | "celtic" | "future_love" | "zodiac_houses" | "health_overview" | "tree_of_life" | "matrix_3x3";
 type ThemeMode = "light" | "dark";
 type ReadingStyle = "direct" | "gentle" | "companion";
 type SpeechStatus = "idle" | "speaking" | "paused";
@@ -107,12 +107,65 @@ function pickQuestionSuggestion(exclude?: string) {
   return pool[Math.floor(Math.random() * pool.length)] || QUESTION_SUGGESTIONS[0];
 }
 
-const PRESETS: Array<{ id: SpreadPreset; count: number | null; title: string; description: string }> = [
-  { id: "three", count: 3, title: "3 lá", description: "Bản chất · Ảnh hưởng · Hướng phát triển" },
-  { id: "six", count: 6, title: "6 lá", description: "Phân tích tình huống sâu hơn" },
-  { id: "celtic", count: 10, title: "10 lá · Celtic Cross", description: "10 vị trí · góc nhìn toàn diện" },
-  { id: "custom", count: null, title: "Tùy chọn", description: "Từ 1 đến 78 lá" }
+type SpreadDefinition = {
+  id: SpreadPreset;
+  count: number;
+  title: string;
+  description: string;
+  questionMode: "required" | "none";
+  tooltip?: string;
+};
+
+const PRESETS: SpreadDefinition[] = [
+  { id: "three", count: 3, title: "3 lá", description: "Bản chất · Ảnh hưởng · Hướng phát triển", questionMode: "required" },
+  { id: "six", count: 6, title: "6 lá", description: "Phân tích tình huống sâu hơn", questionMode: "required" },
+  { id: "celtic", count: 10, title: "10 lá · Celtic Cross", description: "10 vị trí · góc nhìn toàn diện", questionMode: "required" }
 ];
+
+const MORE_PRESETS: SpreadDefinition[] = [
+  {
+    id: "future_love",
+    count: 6,
+    title: "Người yêu tương lai",
+    description: "6 lá · tình yêu sắp tới",
+    questionMode: "none",
+    tooltip: "Khám phá hình mẫu người có thể bước vào cuộc sống của bạn, dấu hiệu nhận ra và tiềm năng gắn bó."
+  },
+  {
+    id: "zodiac_houses",
+    count: 12,
+    title: "12 Nhà Hoàng Đạo",
+    description: "12 lá · tổng quan cuộc sống",
+    questionMode: "none",
+    tooltip: "Xem tổng quan nhiều mặt của cuộc sống như tình cảm, công việc, gia đình."
+  },
+  {
+    id: "health_overview",
+    count: 6,
+    title: "Tổng quan sức khỏe",
+    description: "6 lá · thể chất và tinh thần",
+    questionMode: "none",
+    tooltip: "Nhìn lại thể trạng, năng lượng, tinh thần, thói quen và hướng chăm sóc bản thân. Không thay thế tư vấn y khoa."
+  },
+  {
+    id: "tree_of_life",
+    count: 10,
+    title: "Cây Sự Sống",
+    description: "10 lá · nhìn sâu vào bản thân",
+    questionMode: "none",
+    tooltip: "Nhìn sâu vào bản thân, điều thúc đẩy và điều đang cản trở bạn."
+  },
+  {
+    id: "matrix_3x3",
+    count: 9,
+    title: "Ma trận 3×3",
+    description: "9 lá · quá khứ đến tương lai",
+    questionMode: "required",
+    tooltip: "Theo dõi một tình huống từ quá khứ, hiện tại đến hướng phát triển."
+  }
+];
+
+const ALL_PRESETS = [...PRESETS, ...MORE_PRESETS];
 
 function clampCount(value: number) {
   if (!Number.isFinite(value)) return 3;
@@ -134,6 +187,69 @@ function positionsFor(preset: SpreadPreset, count: number): string[] {
       "Môi trường / người xung quanh",
       "Hy vọng và nỗi sợ",
       "Kết quả / hướng phát triển"
+    ];
+  }
+  if (preset === "future_love") {
+    return [
+      "Người yêu tương lai của bạn là người như thế nào?",
+      "Người đó đã xuất hiện trong cuộc sống của bạn chưa?",
+      "Dấu hiệu giúp bạn nhận ra họ",
+      "Hai người sẽ đối xử với nhau như thế nào?",
+      "Mối quan hệ này mở ra điều gì mới?",
+      "Tiềm năng gắn bó lâu dài"
+    ];
+  }
+  if (preset === "zodiac_houses") {
+    return [
+      "Nhà 1 · Bản thân, tính cách, tham vọng và cơ thể",
+      "Nhà 2 · Vật chất và tài chính",
+      "Nhà 3 · Giao tiếp, suy nghĩ, học hỏi và quan hệ gần",
+      "Nhà 4 · Gia đình, bố mẹ và gốc rễ",
+      "Nhà 5 · Sáng tạo, tình cảm, sở thích và con cái",
+      "Nhà 6 · Công việc hằng ngày, trách nhiệm, thói quen và sức khỏe",
+      "Nhà 7 · Quan hệ tình cảm, cam kết và đối tác",
+      "Nhà 8 · Tài sản chung, nợ, thừa kế và trách nhiệm",
+      "Nhà 9 · Niềm tin, học cao hơn và hành trình xa",
+      "Nhà 10 · Sự nghiệp, hình ảnh cá nhân và cấp trên",
+      "Nhà 11 · Bạn bè, cộng đồng, hy vọng và mục tiêu",
+      "Nhà 12 · Nội tâm, điều kín, giới hạn và tiềm thức"
+    ];
+  }
+  if (preset === "health_overview") {
+    return [
+      "Thể trạng hiện tại",
+      "Mức năng lượng và sức bền",
+      "Tinh thần và áp lực đang ảnh hưởng",
+      "Thói quen đang hỗ trợ sức khỏe",
+      "Điều cần chú ý hoặc thay đổi",
+      "Hướng chăm sóc bản thân"
+    ];
+  }
+  if (preset === "tree_of_life") {
+    return [
+      "Cốt lõi con người bạn",
+      "Nguồn lực bên trong",
+      "Điều đang thúc đẩy bạn",
+      "Điều đang cản trở bạn",
+      "Niềm tin và cách bạn suy nghĩ",
+      "Cảm xúc sâu bên trong",
+      "Bài học từ quá khứ",
+      "Cách bạn đang thể hiện ra ngoài",
+      "Hướng phát triển phù hợp",
+      "Điều cần kết nối và đưa vào hành động"
+    ];
+  }
+  if (preset === "matrix_3x3") {
+    return [
+      "Quá khứ · Nền tảng của tình huống",
+      "Quá khứ · Ảnh hưởng còn kéo dài",
+      "Quá khứ · Điều chưa được giải quyết",
+      "Hiện tại · Trọng tâm",
+      "Hiện tại · Nút thắt chính",
+      "Hiện tại · Nguồn lực có thể dùng",
+      "Hướng phát triển · Điều đang hình thành",
+      "Hướng phát triển · Việc cần làm",
+      "Hướng phát triển · Kết quả có điều kiện"
     ];
   }
   return Array.from({ length: count }, (_, index) => `Vị trí ${index + 1}`);
@@ -215,6 +331,7 @@ export default function Home() {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
   const [followup, setFollowup] = useState("");
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -229,6 +346,7 @@ export default function Home() {
   const [themeReady, setThemeReady] = useState(false);
   const [themeHintVisible, setThemeHintVisible] = useState(true);
   const [flowStep, setFlowStep] = useState<1 | 2>(1);
+  const [moreSpreadsOpen, setMoreSpreadsOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [sideMenuView, setSideMenuView] = useState<"main" | "history">("main");
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -243,7 +361,9 @@ export default function Home() {
   const selectedCards = useMemo(() => cards.filter(Boolean) as DrawnCard[], [cards]);
   const selectedIds = useMemo(() => selectedCards.map((card) => card.id), [selectedCards]);
   const complete = selectedCards.length === count;
-  const presetLabel = PRESETS.find((item) => item.id === preset)?.title || `${count} lá`;
+  const activePreset = ALL_PRESETS.find((item) => item.id === preset);
+  const presetLabel = activePreset?.title || `${count} lá`;
+  const questionNotRequired = activePreset?.questionMode === "none";
 
   useEffect(() => {
     try {
@@ -481,6 +601,7 @@ export default function Home() {
     setAiReading("");
     setChat([]);
     setError("");
+    setUpgradeRequired(false);
     setSaved(false);
   }
 
@@ -498,7 +619,7 @@ export default function Home() {
     return nextCards.map((card, index) => card ? { ...card, position: positions[index] || `Vị trí ${index + 1}` } : card);
   }
 
-  function resizeSpread(nextCount: number, nextPreset: SpreadPreset = "custom") {
+  function resizeSpread(nextCount: number, nextPreset: SpreadPreset) {
     const safe = clampCount(nextCount);
     setKeepInteractiveBoard(false);
     setCount(safe);
@@ -516,15 +637,10 @@ export default function Home() {
       openPricingFromMenu();
       return;
     }
-    if (nextPreset === "custom") {
-      setKeepInteractiveBoard(false);
-      setDrawSession((value) => value + 1);
-      setPreset("custom");
-      setCards((current) => applyPositions(current, "custom", count));
-      resetAnalysis();
-      return;
-    }
-    const nextCount = PRESETS.find((item) => item.id === nextPreset)?.count || 3;
+    const nextDefinition = ALL_PRESETS.find((item) => item.id === nextPreset);
+    const nextCount = nextDefinition?.count || 3;
+    if (nextDefinition?.questionMode === "none") setQuestion("");
+    setMoreSpreadsOpen(false);
     resizeSpread(nextCount, nextPreset);
   }
 
@@ -577,7 +693,7 @@ export default function Home() {
     const spreadText = portableReadingPrompt(
       question,
       selectedCards,
-      preset === "celtic" ? "celtic" : undefined,
+      preset,
       readingStyle || "default"
     );
     void navigator.clipboard.writeText(spreadText).then(() => {
@@ -624,7 +740,7 @@ export default function Home() {
     }
     setSideMenuOpen(false);
     setSideMenuView("main");
-    setQuestion(entry.question);
+    setQuestion(ALL_PRESETS.find((item) => item.id === entry.preset)?.questionMode === "none" ? "" : entry.question);
     setReadingStyle(entry.readingStyle || null);
     setMode(entry.mode);
     setPreset(entry.preset);
@@ -672,7 +788,7 @@ export default function Home() {
   function openPricingFromMenu() {
     setSideMenuOpen(false);
     setSideMenuView("main");
-    window.location.assign("/upgrade");
+    window.location.assign(`/upgrade?theme=${theme}`);
   }
 
   function openAIReader() {
@@ -691,6 +807,7 @@ export default function Home() {
     setAiModalOpen(true);
     setLoading(true);
     setError("");
+    setUpgradeRequired(false);
     setAiReading("");
     try {
       const authHeaders = await getApiAuthHeaders();
@@ -701,6 +818,9 @@ export default function Home() {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+        if (response.status === 403 || data.code === "DAILY_READING_LIMIT_REACHED") {
+          setUpgradeRequired(true);
+        }
         throw new Error(data.error || "Không thể phân tích trải bài.");
       }
       if (!response.body) throw new Error("Không nhận được luồng đọc bài từ máy chủ.");
@@ -904,7 +1024,7 @@ export default function Home() {
                       <article className="history-card side-history-card" key={entry.id}>
                         <div className="history-card-top">
                           <div>
-                            <span>{formatSavedAt(entry.savedAt)} · {PRESETS.find((item) => item.id === entry.preset)?.title || `${entry.count} lá`}{entry.readingStyle ? ` · ${readingStyleFullLabel(entry.readingStyle)}` : ""}</span>
+                            <span>{formatSavedAt(entry.savedAt)} · {ALL_PRESETS.find((item) => item.id === entry.preset)?.title || `${entry.count} lá`}{entry.readingStyle ? ` · ${readingStyleFullLabel(entry.readingStyle)}` : ""}</span>
                             <h3>{entry.question || "Không có câu hỏi cụ thể"}</h3>
                           </div>
                         </div>
@@ -985,14 +1105,20 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="panel question-card">
+            <div className={`panel question-card ${questionNotRequired ? "question-not-required" : ""}`}>
               <div className="panel-kicker">01 · CÂU HỎI</div>
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder={questionHint}
-                aria-label="Câu hỏi cho trải bài Tarot"
-              />
+              {questionNotRequired ? (
+                <div className="question-not-required-message" role="status">
+                  Trải bài này không cần câu hỏi cụ thể
+                </div>
+              ) : (
+                <textarea
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder={questionHint}
+                  aria-label="Câu hỏi cho trải bài Tarot"
+                />
+              )}
               <div className="panel-kicker reading-style-label">PHONG CÁCH ĐỌC BÀI</div>
               <div className="reading-style-picker" aria-label="Phong cách đọc bài">
                 {READING_STYLES.map((style) => (
@@ -1026,15 +1152,46 @@ export default function Home() {
                 <div className="panel-kicker">03 · KIỂU TRẢI</div>
                 <div className="preset-grid">
                   {PRESETS.map((item) => (
-                    <button key={item.id} className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()} onClick={() => selectPreset(item.id)}>
+                    <button key={item.id} type="button" className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()} onClick={() => selectPreset(item.id)}>
                       <b>{item.title}</b>
                       <small>{item.description}</small>
                       {!isPresetAllowed(access, item.id) && <span className="plan-lock" aria-hidden="true">Khóa</span>}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    className={`${MORE_PRESETS.some((item) => item.id === preset) ? "active" : ""} more-spreads-trigger`.trim()}
+                    aria-expanded={moreSpreadsOpen}
+                    onClick={() => setMoreSpreadsOpen((current) => !current)}
+                  >
+                    <b>Xem thêm</b>
+                    <small>{MORE_PRESETS.some((item) => item.id === preset) ? `Đang chọn · ${presetLabel}` : "Các trải bài chuyên sâu"}</small>
+                  </button>
                 </div>
-                {preset === "custom" && (
-                  <label className="custom-count custom-v23"><span>Số lá</span><input type="number" min="1" max="78" value={count} onChange={(e) => resizeSpread(Number(e.target.value), "custom")} /></label>
+                {moreSpreadsOpen && (
+                  <div className="more-spreads-panel" aria-label="Các trải bài khác">
+                    <div className="more-spreads-head">
+                      <b>Các trải bài khác</b>
+                      <button type="button" onClick={() => setMoreSpreadsOpen(false)} aria-label="Đóng danh sách trải bài">×</button>
+                    </div>
+                    <div className="more-spreads-grid">
+                      {MORE_PRESETS.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()}
+                          onClick={() => selectPreset(item.id)}
+                          aria-describedby={`spread-tip-${item.id}`}
+                        >
+                          <b>{item.title}</b>
+                          <small>{item.description}</small>
+                          {!isPresetAllowed(access, item.id) && <span className="plan-lock" aria-hidden="true">Khóa</span>}
+                          <span className="spread-info-tooltip" id={`spread-tip-${item.id}`} role="tooltip">{item.tooltip}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="more-spreads-hint">Rê chuột hoặc dùng phím Tab vào từng kiểu trải để xem ý nghĩa.</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1082,6 +1239,7 @@ export default function Home() {
             count={count}
             positions={positionsFor(preset, count)}
             spreadLabel={presetLabel}
+            spreadPreset={preset}
             onComplete={completeInteractiveDraw}
             actions={
               <section className="reading-actions-panel reading-actions-inside" aria-label="Công cụ trải bài">
@@ -1127,7 +1285,7 @@ export default function Home() {
                 </button>
               </div>
             </section>
-            <div className={`practice-grid manual-slot-layout count-${count > 6 ? "many" : count} ${count > 12 ? "dense" : ""} ${preset === "celtic" ? "celtic-grid" : ""}`}>
+            <div className={`practice-grid manual-slot-layout count-${count > 6 ? "many" : count} ${count > 12 ? "dense" : ""} ${preset === "celtic" ? "celtic-grid" : ""} spread-layout-${preset}`}>
               {cards.map((card, index) => (
                 <PracticeCard
                   key={`${index}-${card?.id || "empty"}`}
@@ -1183,7 +1341,11 @@ export default function Home() {
                 <div className="error-box ai-modal-error">
                   <b>Không thể đọc trải bài.</b>
                   <p>{error}</p>
-                  <button className="ghost-button" type="button" onClick={() => void askAI()}>Thử lại</button>
+                  {upgradeRequired ? (
+                    <button className="gold-button" type="button" onClick={openPricingFromMenu}>Xem gói nâng cấp</button>
+                  ) : (
+                    <button className="ghost-button" type="button" onClick={() => void askAI()}>Thử lại</button>
+                  )}
                 </div>
               )}
 

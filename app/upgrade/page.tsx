@@ -9,9 +9,13 @@ export default function UpgradePage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("theme");
     const saved = window.localStorage.getItem("tarot-practice-theme-v2");
-    const next = saved === "light" ? "light" : "dark";
+    const next = requested === "light" || requested === "dark"
+      ? requested
+      : saved === "light" ? "light" : "dark";
     setTheme(next);
+    window.localStorage.setItem("tarot-practice-theme-v2", next);
     document.documentElement.dataset.theme = next;
   }, []);
 

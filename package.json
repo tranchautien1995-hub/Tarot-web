@@ -1,6 +1,6 @@
 {
   "name": "ttarot-webver1",
-  "version": "2.7.54",
+  "version": "2.7.57",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -252,7 +252,7 @@ export default function PricingModal({ open, currentPlan, isAdmin = false, pageM
                           ? "Gói thấp hơn"
                           : isCurrent
                             ? "Gia hạn gói"
-                            : "Mua bằng VietQR"}
+                            : "Đăng ký gói"}
                 </button>
               </article>
             );
