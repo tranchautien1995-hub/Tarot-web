@@ -4,11 +4,14 @@ import { getPromptLabSpread } from "@/lib/prompt-lab";
 import { normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
 import type { DrawnCard, Orientation } from "@/lib/types";
-import { getXahModel, xahChatStream } from "@/lib/xah";
+import { getPromptLabModel, getXahModel, xahChatStream, type XahProviderId } from "@/lib/xah";
 
 export const runtime = "nodejs";
 
 type RawCard = { name?: unknown; orientation?: unknown };
+type RunTarget = "compare_astra" | "primary_astra" | "sol_current" | "compare_draft";
+
+const RUN_TARGETS: RunTarget[] = ["compare_astra", "primary_astra", "sol_current", "compare_draft"];
 
 function makeCards(rawCards: unknown, positions: string[]): DrawnCard[] | null {
   if (!Array.isArray(rawCards) || rawCards.length !== positions.length) return null;
@@ -50,9 +53,14 @@ export async function POST(request: Request) {
 
     const readingStyle = normalizeReadingStyle(body.readingStyle);
     const currentPrompt = tarotSystemPrompt(spread.id, readingStyle);
+    const models = {
+      compareAstra: getPromptLabModel(),
+      primaryAstra: getXahModel("premium"),
+      sol: getXahModel("free")
+    };
 
     if (body.action === "get_prompt") {
-      return NextResponse.json({ prompt: currentPrompt });
+      return NextResponse.json({ prompt: currentPrompt, models });
     }
 
     if (body.action !== "run") {
@@ -69,22 +77,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Hãy nhập câu hỏi thử nghiệm." }, { status: 400 });
     }
 
-    const mode = body.mode === "draft" ? "draft" : "current";
+    const target = RUN_TARGETS.includes(body.target as RunTarget)
+      ? body.target as RunTarget
+      : null;
+    if (!target) {
+      return NextResponse.json({ error: "Mục so sánh không hợp lệ." }, { status: 400 });
+    }
     const draftPrompt = typeof body.draftPrompt === "string" ? body.draftPrompt.trim() : "";
-    if (mode === "draft" && (!draftPrompt || draftPrompt.length > 80_000)) {
+    if (target === "compare_draft" && (!draftPrompt || draftPrompt.length > 80_000)) {
       return NextResponse.json({ error: "Prompt bản nháp phải có nội dung và không vượt quá 80.000 ký tự." }, { status: 400 });
     }
 
+    const targetConfig: Record<RunTarget, {
+      prompt: string;
+      model: string;
+      provider: XahProviderId;
+    }> = {
+      compare_astra: { prompt: currentPrompt, model: models.compareAstra, provider: "fallback_1" },
+      primary_astra: { prompt: currentPrompt, model: models.primaryAstra, provider: "primary" },
+      sol_current: { prompt: currentPrompt, model: models.sol, provider: "primary" },
+      compare_draft: { prompt: draftPrompt, model: models.compareAstra, provider: "fallback_1" }
+    };
+    const selected = targetConfig[target];
+
     const stream = await xahChatStream([
-      { role: "system", content: mode === "draft" ? draftPrompt : currentPrompt },
+      { role: "system", content: selected.prompt },
       { role: "user", content: readingPrompt(question, cards, spread.id, readingStyle) }
-    ], getXahModel("premium"));
+    ], selected.model, selected.provider);
 
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache, no-transform",
-        "X-Accel-Buffering": "no"
+        "X-Accel-Buffering": "no",
+        "X-Prompt-Lab-Model": selected.model,
+        "X-Prompt-Lab-Target": target
       }
     });
   } catch (error) {

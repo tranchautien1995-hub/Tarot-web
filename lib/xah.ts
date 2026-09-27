@@ -11,8 +11,8 @@ type ChatCompletionResponse = {
   error?: { message?: string; code?: string | number; type?: string };
 };
 
-type ProviderId = "primary" | "fallback_1" | "fallback_2";
-type ApiProvider = { id: ProviderId; label: string; baseUrl: string; apiKey: string; model: string };
+export type XahProviderId = "primary" | "fallback_1" | "fallback_2";
+type ApiProvider = { id: XahProviderId; label: string; baseUrl: string; apiKey: string; model: string };
 
 class ProviderFailure extends Error {
   constructor(message: string, public retryable = true, public status?: number) {
@@ -46,6 +46,12 @@ export type XahModelTier = "free" | "premium";
 export function getXahModel(tier: XahModelTier) {
   if (tier === "free") return process.env.XAH_FREE_MODEL?.trim() || "gpt-5.6-sol";
   return process.env.XAH_PREMIUM_MODEL?.trim() || process.env.XAH_MODEL?.trim() || "gpt-6-astra";
+}
+
+export function getPromptLabModel() {
+  return process.env.PROMPT_LAB_MODEL?.trim()
+    || process.env.XAH_FALLBACK_PREMIUM_MODEL?.trim()
+    || "santiagosgrantp/gpt-6-astra";
 }
 
 function tierForRequestedModel(model: string): XahModelTier {
@@ -189,8 +195,23 @@ async function openProviderStream(provider: ApiProvider, messages: XahMessage[])
   }
 }
 
-export async function xahChatStream(messages: XahMessage[], model = getXahModel("premium")) {
-  const providers = configuredProviders(model);
+export async function xahChatStream(
+  messages: XahMessage[],
+  model = getXahModel("premium"),
+  onlyProvider?: XahProviderId
+) {
+  const configured = configuredProviders(model);
+  const providers = onlyProvider
+    ? configured.filter((provider) => provider.id === onlyProvider)
+    : configured;
+  if (!providers.length) {
+    const label = onlyProvider === "fallback_1"
+      ? "XAH_FALLBACK_API_KEY"
+      : onlyProvider === "fallback_2"
+        ? "XAH_FALLBACK_2_API_KEY"
+        : "API key";
+    throw new Error(`Prompt Lab thiếu ${label} trên máy chủ.`);
+  }
   const failures: ProviderFailure[] = [];
   let firstOpen: OpenStream | null = null;
   let firstIndex = -1;

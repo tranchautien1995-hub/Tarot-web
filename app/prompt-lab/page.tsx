@@ -6,10 +6,23 @@ import { PROMPT_LAB_SPREADS } from "@/lib/prompt-lab";
 import type { ReadingStyle } from "@/lib/prompts";
 import { getApiAuthHeaders } from "@/lib/supabase/auth-fetch";
 
-type RunMode = "current" | "draft";
+type RunTarget = "compare_astra" | "primary_astra" | "sol_current" | "compare_draft";
 type ResultState = { text: string; error: string; running: boolean };
+type PromptLabModels = { compareAstra: string; primaryAstra: string; sol: string };
 
 const EMPTY_RESULT: ResultState = { text: "", error: "", running: false };
+const EMPTY_RESULTS: Record<RunTarget, ResultState> = {
+  compare_astra: EMPTY_RESULT,
+  primary_astra: EMPTY_RESULT,
+  sol_current: EMPTY_RESULT,
+  compare_draft: EMPTY_RESULT
+};
+const DEFAULT_MODELS: PromptLabModels = {
+  compareAstra: "santiagosgrantp/gpt-6-astra",
+  primaryAstra: "gpt-6-astra",
+  sol: "gpt-5.6-sol"
+};
+const RUN_ORDER: RunTarget[] = ["compare_astra", "primary_astra", "sol_current", "compare_draft"];
 const SAMPLE_CARDS = [
   "The High Priestess", "Two of Cups", "Eight of Swords", "The Star", "Five of Pentacles",
   "Queen of Wands", "The Hermit", "Page of Cups", "Justice", "Ten of Pentacles",
@@ -48,11 +61,13 @@ export default function PromptLabPage() {
   const [cardLines, setCardLines] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [draftPrompt, setDraftPrompt] = useState("");
+  const [labModels, setLabModels] = useState<PromptLabModels>(DEFAULT_MODELS);
   const [promptError, setPromptError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [currentResult, setCurrentResult] = useState<ResultState>(EMPTY_RESULT);
-  const [draftResult, setDraftResult] = useState<ResultState>(EMPTY_RESULT);
-  const abortRef = useRef<AbortController | null>(null);
+  const [results, setResults] = useState<Record<RunTarget, ResultState>>(EMPTY_RESULTS);
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const abortRefs = useRef<Partial<Record<RunTarget, AbortController>>>({});
   const spread = useMemo(() => PROMPT_LAB_SPREADS.find((item) => item.id === preset) ?? PROMPT_LAB_SPREADS[0], [preset]);
 
   const fillSampleCards = useCallback(() => {
@@ -68,8 +83,8 @@ export default function PromptLabPage() {
 
   useEffect(() => {
     fillSampleCards();
-    setCurrentResult(EMPTY_RESULT);
-    setDraftResult(EMPTY_RESULT);
+    setResults(EMPTY_RESULTS);
+    setCopiedAll(false);
   }, [fillSampleCards]);
 
   const loadCurrentPrompt = useCallback(async (overwriteDraft = false) => {
@@ -83,9 +98,10 @@ export default function PromptLabPage() {
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ action: "get_prompt", preset, readingStyle })
       });
-      const data = await response.json() as { prompt?: string; error?: string };
+      const data = await response.json() as { prompt?: string; models?: PromptLabModels; error?: string };
       if (!response.ok || !data.prompt) throw new Error(data.error || "Không tải được prompt hiện tại.");
       setCurrentPrompt(data.prompt);
+      if (data.models) setLabModels(data.models);
       const localDraft = window.localStorage.getItem(draftKey(preset, readingStyle));
       if (overwriteDraft || !localDraft) setDraftPrompt(data.prompt);
       else setDraftPrompt(localDraft);
@@ -111,29 +127,37 @@ export default function PromptLabPage() {
     window.setTimeout(() => setSaved(false), 1800);
   }
 
-  async function run(mode: RunMode) {
-    const setResult = mode === "current" ? setCurrentResult : setDraftResult;
+  function resetResults() {
+    setResults(EMPTY_RESULTS);
+    setCopiedAll(false);
+  }
+
+  function setTargetResult(target: RunTarget, next: ResultState) {
+    setResults((current) => ({ ...current, [target]: next }));
+  }
+
+  async function run(target: RunTarget) {
     const cards = parseCardLines(cardLines);
     if (cards.length !== spread.count) {
-      setResult({ text: "", running: false, error: `Cần nhập đúng ${spread.count} dòng lá bài.` });
+      setTargetResult(target, { text: "", running: false, error: `Cần nhập đúng ${spread.count} dòng lá bài.` });
       return;
     }
     if (spread.questionMode === "required" && !question.trim()) {
-      setResult({ text: "", running: false, error: "Hãy nhập câu hỏi thử nghiệm." });
+      setTargetResult(target, { text: "", running: false, error: "Hãy nhập câu hỏi thử nghiệm." });
       return;
     }
 
-    abortRef.current?.abort();
+    abortRefs.current[target]?.abort();
     const controller = new AbortController();
-    abortRef.current = controller;
-    setResult({ text: "", error: "", running: true });
+    abortRefs.current[target] = controller;
+    setTargetResult(target, { text: "", error: "", running: true });
     try {
       const authHeaders = await getApiAuthHeaders();
       const response = await fetch("/api/prompt-lab", {
         method: "POST",
         signal: controller.signal,
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ action: "run", mode, preset, readingStyle, question, cards, draftPrompt })
+        body: JSON.stringify({ action: "run", target, preset, readingStyle, question, cards, draftPrompt })
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({})) as { error?: string };
@@ -147,22 +171,63 @@ export default function PromptLabPage() {
         const { done, value } = await reader.read();
         if (done) break;
         text += decoder.decode(value, { stream: true });
-        setResult({ text, error: "", running: true });
+        setTargetResult(target, { text, error: "", running: true });
       }
       text += decoder.decode();
-      setResult({ text, error: "", running: false });
+      setTargetResult(target, { text, error: "", running: false });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
-      setResult({ text: "", running: false, error: error instanceof Error ? error.message : "Không thể chạy thử." });
+      setTargetResult(target, { text: "", running: false, error: error instanceof Error ? error.message : "Không thể chạy thử." });
     } finally {
-      if (abortRef.current === controller) abortRef.current = null;
+      if (abortRefs.current[target] === controller) delete abortRefs.current[target];
     }
   }
 
-  async function compare() {
-    await run("current");
-    await run("draft");
+  async function compareAll() {
+    setBatchRunning(true);
+    setCopiedAll(false);
+    try {
+      await Promise.all(RUN_ORDER.map((target) => run(target)));
+    } finally {
+      setBatchRunning(false);
+    }
   }
+
+  async function copyAllResults() {
+    const styleLabel = STYLES.find((item) => item.id === readingStyle)?.label || readingStyle;
+    const resultBlock = (target: RunTarget, title: string, model: string) => {
+      const result = results[target];
+      const content = result.error
+        ? `[LỖI — có thể bỏ qua khi so sánh]\n${result.error}`
+        : result.text || "[CHƯA CÓ KẾT QUẢ]";
+      return `\n\n=== ${title} ===\nModel: ${model}\n${content}`;
+    };
+    const copiedText = `Tôi cần bạn so sánh 4 kết quả đọc Tarot dưới đây. Hãy đánh giá độ chính xác, độ tự nhiên, mức dễ hiểu, khả năng liên kết các lá, mức suy diễn và độ lặp ý. Sau đó đề xuất cụ thể nên giữ điểm nào, bỏ điểm nào và chỉnh prompt bản nháp ra sao. Nếu GPT Astra 6 bị lỗi thì bỏ qua ô đó và phân tích các ô còn lại.
+
+=== DỮ LIỆU CHUNG ===
+Dạng trải: ${spread.label}
+Phong cách: ${styleLabel}
+Câu hỏi: ${spread.questionMode === "none" ? "Trải bài này không cần câu hỏi cụ thể" : question.trim()}
+Các lá bài:
+${cardLines.trim()}
+${resultBlock("compare_astra", "1. PROMPT HIỆN TẠI — SANTIAGOS ASTRA", labModels.compareAstra)}
+${resultBlock("primary_astra", "2. PROMPT HIỆN TẠI — GPT ASTRA 6", labModels.primaryAstra)}
+${resultBlock("sol_current", "3. PROMPT HIỆN TẠI — GPT SOL 5.6", labModels.sol)}
+${resultBlock("compare_draft", "4. PROMPT BẢN NHÁP — SANTIAGOS ASTRA", labModels.compareAstra)}
+
+=== YÊU CẦU PHÂN TÍCH ===
+1. So sánh từng phần: mở đầu, thân bài, cách nối lá, lời khuyên và Tóm lại.
+2. Chỉ ra câu nào hay, câu nào dài dòng, học thuật, khó hiểu hoặc suy diễn quá mức.
+3. Chọn phương án tốt nhất dựa trên cả nội dung lẫn văn phong, không chỉ dựa vào độ dài.
+4. Đưa ra những quy tắc prompt cụ thể cần thêm, sửa hoặc bỏ.
+5. Chưa sửa code cho đến khi tôi duyệt phương án.`;
+    await navigator.clipboard.writeText(copiedText);
+    setCopiedAll(true);
+    window.setTimeout(() => setCopiedAll(false), 2200);
+  }
+
+  const anyRunning = batchRunning || RUN_ORDER.some((target) => results[target].running);
+  const comparisonComplete = !anyRunning && RUN_ORDER.every((target) => Boolean(results[target].text || results[target].error));
 
   if (!allowed) {
     return (
@@ -182,8 +247,8 @@ export default function PromptLabPage() {
       <header className="prompt-lab-header">
         <div>
           <span className="prompt-lab-kicker">ADMIN · PROMPT LAB</span>
-          <h1>Thử prompt không cần khởi động lại localhost</h1>
-          <p>Chỉnh bản nháp, chạy cùng một bộ bài và so sánh với prompt đang dùng trên web.</p>
+          <h1>So sánh 4 bản đọc trên 3 model</h1>
+          <p>Cùng một câu hỏi và bộ lá được đọc bằng Santiagos Astra, GPT Astra 6 và GPT Sol 5.6; bản nháp được kiểm tra lại trên Santiagos Astra.</p>
         </div>
         <div className="prompt-lab-header-actions">
           <button type="button" onClick={toggleTheme}>{theme === "dark" ? "Giao diện sáng" : "Giao diện tối"}</button>
@@ -194,24 +259,24 @@ export default function PromptLabPage() {
       <section className="prompt-lab-workbench">
         <div className="prompt-lab-section-head">
           <div><span>01 · DỮ LIỆU THỬ</span><h2>Chọn trải bài và bộ lá cố định</h2></div>
-          <em>Không trừ lượt trải bài</em>
+          <em>3 model · 4 kết quả · Không trừ lượt trải bài</em>
         </div>
         <div className="prompt-lab-controls">
           <label>Dạng trải
-            <select value={preset} onChange={(event) => setPreset(event.target.value)}>
+            <select value={preset} onChange={(event) => { setPreset(event.target.value); resetResults(); }}>
               {PROMPT_LAB_SPREADS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
           <label>Phong cách
-            <select value={readingStyle} onChange={(event) => setReadingStyle(event.target.value as ReadingStyle)}>
+            <select value={readingStyle} onChange={(event) => { setReadingStyle(event.target.value as ReadingStyle); resetResults(); }}>
               {STYLES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </select>
           </label>
           <label className="prompt-lab-question">Câu hỏi
-            <textarea value={spread.questionMode === "none" ? "Trải bài này không cần câu hỏi cụ thể" : question} disabled={spread.questionMode === "none"} onChange={(event) => setQuestion(event.target.value)} />
+            <textarea value={spread.questionMode === "none" ? "Trải bài này không cần câu hỏi cụ thể" : question} disabled={spread.questionMode === "none"} onChange={(event) => { setQuestion(event.target.value); resetResults(); }} />
           </label>
           <label className="prompt-lab-cards">Các lá bài — mỗi dòng: Tên lá | xuôi/ngược
-            <textarea value={cardLines} onChange={(event) => setCardLines(event.target.value)} spellCheck={false} />
+            <textarea value={cardLines} onChange={(event) => { setCardLines(event.target.value); resetResults(); }} spellCheck={false} />
           </label>
         </div>
         <div className="prompt-lab-position-list">
@@ -226,7 +291,7 @@ export default function PromptLabPage() {
           <em>{draftPrompt.length.toLocaleString("vi-VN")} ký tự</em>
         </div>
         {promptError && <p className="prompt-lab-error">{promptError}</p>}
-        <textarea className="prompt-lab-prompt" value={draftPrompt} onChange={(event) => { setDraftPrompt(event.target.value); setSaved(false); }} spellCheck={false} />
+        <textarea className="prompt-lab-prompt" value={draftPrompt} onChange={(event) => { setDraftPrompt(event.target.value); setSaved(false); setResults((current) => ({ ...current, compare_draft: EMPTY_RESULT })); setCopiedAll(false); }} spellCheck={false} />
         <div className="prompt-lab-editor-actions">
           <button type="button" onClick={saveDraft}>Lưu bản nháp trên trình duyệt</button>
           <button type="button" onClick={() => void loadCurrentPrompt(true)}>Khôi phục prompt hiện tại</button>
@@ -236,27 +301,32 @@ export default function PromptLabPage() {
 
       <section className="prompt-lab-results-section">
         <div className="prompt-lab-section-head">
-          <div><span>03 · SO SÁNH</span><h2>Chạy cùng dữ liệu, xem hai kết quả</h2></div>
+          <div><span>03 · SO SÁNH</span><h2>Chạy cùng dữ liệu, xem bốn kết quả</h2></div>
           <div className="prompt-lab-run-actions">
-            <button type="button" disabled={currentResult.running || draftResult.running} onClick={() => void run("current")}>Chạy prompt hiện tại</button>
-            <button type="button" disabled={currentResult.running || draftResult.running} onClick={() => void run("draft")}>Chạy bản nháp</button>
-            <button className="prompt-lab-primary" type="button" disabled={currentResult.running || draftResult.running} onClick={() => void compare()}>So sánh cả hai</button>
+            <button type="button" disabled={anyRunning} onClick={() => void run("compare_astra")}>Santiagos Astra</button>
+            <button type="button" disabled={anyRunning} onClick={() => void run("primary_astra")}>GPT Astra 6</button>
+            <button type="button" disabled={anyRunning} onClick={() => void run("sol_current")}>Sol · hiện tại</button>
+            <button type="button" disabled={anyRunning} onClick={() => void run("compare_draft")}>Santiagos · bản nháp</button>
+            <button className="prompt-lab-primary" type="button" disabled={anyRunning} onClick={() => void compareAll()}>{batchRunning ? "Đang đọc đồng thời…" : "Đọc đồng thời 4 ô"}</button>
+            <button type="button" disabled={!comparisonComplete} onClick={() => void copyAllResults()}>{copiedAll ? "✓ Đã sao chép" : "Sao chép để gửi ChatGPT"}</button>
           </div>
         </div>
-        <p className="prompt-lab-note">“So sánh cả hai” chạy lần lượt để giảm nguy cơ API trả lỗi giới hạn 429.</p>
+        <p className="prompt-lab-note">Một lần bấm sẽ gửi bốn request đồng thời. Nếu GPT Astra 6 lỗi, ô số 2 ghi lỗi nhưng ba ô còn lại vẫn tiếp tục đọc.</p>
         <div className="prompt-lab-results">
-          <ResultPanel title="Prompt hiện tại" state={currentResult} onCopy={() => void navigator.clipboard.writeText(currentResult.text)} />
-          <ResultPanel title="Bản nháp" state={draftResult} onCopy={() => void navigator.clipboard.writeText(draftResult.text)} />
+          <ResultPanel title="1. Prompt hiện tại · Santiagos Astra" model={labModels.compareAstra} state={results.compare_astra} onCopy={() => void navigator.clipboard.writeText(results.compare_astra.text)} />
+          <ResultPanel title="2. Prompt hiện tại · GPT Astra 6" model={labModels.primaryAstra} state={results.primary_astra} onCopy={() => void navigator.clipboard.writeText(results.primary_astra.text)} />
+          <ResultPanel title="3. Prompt hiện tại · GPT Sol 5.6" model={labModels.sol} state={results.sol_current} onCopy={() => void navigator.clipboard.writeText(results.sol_current.text)} />
+          <ResultPanel title="4. Prompt bản nháp · Santiagos Astra" model={labModels.compareAstra} state={results.compare_draft} onCopy={() => void navigator.clipboard.writeText(results.compare_draft.text)} />
         </div>
       </section>
     </main>
   );
 }
 
-function ResultPanel({ title, state, onCopy }: { title: string; state: ResultState; onCopy: () => void }) {
+function ResultPanel({ title, model, state, onCopy }: { title: string; model: string; state: ResultState; onCopy: () => void }) {
   return (
     <article className="prompt-lab-result">
-      <header><h3>{title}</h3><button type="button" disabled={!state.text} onClick={onCopy}>Sao chép</button></header>
+      <header><div><h3>{title}</h3><small>{model}</small></div><button type="button" disabled={!state.text} onClick={onCopy}>Sao chép ô này</button></header>
       {state.running && <span className="prompt-lab-running">Đang đọc bài…</span>}
       {state.error && <p className="prompt-lab-error">{state.error}</p>}
       {!state.text && !state.error && !state.running && <p className="prompt-lab-empty">Kết quả sẽ xuất hiện ở đây.</p>}

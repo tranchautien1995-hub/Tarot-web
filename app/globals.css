@@ -3729,7 +3729,7 @@ html[data-theme="light"] .card-flight.ethereal-card-back,
 .prompt-lab-results{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .prompt-lab-result{min-height:420px;border:1px solid var(--lab-line);background:var(--lab-panel-2)}
 .prompt-lab-result header{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid var(--lab-line)}
-.prompt-lab-result h3{margin:0;font-size:17px}.prompt-lab-result header button{font-size:11px;padding:6px 9px}
+.prompt-lab-result header>div{min-width:0}.prompt-lab-result h3{margin:0;font-size:17px}.prompt-lab-result header small{display:block;margin-top:4px;color:var(--lab-muted);font-size:11px;overflow-wrap:anywhere}.prompt-lab-result header button{flex:none;font-size:11px;padding:6px 9px;margin-left:10px}
 .prompt-lab-output{padding:20px;white-space:pre-wrap;line-height:1.7;font-size:15px}
 .prompt-lab-empty,.prompt-lab-running{display:block;padding:22px;color:var(--lab-muted)}
 .prompt-lab-running{color:var(--lab-gold)}

@@ -6,7 +6,7 @@
 - Prompt Lab tại `/prompt-lab`, chỉ dành cho Admin hoặc chế độ local.
 - Prompt Reader đã chỉnh theo hướng ngắn gọn, dễ hiểu, ít học thuật.
 - API chính giữ nguyên key/model cũ.
-- API phụ dùng key mới và model `thanhnhan9023/gpt-6-astra`.
+- API phụ dùng key mới và model `santiagosgrantp/gpt-6-astra`.
 - Khi chuyển API, model phụ nhận **đúng cùng system prompt, user prompt, câu hỏi,
   bộ bài, vị trí lá và phong cách đọc** như model chính. Hệ thống chỉ đổi key,
   endpoint và model.
@@ -32,7 +32,7 @@ XAH_MODEL=gpt-6-astra
 XAH_FALLBACK_API_KEY=KEY_MOI_TRONG_ANH
 XAH_FALLBACK_BASE_URL=https://api.xah.io/v1
 XAH_FALLBACK_FREE_MODEL=gpt-5.6-sol
-XAH_FALLBACK_PREMIUM_MODEL=thanhnhan9023/gpt-6-astra
+XAH_FALLBACK_PREMIUM_MODEL=santiagosgrantp/gpt-6-astra
 
 XAH_FIRST_BYTE_TIMEOUT_MS=25000
 XAH_STREAM_TIMEOUT_MS=120000

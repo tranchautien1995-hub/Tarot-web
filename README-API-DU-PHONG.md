@@ -18,11 +18,11 @@ XAH_PREMIUM_MODEL=gpt-6-astra
 XAH_FALLBACK_API_KEY=KEY_API_MOI_TRONG_ANH
 XAH_FALLBACK_BASE_URL=https://api.xah.io/v1
 XAH_FALLBACK_FREE_MODEL=gpt-5.6-sol
-XAH_FALLBACK_PREMIUM_MODEL=thanhnhan9023/gpt-6-astra
+XAH_FALLBACK_PREMIUM_MODEL=santiagosgrantp/gpt-6-astra
 ```
 
 `XAH_API_KEY` và model chính của WebVer1.9 vẫn giữ nguyên. Chỉ khi API chính lỗi,
-website mới gọi key mới và model `thanhnhan9023/gpt-6-astra` trong ảnh.
+website mới gọi key mới và model `santiagosgrantp/gpt-6-astra` trong ảnh.
 
 ## API dự phòng 2 (không bắt buộc)
 
