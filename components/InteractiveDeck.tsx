@@ -197,6 +197,10 @@ export default function InteractiveDeck({ count, positions, spreadLabel, spreadP
 
   function handleFanCardPointerDown(event: ReactPointerEvent<HTMLElement>, deckIndex: number) {
     if (event.pointerType === "touch") {
+      // iOS Safari can retain a synthetic :hover state after a tap. Clear every
+      // desktop-only target before recording the touch so the neighbouring card
+      // never appears selected when the tapped card is removed from the fan.
+      setFanTarget(null);
       fanTouchStartRef.current = {
         pointerId: event.pointerId,
         x: event.clientX,
@@ -362,6 +366,8 @@ export default function InteractiveDeck({ count, positions, spreadLabel, spreadP
     if (pickedSet.has(deckIndex)) return;
     const empty = firstEmptySlot(slots);
     if (empty >= 0) placeIntoSlot(deckIndex, empty, null);
+    setFanTarget(null);
+    event.currentTarget.blur();
   }
 
   function touchUseSlot(event: ReactPointerEvent<HTMLElement>, slotIndex: number) {
