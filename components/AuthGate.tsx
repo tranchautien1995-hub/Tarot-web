@@ -1,8 +1,11 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import LenormandReader from "@/components/LenormandReader";
+import { ReaderNavigationProvider } from "@/components/ReaderNavigation";
 import PricingModal from "@/components/PricingModal";
 import { AccessProvider } from "@/components/AccessContext";
 import { getPlanAccess } from "@/lib/plans";
@@ -35,6 +38,7 @@ function authErrorMessage(err: unknown): string {
 }
 
 export default function AuthGate({ children }: Props) {
+  const pathname = usePathname();
   const configured = isSupabaseConfigured();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [user, setUser] = useState<User | null>(null);
@@ -315,9 +319,11 @@ export default function AuthGate({ children }: Props) {
         userId: user?.id || (localMode ? "local-preview" : "guest"),
         localMode
       }}>
-        {selectedExperience === "tarot" ? children : (
-          <EntryUnavailable mode={selectedExperience} onBack={() => setEntryComplete(false)} />
-        )}
+        <ReaderNavigationProvider selectReader={requestExperience}>
+          {pathname !== "/" || selectedExperience === "tarot" ? children : selectedExperience === "lenormand" ? <LenormandReader /> : (
+            <EntryUnavailable mode={selectedExperience} onBack={() => setEntryComplete(false)} />
+          )}
+        </ReaderNavigationProvider>
       </AccessProvider>
       {accountPanelOpen && (
         <div className="account-panel-backdrop" role="presentation" onMouseDown={() => setAccountPanelOpen(false)}>

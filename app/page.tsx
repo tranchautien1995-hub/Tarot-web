@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useReaderNavigation } from "@/components/ReaderNavigation";
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import PracticeCard from "@/components/PracticeCard";
@@ -316,6 +317,7 @@ function createId() {
 }
 
 export default function Home() {
+  const { selectReader } = useReaderNavigation();
   const { access, userId } = usePlanAccess();
   const historyLimit = access.historyLimit ?? 50;
   const historyStorageKey = `${HISTORY_KEY}:${userId}`;
@@ -949,7 +951,7 @@ export default function Home() {
         )}
         <div className="product-tabs" role="tablist" aria-label="Loại công cụ">
           <button className="active" type="button" role="tab" aria-selected="true">Trải bài Tarot</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Trải bài Lenormand</button>
+          <button type="button" role="tab" aria-selected="false" onClick={() => selectReader("lenormand")}>Trải bài Lenormand</button>
           <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Bản đồ sao</button>
         </div>
       </nav>
