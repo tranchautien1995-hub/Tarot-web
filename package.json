@@ -1,6 +1,6 @@
 {
   "name": "ttarot-webver1",
-  "version": "2.7.57",
+  "version": "2.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,12 +12,15 @@
     "next": "15.5.21",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "gsap": "^3.13.0",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.180.0",
     "typescript": "^5.7.0"
   }
 }

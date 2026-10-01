@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/c
 import PricingModal from "@/components/PricingModal";
 import { AccessProvider } from "@/components/AccessContext";
 import { getPlanAccess } from "@/lib/plans";
+import TarotEntryExperience, { EntryMode, EntryUnavailable } from "@/components/TarotEntryExperience";
 
 type AuthMode = "login" | "register";
 
@@ -37,7 +38,6 @@ export default function AuthGate({ children }: Props) {
   const configured = isSupabaseConfigured();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [user, setUser] = useState<User | null>(null);
-  const [checking, setChecking] = useState(configured);
   const [localPreview, setLocalPreview] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -48,14 +48,23 @@ export default function AuthGate({ children }: Props) {
   const [notice, setNotice] = useState("");
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [entryComplete, setEntryComplete] = useState(false);
+  const [selectedExperience, setSelectedExperience] = useState<EntryMode>("tarot");
+  const [authPanelOpen, setAuthPanelOpen] = useState(false);
   // Chỉ local hoàn toàn không cấu hình Supabase mới có quyền thử nghiệm.
   // Khi Supabase đã cấu hình, localhost cũng phải dùng đúng quyền của tài khoản.
   const localMode = !configured && localPreview;
   const { isAdmin, plan: currentPlan, access } = getPlanAccess(user?.app_metadata, localMode);
 
   useEffect(() => {
+    const storedMode = sessionStorage.getItem("ttarot:selected-experience") as EntryMode | null;
+    if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
+      setSelectedExperience(storedMode);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!configured || !supabase) {
-      setChecking(false);
       return;
     }
 
@@ -63,14 +72,26 @@ export default function AuthGate({ children }: Props) {
 
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
-      setUser(data.user ?? null);
-      setChecking(false);
+      const nextUser = data.user ?? null;
+      setUser(nextUser);
+      const storedMode = sessionStorage.getItem("ttarot:selected-experience") as EntryMode | null;
+      if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
+        setSelectedExperience(storedMode);
+      }
+      if (nextUser && sessionStorage.getItem("ttarot:continue-after-auth") === "1") {
+        setEntryComplete(true);
+        sessionStorage.removeItem("ttarot:continue-after-auth");
+      }
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setUser(session?.user ?? null);
-      setChecking(false);
+      if (session?.user && sessionStorage.getItem("ttarot:continue-after-auth") === "1") {
+        setEntryComplete(true);
+        setAuthPanelOpen(false);
+        sessionStorage.removeItem("ttarot:continue-after-auth");
+      }
     });
 
     return () => {
@@ -136,6 +157,8 @@ export default function AuthGate({ children }: Props) {
 
         if (data.session) {
           setUser(data.user ?? null);
+          setEntryComplete(true);
+          setAuthPanelOpen(false);
         } else {
           setNotice("Yêu cầu đăng ký đã được gửi. Nếu bật xác nhận email, hãy mở thư xác nhận rồi đăng nhập. Không thấy thư? Kiểm tra Spam hoặc liên hệ chủ website để kiểm tra cấu hình gửi email.");
           setMode("login");
@@ -150,6 +173,8 @@ export default function AuthGate({ children }: Props) {
 
         if (signInError) throw signInError;
         setUser(data.user ?? null);
+        setEntryComplete(true);
+        setAuthPanelOpen(false);
       }
     } catch (err) {
       setError(authErrorMessage(err));
@@ -164,12 +189,14 @@ export default function AuthGate({ children }: Props) {
     setNotice("");
     setSubmitting(true);
     try {
+      sessionStorage.setItem("ttarot:continue-after-auth", "1");
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin }
       });
       if (oauthError) throw oauthError;
     } catch (err) {
+      sessionStorage.removeItem("ttarot:continue-after-auth");
       setError(authErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -182,12 +209,14 @@ export default function AuthGate({ children }: Props) {
     setNotice("");
     setSubmitting(true);
     try {
+      sessionStorage.setItem("ttarot:continue-after-auth", "1");
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: { redirectTo: window.location.origin }
       });
       if (oauthError) throw oauthError;
     } catch (err) {
+      sessionStorage.removeItem("ttarot:continue-after-auth");
       setError(authErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -199,97 +228,81 @@ export default function AuthGate({ children }: Props) {
     await supabase.auth.signOut();
     setUser(null);
     setAccountPanelOpen(false);
+    setEntryComplete(false);
   }
 
-  if (checking) {
-    return (
-      <div className="auth-shell auth-loading-screen">
-        <div className="auth-orb" aria-hidden="true">✦</div>
-        <p>Đang kiểm tra phiên đăng nhập…</p>
-      </div>
-    );
+  function requestExperience(nextMode: EntryMode) {
+    setSelectedExperience(nextMode);
+    sessionStorage.setItem("ttarot:selected-experience", nextMode);
+    setError("");
+    setNotice("");
+    if (configured && !user) {
+      setAuthPanelOpen(true);
+      return;
+    }
+    if (!configured && !localPreview) {
+      setAuthPanelOpen(true);
+      return;
+    }
+    setEntryComplete(true);
   }
 
-  if (!configured && !localPreview) {
+  if (!entryComplete) {
     return (
-      <div className="auth-shell">
-        <div className="auth-card auth-setup-card">
-          <div className="auth-symbol">✦</div>
-          <div className="auth-eyebrow">TAROT PRACTICE · AUTH READY</div>
-          <h1>Chuẩn bị cho phiên bản online.</h1>
-          <p>
-            Supabase Auth đã được tích hợp vào code nhưng chưa có biến môi trường trên máy này.
-            Khi bạn thêm URL và Publishable Key, web sẽ tự yêu cầu đăng ký / đăng nhập.
-          </p>
-          <div className="auth-setup-code">
-            <code>NEXT_PUBLIC_SUPABASE_URL</code>
-            <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>
+      <>
+        <TarotEntryExperience onContinue={requestExperience} initialMode={selectedExperience} />
+        {authPanelOpen && (
+          <div className="entry-auth-layer" role="presentation" onMouseDown={() => setAuthPanelOpen(false)}>
+            <div className={`auth-card ${!configured ? "auth-setup-card" : ""}`} role="dialog" aria-modal="true" aria-label={configured ? "Đăng nhập" : "Cấu hình đăng nhập"} onMouseDown={(event) => event.stopPropagation()}>
+              <button className="entry-auth-close" type="button" onClick={() => setAuthPanelOpen(false)} aria-label="Đóng">×</button>
+              {!configured ? (
+                <>
+                  <div className="auth-symbol">✦</div>
+                  <div className="auth-eyebrow">TAROT PRACTICE · AUTH READY</div>
+                  <h1>Chuẩn bị cho phiên bản online.</h1>
+                  <p>Supabase Auth đã được tích hợp vào code nhưng chưa có biến môi trường trên máy này. Khi bạn thêm URL và Publishable Key, web sẽ tự yêu cầu đăng ký / đăng nhập.</p>
+                  <div className="auth-setup-code">
+                    <code>NEXT_PUBLIC_SUPABASE_URL</code>
+                    <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>
+                  </div>
+                  <button className="auth-primary" type="button" onClick={() => { setLocalPreview(true); setAuthPanelOpen(false); setEntryComplete(true); }}>
+                    Xem bản local để tiếp tục chỉnh giao diện
+                  </button>
+                  <small>Chế độ local chỉ để phát triển. Khi deploy và có Supabase, nút bỏ qua này sẽ không xuất hiện.</small>
+                </>
+              ) : (
+                <>
+                  <div className="auth-symbol">✦</div>
+                  <div className="auth-eyebrow">TAROT PRACTICE</div>
+                  <h1>{mode === "login" ? "Chào mừng bạn trở lại." : "Tạo không gian Tarot của bạn."}</h1>
+                  <p>{mode === "login" ? "Đăng nhập để tiếp tục trải bài và sử dụng các tính năng đọc bài." : "Tạo tài khoản bằng email và mật khẩu. Tùy cấu hình Supabase, bạn có thể cần xác nhận email."}</p>
+                  <div className="auth-tabs" role="tablist" aria-label="Đăng nhập hoặc đăng ký">
+                    <button type="button" className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); setNotice(""); }}>Đăng nhập</button>
+                    <button type="button" className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setError(""); setNotice(""); }}>Đăng ký</button>
+                  </div>
+                  <form className="auth-form" onSubmit={submit}>
+                    <label><span>Email</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+                    <label><span>Mật khẩu</span><input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Ít nhất 6 ký tự" /></label>
+                    {mode === "register" && <label><span>Nhập lại mật khẩu</span><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Nhập lại mật khẩu" /></label>}
+                    {error && <div className="auth-message auth-error">{error}</div>}
+                    {notice && <div className="auth-message auth-notice">{notice}</div>}
+                    <button className="auth-primary" type="submit" disabled={submitting}>{submitting ? "Đang xử lý…" : mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</button>
+                  </form>
+                  <div className="auth-divider"><span>hoặc</span></div>
+                  <button className="auth-google" type="button" disabled={submitting} onClick={signInWithGoogle}>
+                    <svg aria-hidden="true" viewBox="0 0 48 48" width="19" height="19"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94a11.05 11.05 0 0 1-4.81 7.26l7.69 5.96c4.49-4.14 7.16-10.25 7.16-17.69Z"/><path fill="#FBBC05" d="M10.53 28.59A14.37 14.37 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.89-5.76l-7.69-5.96c-2.13 1.43-4.86 2.22-8.2 2.22-6.26 0-11.57-4.22-13.47-9.91l-7.97 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
+                    Tiếp tục với Google
+                  </button>
+                  <button className="auth-facebook" type="button" disabled={submitting} onClick={signInWithFacebook}>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.23.19 2.23.19v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg>
+                    Tiếp tục với Facebook
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-          <button className="auth-primary" type="button" onClick={() => setLocalPreview(true)}>
-            Xem bản local để tiếp tục chỉnh giao diện
-          </button>
-          <small>Chế độ local chỉ để phát triển. Khi deploy và có Supabase, nút bỏ qua này sẽ không xuất hiện.</small>
-        </div>
-      </div>
-    );
-  }
-
-  if (configured && !user) {
-    return (
-      <div className="auth-shell">
-        <div className="auth-card">
-          <div className="auth-symbol">✦</div>
-          <div className="auth-eyebrow">TAROT PRACTICE</div>
-          <h1>{mode === "login" ? "Chào mừng bạn trở lại." : "Tạo không gian Tarot của bạn."}</h1>
-          <p>
-            {mode === "login"
-              ? "Đăng nhập để tiếp tục trải bài và sử dụng các tính năng đọc bài."
-              : "Tạo tài khoản bằng email và mật khẩu. Tùy cấu hình Supabase, bạn có thể cần xác nhận email."}
-          </p>
-
-          <div className="auth-tabs" role="tablist" aria-label="Đăng nhập hoặc đăng ký">
-            <button type="button" className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); setNotice(""); }}>
-              Đăng nhập
-            </button>
-            <button type="button" className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setError(""); setNotice(""); }}>
-              Đăng ký
-            </button>
-          </div>
-
-          <form className="auth-form" onSubmit={submit}>
-            <label>
-              <span>Email</span>
-              <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
-            </label>
-            <label>
-              <span>Mật khẩu</span>
-              <input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Ít nhất 6 ký tự" />
-            </label>
-            {mode === "register" && (
-              <label>
-                <span>Nhập lại mật khẩu</span>
-                <input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Nhập lại mật khẩu" />
-              </label>
-            )}
-
-            {error && <div className="auth-message auth-error">{error}</div>}
-            {notice && <div className="auth-message auth-notice">{notice}</div>}
-
-            <button className="auth-primary" type="submit" disabled={submitting}>
-              {submitting ? "Đang xử lý…" : mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
-            </button>
-          </form>
-          <div className="auth-divider"><span>hoặc</span></div>
-          <button className="auth-google" type="button" disabled={submitting} onClick={signInWithGoogle}>
-            <svg aria-hidden="true" viewBox="0 0 48 48" width="19" height="19"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94a11.05 11.05 0 0 1-4.81 7.26l7.69 5.96c4.49-4.14 7.16-10.25 7.16-17.69Z"/><path fill="#FBBC05" d="M10.53 28.59A14.37 14.37 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.92-2.13 15.89-5.76l-7.69-5.96c-2.13 1.43-4.86 2.22-8.2 2.22-6.26 0-11.57-4.22-13.47-9.91l-7.97 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
-            Tiếp tục với Google
-          </button>
-          <button className="auth-facebook" type="button" disabled={submitting} onClick={signInWithFacebook}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.23.19 2.23.19v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg>
-            Tiếp tục với Facebook
-          </button>
-        </div>
-      </div>
+        )}
+      </>
     );
   }
 
@@ -302,7 +315,9 @@ export default function AuthGate({ children }: Props) {
         userId: user?.id || (localMode ? "local-preview" : "guest"),
         localMode
       }}>
-        {children}
+        {selectedExperience === "tarot" ? children : (
+          <EntryUnavailable mode={selectedExperience} onBack={() => setEntryComplete(false)} />
+        )}
       </AccessProvider>
       {accountPanelOpen && (
         <div className="account-panel-backdrop" role="presentation" onMouseDown={() => setAccountPanelOpen(false)}>
