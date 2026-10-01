@@ -1,0 +1,9 @@
+OcclusionHands TRIAL4
+
+Both new skin/cyan textures unchanged. Connected skinned meshes retained. Skin weights now blend all nearby digit joints continuously, replacing abrupt strongest-bone assignment. Skin digit angles are bounded to protect the photographed fingertip contours; wrist tilt increases from 0.022/0.028 to 0.040/0.050 radians. Cyan digit angular amplitudes also increase slightly.
+
+Hands intentionally overlap the card edges again. Skin hand is physically behind the card at local z=-1.0 with depth testing/writing. Cyan is a foreground compositing layer: renderOrder 20, depthTest/depthWrite disabled, opacity 1 with alpha-tested cutout edges. Card material and movement are unchanged.
+
+QA checks 12 seconds of poses in all three modes across four viewport fixtures: visible triangles retain positive signed area, intentional overlap occurs on desktop, and overlapping skin vertices stay behind the card. Mathematical/component verification uses a mocked renderer; browser visuals/FPS are not verified.
+
+The HTML preview embeds the same helper and uses identical framing and material settings.

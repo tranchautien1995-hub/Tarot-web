@@ -1,0 +1,6 @@
+TTAROT entry hands
+
+Created specifically for this project with OpenAI image generation on 2026-09-30.
+The two transparent WebP files are original project assets, not extracted from
+the Why Zero reference website. The reference HAR was used only to study the
+rendering architecture, camera continuity, asset staging and timing.
