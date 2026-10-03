@@ -1,5 +1,3 @@
-import { randomInt } from "node:crypto";
-
 export type XahMessage = {
   role: "system" | "user" | "assistant";
   content: string;
@@ -15,7 +13,7 @@ type ChatCompletionResponse = {
 
 export type XahProviderId = "primary" | "fallback_1" | "fallback_2";
 export type ReaderProviderId = "ckey" | "apiz";
-type ApiProvider = { id: XahProviderId | ReaderProviderId; label: string; baseUrl: string; apiKey: string; model: string };
+type ApiProvider = { id: ReaderProviderId; label: string; baseUrl: string; apiKey: string; model: string };
 
 class ProviderFailure extends Error {
   constructor(message: string, public retryable = true, public status?: number) {
@@ -37,13 +35,9 @@ function readPositiveInt(value: string | undefined, fallback: number, min: numbe
   return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 
-const PRIMARY_BASE_URL = cleanBaseUrl(process.env.XAH_BASE_URL, "https://api.xah.io/v1");
 const FIRST_BYTE_TIMEOUT_MS = readPositiveInt(process.env.XAH_FIRST_BYTE_TIMEOUT_MS, 25_000, 5_000, 120_000);
 const STREAM_TIMEOUT_MS = readPositiveInt(process.env.XAH_STREAM_TIMEOUT_MS, 120_000, 30_000, 300_000);
 const NON_STREAM_TIMEOUT_MS = readPositiveInt(process.env.XAH_NON_STREAM_TIMEOUT_MS, 60_000, 10_000, 180_000);
-const FAILOVER_COOLDOWN_MS = readPositiveInt(process.env.XAH_FAILOVER_COOLDOWN_MS, 60_000, 5_000, 600_000);
-let primaryDisabledUntil = 0;
-
 export type XahModelTier = "free" | "premium";
 
 export function getXahModel(tier: XahModelTier) {
@@ -52,43 +46,25 @@ export function getXahModel(tier: XahModelTier) {
 }
 
 export function getPromptLabModel() {
-  return process.env.PROMPT_LAB_MODEL?.trim()
-    || process.env.XAH_FALLBACK_PREMIUM_MODEL?.trim()
-    || "santiagosgrantp/gpt-6-astra";
+  return getXahModel("premium");
 }
 
-function tierForRequestedModel(model: string): XahModelTier {
-  return model === getXahModel("free") ? "free" : "premium";
-}
-
-function fallbackModel(slot: 1 | 2, requestedModel: string) {
-  const prefix = slot === 1 ? "XAH_FALLBACK_" : "XAH_FALLBACK_2_";
-  const tier = tierForRequestedModel(requestedModel);
-  return process.env[`${prefix}${tier === "free" ? "FREE_MODEL" : "PREMIUM_MODEL"}`]?.trim()
-    || process.env[`${prefix}MODEL`]?.trim()
-    || requestedModel;
-}
-
+/** Only APIZ and CKEY remain; obsolete fallback env variables are ignored. */
 function configuredProviders(requestedModel: string) {
   const providers: ApiProvider[] = [];
-  const primaryKey = process.env.XAH_API_KEY?.trim();
-  const fallbackKey = process.env.XAH_FALLBACK_API_KEY?.trim();
-  const fallback2Key = process.env.XAH_FALLBACK_2_API_KEY?.trim();
-  if (primaryKey) providers.push({ id: "primary", label: "API chính", baseUrl: PRIMARY_BASE_URL, apiKey: primaryKey, model: requestedModel });
-  if (fallbackKey) providers.push({
-    id: "fallback_1", label: "API dự phòng 1",
-    baseUrl: cleanBaseUrl(process.env.XAH_FALLBACK_BASE_URL, PRIMARY_BASE_URL),
-    apiKey: fallbackKey, model: fallbackModel(1, requestedModel)
+  const apizKey = process.env.APIZ_API_KEY?.trim();
+  const ckeyKey = process.env.XAH_API_KEY?.trim();
+  if (apizKey) providers.push({
+    id: "apiz", label: "AI APIZ",
+    baseUrl: cleanBaseUrl(process.env.APIZ_BASE_URL, "https://api.apiz.vn/v1"),
+    apiKey: apizKey, model: requestedModel
   });
-  if (fallback2Key) providers.push({
-    id: "fallback_2", label: "API dự phòng 2",
-    baseUrl: cleanBaseUrl(process.env.XAH_FALLBACK_2_BASE_URL, PRIMARY_BASE_URL),
-    apiKey: fallback2Key, model: fallbackModel(2, requestedModel)
+  if (ckeyKey) providers.push({
+    id: "ckey", label: "AI CKEY",
+    baseUrl: cleanBaseUrl(process.env.XAH_BASE_URL, "https://api.xah.io/v1"),
+    apiKey: ckeyKey, model: requestedModel
   });
-  if (!providers.length) throw new Error("Thiếu XAH_API_KEY và chưa cấu hình API dự phòng trên máy chủ.");
-  if (Date.now() < primaryDisabledUntil && providers.length > 1) {
-    return [...providers.filter((item) => item.id !== "primary"), ...providers.filter((item) => item.id === "primary")];
-  }
+  if (!providers.length) throw new Error("Thiếu APIZ_API_KEY và XAH_API_KEY trên máy chủ.");
   return providers;
 }
 
@@ -104,14 +80,6 @@ function friendlyProviderError(status: number, detail: string, provider: ApiProv
   if (status === 429) return `${provider.label}: đang giới hạn lượt gọi hoặc tài khoản không đủ số dư.`;
   if (status >= 500) return `${provider.label}: máy chủ đang gặp sự cố HTTP ${status}.`;
   return `${provider.label}: ${detail || `HTTP ${status}`}`;
-}
-
-function markFailure(provider: ApiProvider, failure: ProviderFailure) {
-  if (provider.id === "primary" && failure.retryable) primaryDisabledUntil = Date.now() + FAILOVER_COOLDOWN_MS;
-}
-
-function markSuccess(provider: ApiProvider) {
-  if (provider.id === "primary") primaryDisabledUntil = 0;
 }
 
 function normalizeFailure(error: unknown, provider: ApiProvider) {
@@ -152,12 +120,10 @@ export async function xahChat(messages: XahMessage[], model = getXahModel("premi
       if (data.error?.message) throw new ProviderFailure(`${provider.label}: ${data.error.message}`, true);
       const text = responseText(data).trim();
       if (!text) throw new ProviderFailure(`${provider.label}: phản hồi không có nội dung.`, true);
-      markSuccess(provider);
       return text;
     } catch (error) {
       const failure = normalizeFailure(error, provider);
       failures.push(failure);
-      markFailure(provider, failure);
       if (!failure.retryable) throw failure;
     } finally { clearTimeout(timeout); }
   }
@@ -210,48 +176,34 @@ function logReaderRouting(log: ReaderRoutingLog) {
   console.info(`[AI Router] selected=${log.provider_selected} used=${log.provider_used ?? "none"} fallback=${log.fallback_used}`, { ...log });
 }
 
-function readProviderWeight(value: string | undefined) {
-  if (!value?.trim()) return 50;
-  const weight = Number(value);
-  return Number.isFinite(weight) && weight >= 0 ? weight : 50;
+/** APIZ first, CKEY fallback only before first content. No random routing. */
+export async function readerChatStream(messages: XahMessage[]) {
+  const model = process.env.APIZ_MODEL?.trim() || "gpt-6-astra";
+  const providers = configuredProviders(model);
+  const ckey = providers.find(provider => provider.id === "ckey");
+  if (ckey) ckey.model = getXahModel("premium");
+  return loggedReaderStream(messages, providers);
 }
 
-/** Server-only selection. Zero weight excludes the initial pick, not fallback. */
-export function selectProviderByWeight(
-  weights: Record<ReaderProviderId, number>,
-  sample = randomInt(0, 0x100000000) / 0x100000000
-): ReaderProviderId {
-  const total = weights.ckey + weights.apiz;
-  if (!Number.isFinite(total) || total <= 0 || weights.ckey < 0 || weights.apiz < 0) {
-    throw new Error("AI_CKEY_WEIGHT và AI_APIZ_WEIGHT phải có tổng lớn hơn 0.");
-  }
-  if (!Number.isFinite(sample) || sample < 0 || sample >= 1) throw new Error("Mẫu chọn provider không hợp lệ.");
-  return sample * total < weights.ckey ? "ckey" : "apiz";
-}
-
-/** Tarot only: pick before any outbound request; at most one sequential fallback. */
-export async function tarotReaderChatStream(messages: XahMessage[]) {
-  const model = "gpt-6-astra";
-  const providers: ApiProvider[] = [];
-  const ckeyKey = process.env.XAH_API_KEY?.trim();
-  const apizKey = process.env.APIZ_API_KEY?.trim();
-  if (ckeyKey) {
-    if ((process.env.XAH_PREMIUM_MODEL?.trim() || model) !== model) throw new Error("Tarot AI Router yêu cầu XAH_PREMIUM_MODEL=gpt-6-astra.");
-    providers.push({ id: "ckey", label: "AI CKEY", baseUrl: cleanBaseUrl(process.env.XAH_BASE_URL, "https://api.xah.io/v1"), apiKey: ckeyKey, model });
-  }
-  if (apizKey) {
-    if ((process.env.APIZ_MODEL?.trim() || model) !== model) throw new Error("Tarot AI Router yêu cầu APIZ_MODEL=gpt-6-astra.");
-    providers.push({ id: "apiz", label: "AI APIZ", baseUrl: cleanBaseUrl(process.env.APIZ_BASE_URL, "https://api.apiz.vn/v1"), apiKey: apizKey, model });
-  }
-  if (!providers.length) throw new Error("Thiếu XAH_API_KEY và APIZ_API_KEY trên máy chủ.");
-  const selected = selectProviderByWeight({
-    ckey: ckeyKey ? readProviderWeight(process.env.AI_CKEY_WEIGHT) : 0,
-    apiz: apizKey ? readProviderWeight(process.env.AI_APIZ_WEIGHT) : 0
-  });
-  const ordered = [...providers.filter(p => p.id === selected), ...providers.filter(p => p.id !== selected)];
-  const log: ReaderRoutingLog = { provider_selected: selected, provider_used: null, fallback_used: false, first_provider_error: null };
+function loggedReaderStream(messages: XahMessage[], providers: ApiProvider[]) {
+  const log: ReaderRoutingLog = {
+    provider_selected: providers[0].id, provider_used: null,
+    fallback_used: false, first_provider_error: null
+  };
   logReaderRouting(log);
-  return streamWithProviders(messages, ordered, log);
+  return streamWithProviders(messages, providers, log);
+}
+
+/** Three-card Tarot uses CKEY Sol only, regardless of account tier or preset. */
+export async function tarotReaderChatStream(messages: XahMessage[], cardCount: number) {
+  if (cardCount !== 3) return readerChatStream(messages);
+  const apiKey = process.env.XAH_API_KEY?.trim();
+  if (!apiKey) throw new Error("Trải Tarot 3 lá cần XAH_API_KEY trên máy chủ.");
+  return loggedReaderStream(messages, [{
+    id: "ckey", label: "AI CKEY",
+    baseUrl: cleanBaseUrl(process.env.XAH_BASE_URL, "https://api.xah.io/v1"),
+    apiKey, model: "gpt-5.6-sol"
+  }]);
 }
 
 export async function xahChatStream(
@@ -260,23 +212,17 @@ export async function xahChatStream(
   onlyProvider?: XahProviderId
 ) {
   const configured = configuredProviders(model);
+  // Keep existing Prompt Lab targets, backed only by the two retained providers.
+  const providerId = onlyProvider === "primary" ? "ckey" : onlyProvider === "fallback_1" ? "apiz" : null;
   const providers = onlyProvider
-    ? configured.filter((provider) => provider.id === onlyProvider)
+    ? configured.filter(provider => provider.id === providerId)
     : configured;
-  if (!providers.length) {
-    const label = onlyProvider === "fallback_1"
-      ? "XAH_FALLBACK_API_KEY"
-      : onlyProvider === "fallback_2"
-        ? "XAH_FALLBACK_2_API_KEY"
-        : "API key";
-    throw new Error(`Prompt Lab thiếu ${label} trên máy chủ.`);
-  }
+  if (!providers.length) throw new Error("Provider được yêu cầu chưa cấu hình hoặc đã được gỡ bỏ.");
   return streamWithProviders(messages, providers);
 }
 
 async function streamWithProviders(messages: XahMessage[], providers: ApiProvider[], routingLog?: ReaderRoutingLog) {
   const recordFailure = (provider: ApiProvider, failure: ProviderFailure) => {
-    markFailure(provider, failure);
     if (routingLog && provider.id === routingLog.provider_selected && !routingLog.first_provider_error) {
       // Never log credentials, prompts, cards or raw upstream error bodies.
       routingLog.first_provider_error = { name: failure.name, status: failure.status ?? null };
@@ -333,7 +279,6 @@ async function streamWithProviders(messages: XahMessage[], providers: ApiProvide
           emitted = true;
           clearTimeout(firstByteTimeout);
           streamTimeout = setTimeout(() => abortController.abort(), STREAM_TIMEOUT_MS);
-          markSuccess(provider);
           if (routingLog) {
             routingLog.provider_used = provider.id as ReaderProviderId;
             logReaderRouting(routingLog);

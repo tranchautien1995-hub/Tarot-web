@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         role: "user",
         content: readingPrompt(question, cards, spreadPreset, readingStyle),
       },
-    ]);
+    ], cards.length);
 
     const responseHeaders: Record<string, string> = {
         "Content-Type": "text/plain; charset=utf-8",

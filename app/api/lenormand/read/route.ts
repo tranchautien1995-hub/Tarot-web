@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
 import { getPlanAccess } from "@/lib/plans";
 import { LENORMAND_DECK } from "@/lib/lenormand/deck";
-import { getXahModel, xahChatStream } from "@/lib/xah";
+import { readerChatStream } from "@/lib/xah";
 import { lenormandReadingPrompt, lenormandSystemPrompt } from "@/lib/lenormand/prompts";
 import type { DrawnLenormandCard, LenormandSpread, ReadingStyle } from "@/lib/lenormand/types";
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
     if (spread !== "grand_tableau" && !String(body.question || "").trim()) return NextResponse.json({ error: "Hãy nhập câu hỏi cho trải bài." }, { status: 400 });
     if (!String(body.timeframe || "").trim()) return NextResponse.json({ error: "Hãy nhập khung thời gian." }, { status: 400 });
-    const stream = await xahChatStream([
+    const stream = await readerChatStream([
       { role: "system", content: lenormandSystemPrompt(spread, (["direct", "gentle", "companion"].includes(body.readingStyle) ? body.readingStyle : "direct") as ReadingStyle) },
       { role: "user", content: lenormandReadingPrompt({
         question: String(body.question || "").trim(),
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         cards,
         significator: body.significator === "man" || body.significator === "woman" ? body.significator : undefined
       }) }
-    ], getXahModel(access.modelTier));
+    ]);
 
     return new Response(stream, { headers: {
       "Content-Type": "text/plain; charset=utf-8",

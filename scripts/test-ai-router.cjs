@@ -62,12 +62,8 @@ async function consume(stream) {
   try { while (true) { const chunk = await reader.read(); if (chunk.done) break; text += decoder.decode(chunk.value, { stream: true }); } return text + decoder.decode(); }
   finally { reader.releaseLock(); }
 }
-function forceProvider(id) {
-  process.env.AI_CKEY_WEIGHT = id === 'ckey' ? '100' : '0';
-  process.env.AI_APIZ_WEIGHT = id === 'apiz' ? '100' : '0';
-}
-function assertPayload() {
-  for (const call of calls) assert.deepEqual(call.body, { model: 'gpt-6-astra', messages: message, stream: true });
+function assertPayload(model = 'gpt-6-astra') {
+  for (const call of calls) assert.deepEqual(call.body, { model, messages: message, stream: true });
 }
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -78,50 +74,62 @@ function assertPayload() {
   global.setTimeout = (cb, ms, ...args) => originalSetTimeout(cb, ms === 5000 ? 100 : ms === 30000 ? 150 : ms, ...args);
   moduleUnderTest._compile(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS } }).outputText, file);
   const router = moduleUnderTest.exports;
-  assert.equal(router.selectProviderByWeight({ ckey: 50, apiz: 50 }, .4999), 'ckey');
-  assert.equal(router.selectProviderByWeight({ ckey: 50, apiz: 50 }, .5), 'apiz');
-  assert.equal(router.selectProviderByWeight({ ckey: 80, apiz: 20 }, .7999), 'ckey');
-  assert.equal(router.selectProviderByWeight({ ckey: 80, apiz: 20 }, .8), 'apiz');
-  assert.throws(() => router.selectProviderByWeight({ ckey: 0, apiz: 0 }));
-  delete process.env.AI_CKEY_WEIGHT; delete process.env.AI_APIZ_WEIGHT;
-  const distribution = { ckey: 0, apiz: 0 };
-  for (let index = 0; index < 100; index++) {
-    calls = []; const beforeLogs = logs.length;
-    assert.equal(await consume(await router.tarotReaderChatStream(message)), 'Bài đọc: rõ ràng.');
-    assert.equal(calls.length, 1, 'normal request must call only one provider');
-    assertPayload(); distribution[calls[0].id]++;
-    const final = logs.slice(beforeLogs).at(-1)[1];
-    assert.equal(final.provider_used, calls[0].id); assert.equal(final.fallback_used, false);
-  }
-  assert(distribution.ckey > 0 && distribution.apiz > 0);
-  originalInfo(`PASS 100 real local HTTP/SSE requests: CKEY=${distribution.ckey}, APIZ=${distribution.apiz}; exactly one outbound request each.`);
-  for (const id of ['ckey', 'apiz']) {
-    failId = id; forceProvider(id);
-    for (const scenario of ['http-error', 'bad-request', 'network-error', 'empty', 'invalid-json', 'sse-error', 'before-headers-timeout', 'before-content-timeout']) {
-      mode = scenario; calls = []; const beforeLogs = logs.length;
-      assert.equal(await consume(await router.tarotReaderChatStream(message)), 'Bài đọc: rõ ràng.');
-      assert.deepEqual(calls.map(c => c.id), [id, id === 'ckey' ? 'apiz' : 'ckey']); assertPayload();
+  // Stale configuration must not alter fixed routing or call removed providers.
+  Object.assign(process.env, {
+    AI_CKEY_WEIGHT: '100', AI_APIZ_WEIGHT: '0',
+    XAH_FALLBACK_API_KEY: 'removed-secret', XAH_FALLBACK_BASE_URL: url + '/removed',
+    XAH_FALLBACK_2_API_KEY: 'removed-secret-2', XAH_FALLBACK_2_BASE_URL: url + '/removed-2',
+    PROMPT_LAB_MODEL: 'removed-model', XAH_FREE_MODEL: 'stale-sol-model'
+  });
+  for (const count of [3, 6, 10, 1, 78]) {
+    for (let index = 0; index < 20; index++) {
+      calls = []; const beforeLogs = logs.length;
+      assert.equal(await consume(await router.tarotReaderChatStream(message, count)), 'Bài đọc: rõ ràng.');
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].id, count === 3 ? 'ckey' : 'apiz');
+      assertPayload(count === 3 ? 'gpt-5.6-sol' : 'gpt-6-astra');
       const final = logs.slice(beforeLogs).at(-1)[1];
-      assert.equal(final.provider_selected, id); assert.notEqual(final.provider_used, id); assert.equal(final.fallback_used, true); assert(final.first_provider_error);
+      assert.equal(final.provider_used, calls[0].id); assert.equal(final.fallback_used, false);
     }
+  }
+  originalInfo('PASS 100 local HTTP/SSE readings: 3 cards → CKEY Sol; 1/6/10/78 cards → APIZ Astra; one outbound request each.');
+  failId = 'apiz';
+  for (const scenario of ['http-error', 'bad-request', 'network-error', 'empty', 'invalid-json', 'sse-error', 'before-headers-timeout', 'before-content-timeout']) {
+    mode = scenario; calls = []; const beforeLogs = logs.length;
+    assert.equal(await consume(await router.tarotReaderChatStream(message, 6)), 'Bài đọc: rõ ràng.');
+    assert.deepEqual(calls.map(c => c.id), ['apiz', 'ckey']); assertPayload();
+    const final = logs.slice(beforeLogs).at(-1)[1];
+    assert.equal(final.provider_selected, 'apiz'); assert.equal(final.provider_used, 'ckey'); assert.equal(final.fallback_used, true); assert(final.first_provider_error);
+  }
+  for (const count of [3, 6]) {
+    failId = count === 3 ? 'ckey' : 'apiz';
     for (const scenario of ['after-content-error', 'after-content-timeout']) {
       mode = scenario; calls = [];
-      const stream = await router.tarotReaderChatStream(message); const reader = stream.getReader();
+      const stream = await router.tarotReaderChatStream(message, count); const reader = stream.getReader();
       const first = await reader.read(); assert(new TextDecoder().decode(first.value).startsWith('Bài đọc:'));
       await assert.rejects(async () => { while (!(await reader.read()).done) {} }); reader.releaseLock();
-      assert.equal(calls.length, 1, 'after first content, never call other provider');
+      assert.equal(calls.length, 1, 'no provider switch after first content');
     }
   }
-  mode = 'both-error'; calls = []; await assert.rejects(router.tarotReaderChatStream(message)); assert.equal(calls.length, 2, 'no third retry');
-  mode = 'json'; forceProvider(failId); calls = []; assert.equal(await consume(await router.tarotReaderChatStream(message)), 'JSON result'); assert.equal(calls.length, 1);
-  mode = 'cancel'; calls = []; const stream = await router.tarotReaderChatStream(message); const reader = stream.getReader(); await reader.read(); await reader.cancel(); await delay(40); assert.equal(calls.length, 1); reader.releaseLock();
-  mode = 'cancel-fallback'; calls = []; const pendingStream = await router.tarotReaderChatStream(message); for (let i = 0; calls.length < 2 && i < 20; i++) await delay(5); await pendingStream.cancel(); await delay(30); assert.equal(calls.length, 2);
-  // Existing non-reader helper ignores APIZ/random routing (Lenormand/Prompt Lab).
-  mode = 'ok'; calls = []; process.env.XAH_FALLBACK_API_KEY = 'fake-apiz'; process.env.XAH_FALLBACK_BASE_URL = url + '/apiz'; process.env.XAH_FALLBACK_PREMIUM_MODEL = 'lab-model';
-  assert.equal(await consume(await router.xahChatStream(message, 'lab-model', 'fallback_1')), 'Bài đọc: rõ ràng.');
-  assert.equal(calls.length, 1); assert.equal(calls[0].id, 'apiz'); assert.equal(calls[0].body.model, 'lab-model');
-  calls = []; forceProvider('apiz'); await consume(await router.xahChatStream(message, 'lenormand-model')); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'ckey'); assert.equal(calls[0].body.model, 'lenormand-model');
-  originalInfo('PASS fallback in both directions before content, HTTP/network/SSE errors, timeouts, no fallback after content, cancellation, identical payloads, existing Lenormand/Prompt Lab helper.');
+  failId = 'ckey';
+  for (const scenario of ['http-error', 'empty', 'before-content-timeout']) {
+    mode = scenario; calls = [];
+    await assert.rejects(async () => consume(await router.tarotReaderChatStream(message, 3)));
+    assert.deepEqual(calls.map(c => c.id), ['ckey'], '3 cards must never call APIZ'); assertPayload('gpt-5.6-sol');
+  }
+  mode = 'both-error'; calls = []; await assert.rejects(router.tarotReaderChatStream(message, 6)); assert.equal(calls.length, 2, 'no third retry');
+  mode = 'json'; failId = 'apiz'; calls = []; assert.equal(await consume(await router.tarotReaderChatStream(message, 6)), 'JSON result'); assert.equal(calls.length, 1);
+  mode = 'cancel'; calls = []; const stream = await router.tarotReaderChatStream(message, 6); const reader = stream.getReader(); await reader.read(); await reader.cancel(); await delay(40); assert.equal(calls.length, 1); reader.releaseLock();
+  mode = 'cancel-fallback'; calls = []; const pendingStream = await router.tarotReaderChatStream(message, 6); for (let i = 0; calls.length < 2 && i < 20; i++) await delay(5); await pendingStream.cancel(); await delay(30); assert.equal(calls.length, 2);
+  mode = 'ok'; calls = []; await consume(await router.readerChatStream(message)); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'apiz'); assertPayload();
+  mode = 'http-error'; calls = []; await consume(await router.readerChatStream(message)); assert.deepEqual(calls.map(c => c.id), ['apiz', 'ckey']); assertPayload();
+  mode = 'ok'; calls = []; await consume(await router.xahChatStream(message, 'gpt-6-astra', 'fallback_1')); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'apiz');
+  calls = []; await consume(await router.xahChatStream(message, 'gpt-6-astra', 'primary')); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'ckey');
+  calls = []; await assert.rejects(router.xahChatStream(message, 'gpt-6-astra', 'fallback_2')); assert.equal(calls.length, 0);
+  assert.equal(router.getPromptLabModel(), 'gpt-6-astra');
+  delete process.env.XAH_API_KEY; calls = []; await assert.rejects(router.tarotReaderChatStream(message, 3)); assert.equal(calls.length, 0); await consume(await router.tarotReaderChatStream(message, 6)); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'apiz');
+  process.env.XAH_API_KEY = 'fake-ckey'; delete process.env.APIZ_API_KEY; calls = []; await consume(await router.tarotReaderChatStream(message, 6)); assert.equal(calls.length, 1); assert.equal(calls[0].id, 'ckey'); assertPayload();
+  originalInfo('PASS APIZ→CKEY fallback before content, no fallback after content, 3-card Sol exclusivity, cancellation, Lenormand shared routing, old providers ignored.');
   originalInfo('PASS maximum concurrent provider requests:', maxActive); assert.equal(maxActive, 1);
   assert(!JSON.stringify(logs).includes('fake-'), 'logs never contain keys');
   originalInfo('Example logs:', logs.find(x => x[1]?.provider_used === 'ckey' && !x[1]?.fallback_used), logs.find(x => x[1]?.fallback_used && x[1]?.provider_used));
