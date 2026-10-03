@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { DrawnCard } from "@/lib/types";
-import { getXahModel, xahChatStream } from "@/lib/xah";
+import { tarotReaderChatStream } from "@/lib/xah";
 import { freeTarotSystemPrompt, normalizeReadingStyle, readingPrompt, tarotSystemPrompt } from "@/lib/prompts";
 import { verifyApiUser } from "@/lib/supabase/server-auth";
 import { getPlanAccess, validatePlanReading, type SpreadAccess } from "@/lib/plans";
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    const stream = await xahChatStream([
+    const stream = await tarotReaderChatStream([
       {
         role: "system",
         content: access.modelTier === "free"
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         role: "user",
         content: readingPrompt(question, cards, spreadPreset, readingStyle),
       },
-    ], getXahModel(access.modelTier));
+    ]);
 
     const responseHeaders: Record<string, string> = {
         "Content-Type": "text/plain; charset=utf-8",

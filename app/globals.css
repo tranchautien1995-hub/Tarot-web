@@ -5113,7 +5113,7 @@ main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-fl
   color:#f4ede2!important;
 }
 main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)):is(:hover,:focus-visible):not(:disabled){
-  background:linear-gradient(145deg,#2d2033,#123b34)!important;
+  background:linear-gradient(145deg,rgba(32,21,37,.82),rgba(10,36,34,.78))!important;
   border-color:rgba(223,193,129,.62)!important;
   color:#f4ede2!important;
 }
@@ -5122,7 +5122,7 @@ main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-fl
 main.theme-dark[data-theme]:not(.upgrade-page) button.danger-action,
 main.theme-dark[data-theme]:not(.upgrade-page) button.danger-link{color:#efb2bf!important}
 
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)):is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled){background:linear-gradient(145deg,#2d2033,#123b34)!important;border-color:rgba(223,193,129,.62)!important}
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)):is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled){background:linear-gradient(145deg,rgba(32,21,37,.82),rgba(10,36,34,.78))!important;border-color:rgba(223,193,129,.62)!important}
 
 /* Uploaded Lenormand layouts; all reader colors come from the shared Tarot rules. */
 .lenormand-reader .lenormand-context-row{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:16px 0 2px;border-top:1px solid var(--line);margin-top:0}
@@ -5272,3 +5272,37 @@ main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-fl
 .lenormand-reader .v27-slots{
   background:transparent!important;
 }
+
+/* Equal reader tabs; retain the existing menu width and all page backgrounds. */
+main[data-theme]:not(.upgrade-page) .product-tabs{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  flex:1 1 0!important;width:auto!important;min-width:0!important;overflow:visible!important;
+}
+main[data-theme]:not(.upgrade-page) .product-tabs button{
+  width:100%!important;min-width:0!important;max-width:none!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+}
+
+/* Match the exposed fan strips to the black in the existing card-back image. */
+.theme-dark .ethereal-card-back,
+html[data-theme="dark"] :is(.drag-card-ghost,.card-flight).ethereal-card-back{
+  background-color:#090909!important;
+  background-blend-mode:lighten!important;
+}
+/* Reserve a clear row below the absolute product tabs for the back control. */
+main[data-theme] .flow-stage-head-nav-only{padding-top:66px!important}
+@media(max-width:760px){main[data-theme] .flow-stage-head-nav-only{padding-top:58px!important}}
+/* Pricing inherits the active reader theme even when rendered outside main. */
+.pricing-backdrop.theme-dark{background:rgba(7,5,10,.78)}
+.theme-dark .pricing-modal{
+  background:
+    radial-gradient(circle at 50% 45%,rgba(79,42,83,.28),transparent 35%),
+    radial-gradient(circle at 18% 80%,rgba(18,92,84,.22),transparent 30%),
+    linear-gradient(145deg,#08070c 0%,#0c0912 48%,#050509 100%);
+}
+.pricing-backdrop.theme-light{background:rgba(66,57,65,.34)}
+.theme-light .pricing-modal{background:#f8f5f2;color:#362f36}
+
+/* Lenormand menu uses two columns: text and action arrow. */
+.lenormand-reader .side-menu-nav>button{grid-template-columns:minmax(0,1fr) 18px}
+.lenormand-reader .side-menu-nav>button>span{min-width:0}

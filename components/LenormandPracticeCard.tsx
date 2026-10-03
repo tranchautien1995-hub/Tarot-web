@@ -34,7 +34,7 @@ export default function LenormandPracticeCard({ card, index, position, mode, onP
         <span>{String(index + 1).padStart(2, "0")}</span>
         <span className="slot-position-name">{card.position || position}</span>
       </div>
-      <div className="practice-card-face">
+      <div className="practice-card-face" onContextMenu={event => { event.preventDefault(); onRemove(); }}>
         <div className="practice-card-inner image-mode">
           <span className="practice-number">{String(index + 1).padStart(2, "0")}</span>
           <LenormandCardArtwork card={card} className="practice-card-image" fallbackClassName="practice-card-fallback" />

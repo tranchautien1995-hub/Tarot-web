@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 export type XahMessage = {
   role: "system" | "user" | "assistant";
   content: string;
@@ -12,7 +14,8 @@ type ChatCompletionResponse = {
 };
 
 export type XahProviderId = "primary" | "fallback_1" | "fallback_2";
-type ApiProvider = { id: XahProviderId; label: string; baseUrl: string; apiKey: string; model: string };
+export type ReaderProviderId = "ckey" | "apiz";
+type ApiProvider = { id: XahProviderId | ReaderProviderId; label: string; baseUrl: string; apiKey: string; model: string };
 
 class ProviderFailure extends Error {
   constructor(message: string, public retryable = true, public status?: number) {
@@ -168,9 +171,10 @@ type OpenStream = {
   firstByteTimeout: ReturnType<typeof setTimeout>;
 };
 
-async function openProviderStream(provider: ApiProvider, messages: XahMessage[]): Promise<OpenStream> {
+async function openProviderStream(provider: ApiProvider, messages: XahMessage[], onOpen?: (controller: AbortController) => void): Promise<OpenStream> {
   const abortController = new AbortController();
   const firstByteTimeout = setTimeout(() => abortController.abort(), FIRST_BYTE_TIMEOUT_MS);
+  onOpen?.(abortController);
   try {
     const response = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: "POST",
@@ -195,6 +199,61 @@ async function openProviderStream(provider: ApiProvider, messages: XahMessage[])
   }
 }
 
+type ReaderRoutingLog = {
+  provider_selected: ReaderProviderId;
+  provider_used: ReaderProviderId | null;
+  fallback_used: boolean;
+  first_provider_error: { name: string; status: number | null } | null;
+};
+
+function logReaderRouting(log: ReaderRoutingLog) {
+  console.info(`[AI Router] selected=${log.provider_selected} used=${log.provider_used ?? "none"} fallback=${log.fallback_used}`, { ...log });
+}
+
+function readProviderWeight(value: string | undefined) {
+  if (!value?.trim()) return 50;
+  const weight = Number(value);
+  return Number.isFinite(weight) && weight >= 0 ? weight : 50;
+}
+
+/** Server-only selection. Zero weight excludes the initial pick, not fallback. */
+export function selectProviderByWeight(
+  weights: Record<ReaderProviderId, number>,
+  sample = randomInt(0, 0x100000000) / 0x100000000
+): ReaderProviderId {
+  const total = weights.ckey + weights.apiz;
+  if (!Number.isFinite(total) || total <= 0 || weights.ckey < 0 || weights.apiz < 0) {
+    throw new Error("AI_CKEY_WEIGHT và AI_APIZ_WEIGHT phải có tổng lớn hơn 0.");
+  }
+  if (!Number.isFinite(sample) || sample < 0 || sample >= 1) throw new Error("Mẫu chọn provider không hợp lệ.");
+  return sample * total < weights.ckey ? "ckey" : "apiz";
+}
+
+/** Tarot only: pick before any outbound request; at most one sequential fallback. */
+export async function tarotReaderChatStream(messages: XahMessage[]) {
+  const model = "gpt-6-astra";
+  const providers: ApiProvider[] = [];
+  const ckeyKey = process.env.XAH_API_KEY?.trim();
+  const apizKey = process.env.APIZ_API_KEY?.trim();
+  if (ckeyKey) {
+    if ((process.env.XAH_PREMIUM_MODEL?.trim() || model) !== model) throw new Error("Tarot AI Router yêu cầu XAH_PREMIUM_MODEL=gpt-6-astra.");
+    providers.push({ id: "ckey", label: "AI CKEY", baseUrl: cleanBaseUrl(process.env.XAH_BASE_URL, "https://api.xah.io/v1"), apiKey: ckeyKey, model });
+  }
+  if (apizKey) {
+    if ((process.env.APIZ_MODEL?.trim() || model) !== model) throw new Error("Tarot AI Router yêu cầu APIZ_MODEL=gpt-6-astra.");
+    providers.push({ id: "apiz", label: "AI APIZ", baseUrl: cleanBaseUrl(process.env.APIZ_BASE_URL, "https://api.apiz.vn/v1"), apiKey: apizKey, model });
+  }
+  if (!providers.length) throw new Error("Thiếu XAH_API_KEY và APIZ_API_KEY trên máy chủ.");
+  const selected = selectProviderByWeight({
+    ckey: ckeyKey ? readProviderWeight(process.env.AI_CKEY_WEIGHT) : 0,
+    apiz: apizKey ? readProviderWeight(process.env.AI_APIZ_WEIGHT) : 0
+  });
+  const ordered = [...providers.filter(p => p.id === selected), ...providers.filter(p => p.id !== selected)];
+  const log: ReaderRoutingLog = { provider_selected: selected, provider_used: null, fallback_used: false, first_provider_error: null };
+  logReaderRouting(log);
+  return streamWithProviders(messages, ordered, log);
+}
+
 export async function xahChatStream(
   messages: XahMessage[],
   model = getXahModel("premium"),
@@ -212,19 +271,41 @@ export async function xahChatStream(
         : "API key";
     throw new Error(`Prompt Lab thiếu ${label} trên máy chủ.`);
   }
+  return streamWithProviders(messages, providers);
+}
+
+async function streamWithProviders(messages: XahMessage[], providers: ApiProvider[], routingLog?: ReaderRoutingLog) {
+  const recordFailure = (provider: ApiProvider, failure: ProviderFailure) => {
+    markFailure(provider, failure);
+    if (routingLog && provider.id === routingLog.provider_selected && !routingLog.first_provider_error) {
+      // Never log credentials, prompts, cards or raw upstream error bodies.
+      routingLog.first_provider_error = { name: failure.name, status: failure.status ?? null };
+      logReaderRouting(routingLog);
+    }
+  };
+  let pendingAbortController: AbortController | null = null;
+  const open = async (index: number) => {
+    if (routingLog && index > 0) {
+      routingLog.fallback_used = true;
+      logReaderRouting(routingLog);
+    }
+    try {
+      return await openProviderStream(providers[index], messages, routingLog ? controller => { pendingAbortController = controller; } : undefined);
+    } finally { pendingAbortController = null; }
+  };
   const failures: ProviderFailure[] = [];
   let firstOpen: OpenStream | null = null;
   let firstIndex = -1;
   for (let index = 0; index < providers.length; index += 1) {
     try {
-      firstOpen = await openProviderStream(providers[index], messages);
+      firstOpen = await open(index);
       firstIndex = index;
       break;
     } catch (error) {
       const failure = normalizeFailure(error, providers[index]);
       failures.push(failure);
-      markFailure(providers[index], failure);
-      if (!failure.retryable) throw failure;
+      recordFailure(providers[index], failure);
+      if (!routingLog && !failure.retryable) throw failure;
     }
   }
   if (!firstOpen || firstIndex < 0) throw allProvidersFailed(failures);
@@ -253,6 +334,10 @@ export async function xahChatStream(
           clearTimeout(firstByteTimeout);
           streamTimeout = setTimeout(() => abortController.abort(), STREAM_TIMEOUT_MS);
           markSuccess(provider);
+          if (routingLog) {
+            routingLog.provider_used = provider.id as ReaderProviderId;
+            logReaderRouting(routingLog);
+          }
         };
         const emitEvent = (eventBlock: string) => {
           const payload = eventBlock.split(/\r?\n/).filter((line) => line.startsWith("data:"))
@@ -298,11 +383,16 @@ export async function xahChatStream(
         } catch (error) {
           const failure = normalizeFailure(error, provider);
           failures.push(failure);
-          markFailure(provider, failure);
-          if (emitted || !failure.retryable) { controller.error(failure); return; }
+          recordFailure(provider, failure);
+          if (cancelled) return;
+          if (emitted || (!routingLog && !failure.retryable)) { controller.error(failure); return; }
         } finally {
           clearTimeout(firstByteTimeout);
           if (streamTimeout) clearTimeout(streamTimeout);
+          if (routingLog) {
+            abortController.abort();
+            try { await reader.cancel(); } catch { /* Upstream may already have errored. */ }
+          }
           reader.releaseLock();
           activeOpen = null;
         }
@@ -310,12 +400,13 @@ export async function xahChatStream(
         opened = null;
         nextIndex += 1;
         while (nextIndex < providers.length && !opened && !cancelled) {
-          try { opened = await openProviderStream(providers[nextIndex], messages); }
+          try { opened = await open(nextIndex); }
           catch (error) {
+            if (cancelled) return;
             const failure = normalizeFailure(error, providers[nextIndex]);
             failures.push(failure);
-            markFailure(providers[nextIndex], failure);
-            if (!failure.retryable) { controller.error(failure); return; }
+            recordFailure(providers[nextIndex], failure);
+            if (!routingLog && !failure.retryable) { controller.error(failure); return; }
             nextIndex += 1;
           }
         }
@@ -324,6 +415,7 @@ export async function xahChatStream(
     },
     cancel() {
       cancelled = true;
+      pendingAbortController?.abort();
       if (activeOpen) {
         clearTimeout(activeOpen.firstByteTimeout);
         activeOpen.abortController.abort();

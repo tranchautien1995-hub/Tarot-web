@@ -36,7 +36,7 @@ export default function PracticeCard({ card, index, position, mode, onPick, onFl
         <span>{String(index + 1).padStart(2, "0")}</span>
         <span className="slot-position-name">{card.position || position}</span>
       </div>
-      <div className={`practice-card-face ${card.orientation === "reversed" ? "reversed-card" : ""}`}>
+      <div className={`practice-card-face ${card.orientation === "reversed" ? "reversed-card" : ""}`} onContextMenu={event => { event.preventDefault(); onRemove(); }}>
         <div className="practice-card-inner image-mode">
           <span className="practice-number">{String(index + 1).padStart(2, "0")}</span>
           <CardArtwork card={card} className="practice-card-image" fallbackClassName="practice-card-fallback" />

@@ -53,6 +53,7 @@ export default function AuthGate({ children }: Props) {
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [entryComplete, setEntryComplete] = useState(false);
+  const [skipMobileIntro, setSkipMobileIntro] = useState<boolean | null>(null);
   const [selectedExperience, setSelectedExperience] = useState<EntryMode>("tarot");
   const [authPanelOpen, setAuthPanelOpen] = useState(false);
   // Chỉ local hoàn toàn không cấu hình Supabase mới có quyền thử nghiệm.
@@ -61,7 +62,18 @@ export default function AuthGate({ children }: Props) {
   const { isAdmin, plan: currentPlan, access } = getPlanAccess(user?.app_metadata, localMode);
 
   useEffect(() => {
+    const mobile = window.innerWidth <= 760;
+    setSkipMobileIntro(mobile);
+    if (mobile && !configured) {
+      setLocalPreview(true);
+      setEntryComplete(true);
+    }
     const storedMode = sessionStorage.getItem("ttarot:selected-experience") as EntryMode | null;
+    if (mobile && storedMode === "combined") {
+      setSelectedExperience("tarot");
+      sessionStorage.setItem("ttarot:selected-experience", "tarot");
+      return;
+    }
     if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
       setSelectedExperience(storedMode);
     }
@@ -82,16 +94,18 @@ export default function AuthGate({ children }: Props) {
       if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
         setSelectedExperience(storedMode);
       }
-      if (nextUser && sessionStorage.getItem("ttarot:continue-after-auth") === "1") {
+      if (nextUser && (window.innerWidth <= 760 || sessionStorage.getItem("ttarot:continue-after-auth") === "1")) {
         setEntryComplete(true);
         sessionStorage.removeItem("ttarot:continue-after-auth");
+      } else if (!nextUser && window.innerWidth <= 760) {
+        setAuthPanelOpen(true);
       }
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setUser(session?.user ?? null);
-      if (session?.user && sessionStorage.getItem("ttarot:continue-after-auth") === "1") {
+      if (session?.user && (window.innerWidth <= 760 || sessionStorage.getItem("ttarot:continue-after-auth") === "1")) {
         setEntryComplete(true);
         setAuthPanelOpen(false);
         sessionStorage.removeItem("ttarot:continue-after-auth");
@@ -233,6 +247,7 @@ export default function AuthGate({ children }: Props) {
     setUser(null);
     setAccountPanelOpen(false);
     setEntryComplete(false);
+    if (skipMobileIntro) setAuthPanelOpen(true);
   }
 
   function requestExperience(nextMode: EntryMode) {
@@ -251,14 +266,16 @@ export default function AuthGate({ children }: Props) {
     setEntryComplete(true);
   }
 
+  if (skipMobileIntro === null) return <div style={{ minHeight: "100dvh", background: "var(--bg)" }} />;
+
   if (!entryComplete) {
     return (
       <>
-        <TarotEntryExperience onContinue={requestExperience} initialMode={selectedExperience} />
+        {!skipMobileIntro && <TarotEntryExperience onContinue={requestExperience} initialMode={selectedExperience} />}
         {authPanelOpen && (
-          <div className="entry-auth-layer" role="presentation" onMouseDown={() => setAuthPanelOpen(false)}>
+          <div className="entry-auth-layer" role="presentation" onMouseDown={() => { if (!skipMobileIntro) setAuthPanelOpen(false); }}>
             <div className={`auth-card ${!configured ? "auth-setup-card" : ""}`} role="dialog" aria-modal="true" aria-label={configured ? "Đăng nhập" : "Cấu hình đăng nhập"} onMouseDown={(event) => event.stopPropagation()}>
-              <button className="entry-auth-close" type="button" onClick={() => setAuthPanelOpen(false)} aria-label="Đóng">×</button>
+              {!skipMobileIntro && <button className="entry-auth-close" type="button" onClick={() => setAuthPanelOpen(false)} aria-label="Đóng">×</button>}
               {!configured ? (
                 <>
                   <div className="auth-symbol">✦</div>

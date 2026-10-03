@@ -26,6 +26,15 @@ type SePayCheckout = {
 };
 
 export default function PricingModal({ open, currentPlan, isAdmin = false, pageMode = false, onClose }: Props) {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    if (!open) return;
+    const syncTheme = () => setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+    syncTheme();
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, [open]);
   const [billingMode, setBillingMode] = useState<"flexible" | "week" | "month">("week");
   const [creditAmount, setCreditAmount] = useState(20);
   const creditUnitPrice = 1050;
@@ -143,7 +152,7 @@ export default function PricingModal({ open, currentPlan, isAdmin = false, pageM
   if (!open) return null;
 
   return (
-    <div className={pageMode ? "pricing-page-shell" : "pricing-backdrop"} role="presentation" onMouseDown={pageMode ? undefined : onClose}>
+    <div className={`${pageMode ? "pricing-page-shell" : "pricing-backdrop"} theme-${theme}`} role="presentation" onMouseDown={pageMode ? undefined : onClose}>
       <section className={pageMode ? "pricing-modal pricing-page" : "pricing-modal"} role="dialog" aria-modal={!pageMode} aria-labelledby="pricing-title" onMouseDown={(event) => event.stopPropagation()}>
         <header className="pricing-header">
           <div>

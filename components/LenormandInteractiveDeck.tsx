@@ -14,6 +14,7 @@ type Props = {
   spreadLabel?: string;
   spreadPreset?: string;
   onComplete: (cards: DrawnLenormandCard[]) => void;
+  onCardRemoved?: (index: number) => void;
   actions?: ReactNode;
 };
 
@@ -40,7 +41,7 @@ function firstEmptySlot(slots: Array<number | undefined>) {
 }
 
 
-export default function InteractiveDeck({ count, positions, spreadLabel, spreadPreset, onComplete, actions }: Props) {
+export default function InteractiveDeck({ count, positions, spreadLabel, spreadPreset, onComplete, onCardRemoved, actions }: Props) {
   const [deck, setDeck] = useState<LenormandCard[]>(() => shuffleDeck());
   const [phase, setPhase] = useState<Phase>("idle");
   const [shuffleStep, setShuffleStep] = useState<ShuffleStep>("cut");
@@ -264,6 +265,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, spreadP
   }
 
   function beginDrag(event: ReactPointerEvent<HTMLElement>, deckIndex: number, fromSlot: number | null = null) {
+    if (event.button === 2) return;
     if ((phase !== "fan" && phase !== "ready") || drag) return;
     if (fromSlot === null && pickedSet.has(deckIndex)) return;
     event.preventDefault();
@@ -412,7 +414,14 @@ export default function InteractiveDeck({ count, positions, spreadLabel, spreadP
   }
 
   function removeFromSlot(slotIndex: number) {
-    if (phase === "revealing") return;
+    if (slots[slotIndex] === undefined) return;
+    timers.current.forEach(timer => window.clearTimeout(timer));
+    timers.current = [];
+    if (dragRafRef.current !== null) window.cancelAnimationFrame(dragRafRef.current);
+    dragRafRef.current = null;
+    setDrag(null);
+    setHoverSlot(null);
+    onCardRemoved?.(slotIndex);
     setSlots((current) => current.map((value, index) => index === slotIndex ? undefined : value));
     setPreparedCards(null);
     setRevealed(Array(count).fill(false));
@@ -531,6 +540,7 @@ export default function InteractiveDeck({ count, positions, spreadLabel, spreadP
                       onPointerMove={moveDrag}
                       onPointerUp={(event) => touchUseSlot(event, index)}
                       onPointerCancel={cancelDrag}
+                      onContextMenu={event => { event.preventDefault(); removeFromSlot(index); }}
                     >
                       <span className="slot-flip-inner">
                         <span className="slot-flip-face slot-flip-back ethereal-card-back"><i>✦</i></span>

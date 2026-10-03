@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useReaderNavigation } from "@/components/ReaderNavigation";
+import { useReadingRetry } from "@/components/useReadingRetry";
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import PracticeCard from "@/components/PracticeCard";
@@ -318,6 +319,9 @@ function createId() {
 
 export default function Home() {
   const { selectReader } = useReaderNavigation();
+  const { retrySeconds, retryBlocked, startRetry, retryMessage } = useReadingRetry();
+  const [presetChosen, setPresetChosen] = useState(true);
+  const [modeChosen, setModeChosen] = useState(true);
   const { access, userId } = usePlanAccess();
   const historyLimit = access.historyLimit ?? 50;
   const historyStorageKey = `${HISTORY_KEY}:${userId}`;
@@ -639,11 +643,21 @@ export default function Home() {
       openPricingFromMenu();
       return;
     }
+    if (preset === nextPreset && presetChosen) { setPresetChosen(false); resetAnalysis(); return; }
+    setPresetChosen(true);
     const nextDefinition = ALL_PRESETS.find((item) => item.id === nextPreset);
     const nextCount = nextDefinition?.count || 3;
     if (nextDefinition?.questionMode === "none") setQuestion("");
     setMoreSpreadsOpen(false);
     resizeSpread(nextCount, nextPreset);
+  }
+
+  function selectDrawMode(next: DrawMode) {
+    if (mode === next && modeChosen) { setModeChosen(false); resetAnalysis(); return; }
+    setModeChosen(true);
+    setMode(next);
+    setKeepInteractiveBoard(false);
+    if (next === "random") setDrawSession(value => value + 1);
   }
 
   function completeInteractiveDraw(nextCards: DrawnCard[]) {
@@ -745,6 +759,8 @@ export default function Home() {
     setQuestion(ALL_PRESETS.find((item) => item.id === entry.preset)?.questionMode === "none" ? "" : entry.question);
     setReadingStyle(entry.readingStyle || null);
     setMode(entry.mode);
+    setModeChosen(true);
+    setPresetChosen(true);
     setPreset(entry.preset);
     setCount(entry.count);
     setCards(applyPositions(entry.cards.map((card) => ({ ...card })), entry.preset, entry.count));
@@ -790,11 +806,11 @@ export default function Home() {
   function openPricingFromMenu() {
     setSideMenuOpen(false);
     setSideMenuView("main");
-    window.location.assign(`/upgrade?theme=${theme}`);
+    window.dispatchEvent(new Event("tarot-open-pricing"));
   }
 
   function openAIReader() {
-    if (!complete) return;
+    if (!complete || retryBlocked()) return;
     if (aiReading) {
       setAiModalOpen(true);
       return;
@@ -804,7 +820,7 @@ export default function Home() {
   }
 
   async function askAI() {
-    if (!complete || loading) return;
+    if (!complete || loading || retryBlocked()) return;
     stopReadingAloud();
     setAiModalOpen(true);
     setLoading(true);
@@ -860,7 +876,9 @@ export default function Home() {
         window.setTimeout(() => setSaved(false), 1800);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
+      setAiReading("");
+      setError("Hệ thống đang quá tải.");
+      startRetry();
     } finally {
       setLoading(false);
     }
@@ -952,7 +970,7 @@ export default function Home() {
         <div className="product-tabs" role="tablist" aria-label="Loại công cụ">
           <button className="active" type="button" role="tab" aria-selected="true">Trải bài Tarot</button>
           <button type="button" role="tab" aria-selected="false" onClick={() => selectReader("lenormand")}>Trải bài Lenormand</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Bản đồ sao</button>
+          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Tarot x Lenormand</button>
         </div>
       </nav>
 
@@ -1145,8 +1163,8 @@ export default function Home() {
               <div className="panel">
                 <div className="panel-kicker">02 · CÁCH LẤY BÀI</div>
                 <div className="mode-switch">
-                  <button className={mode === "random" ? "active" : ""} onClick={() => { setMode("random"); setKeepInteractiveBoard(false); setDrawSession((value) => value + 1); }}><span>✦</span><b>Xáo & bốc bài</b><small>Xáo bộ bài, trải 78 lá úp rồi kéo từng lá vào vị trí bạn muốn.</small></button>
-                  <button className={mode === "manual" ? "active" : ""} onClick={() => { setMode("manual"); setKeepInteractiveBoard(false); }}><span>🃏</span><b>Tự rút bài</b><small>Dành cho các bạn đang học Tarot và có sẵn bài.</small></button>
+                  <button className={modeChosen && mode === "random" ? "active" : ""} onClick={() => selectDrawMode("random")}><span>✦</span><b>Xáo & bốc bài</b><small>Xáo bộ bài, trải 78 lá úp rồi kéo từng lá vào vị trí bạn muốn.</small></button>
+                  <button className={modeChosen && mode === "manual" ? "active" : ""} onClick={() => selectDrawMode("manual")}><span>🃏</span><b>Tự rút bài</b><small>Dành cho các bạn đang học Tarot và có sẵn bài.</small></button>
                 </div>
               </div>
 
@@ -1154,7 +1172,7 @@ export default function Home() {
                 <div className="panel-kicker">03 · KIỂU TRẢI</div>
                 <div className="preset-grid">
                   {PRESETS.map((item) => (
-                    <button key={item.id} type="button" className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()} onClick={() => selectPreset(item.id)}>
+                    <button key={item.id} type="button" className={`${presetChosen && preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()} onClick={() => selectPreset(item.id)}>
                       <b>{item.title}</b>
                       <small>{item.description}</small>
                       {!isPresetAllowed(access, item.id) && <span className="plan-lock" aria-hidden="true">Khóa</span>}
@@ -1162,7 +1180,7 @@ export default function Home() {
                   ))}
                   <button
                     type="button"
-                    className={`${MORE_PRESETS.some((item) => item.id === preset) ? "active" : ""} more-spreads-trigger`.trim()}
+                    className={`${presetChosen && MORE_PRESETS.some((item) => item.id === preset) ? "active" : ""} more-spreads-trigger`.trim()}
                     aria-expanded={moreSpreadsOpen}
                     onClick={() => setMoreSpreadsOpen((current) => !current)}
                   >
@@ -1181,7 +1199,7 @@ export default function Home() {
                         <button
                           key={item.id}
                           type="button"
-                          className={`${preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()}
+                          className={`${presetChosen && preset === item.id ? "active" : ""} ${!isPresetAllowed(access, item.id) ? "plan-locked" : ""}`.trim()}
                           onClick={() => selectPreset(item.id)}
                           aria-describedby={`spread-tip-${item.id}`}
                         >
@@ -1200,14 +1218,16 @@ export default function Home() {
 
             <div className="flow-continue-row">
               <div className="flow-continue-summary">
-                <span>{presetLabel}</span>
+                <span>{presetChosen ? presetLabel : "Chọn kiểu trải"}</span>
                 <span>·</span>
-                <span>{mode === "random" ? "Xáo & bốc bài" : "Tự rút bài"}</span>
+                <span>{modeChosen ? (mode === "random" ? "Xáo & bốc bài" : "Tự rút bài") : "Chọn cách lấy bài"}</span>
               </div>
               <button
                 className="gold-button flow-continue-button"
+                disabled={!presetChosen || !modeChosen}
                 type="button"
                 onClick={() => {
+                  if (!presetChosen || !modeChosen) return;
                   setFlowStep(2);
                   window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
                 }}
@@ -1243,6 +1263,7 @@ export default function Home() {
             spreadLabel={presetLabel}
             spreadPreset={preset}
             onComplete={completeInteractiveDraw}
+            onCardRemoved={index => { setKeepInteractiveBoard(true); removeCard(index); }}
             actions={
               <section className="reading-actions-panel reading-actions-inside" aria-label="Công cụ trải bài">
                 <div className="spread-management-actions">
@@ -1255,7 +1276,7 @@ export default function Home() {
                   <button className="ghost-button reading-copy-button" disabled={!complete} onClick={copyForChatGPT}>
                     {copied ? "✓ Đã sao chép" : "Sao chép trải bài"}
                   </button>
-                  <button className="gold-button reading-ai-button" disabled={!complete || loading} onClick={openAIReader}>
+                  <button className="gold-button reading-ai-button" disabled={!complete || loading || retrySeconds > 0} onClick={openAIReader}>
                     {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : "✦ Đọc bài"}
                   </button>
                 </div>
@@ -1282,7 +1303,7 @@ export default function Home() {
                 <button className="ghost-button reading-copy-button" disabled={!complete} onClick={copyForChatGPT}>
                   {copied ? "✓ Đã sao chép" : "Sao chép trải bài"}
                 </button>
-                <button className="gold-button reading-ai-button" disabled={!complete || loading} onClick={openAIReader}>
+                <button className="gold-button reading-ai-button" disabled={!complete || loading || retrySeconds > 0} onClick={openAIReader}>
                   {loading ? "Đang đọc bài..." : aiReading ? "✦ Mở bài đọc" : "✦ Đọc bài"}
                 </button>
               </div>
@@ -1342,11 +1363,11 @@ export default function Home() {
               {error && !loading && (
                 <div className="error-box ai-modal-error">
                   <b>Không thể đọc trải bài.</b>
-                  <p>{error}</p>
+                  <p role="status" aria-live="polite">{retryMessage}</p>
                   {upgradeRequired ? (
                     <button className="gold-button" type="button" onClick={openPricingFromMenu}>Xem gói nâng cấp</button>
                   ) : (
-                    <button className="ghost-button" type="button" onClick={() => void askAI()}>Thử lại</button>
+                    <button className="ghost-button" type="button" disabled={retrySeconds > 0} onClick={() => void askAI()}>Thử lại</button>
                   )}
                 </div>
               )}
