@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useReaderNavigation } from "@/components/ReaderNavigation";
+import { useTtsPlayback } from "@/components/useTtsPlayback";
 import { useReadingRetry } from "@/components/useReadingRetry";
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
@@ -18,7 +19,6 @@ type DrawMode = "random" | "manual";
 type SpreadPreset = "three" | "six" | "celtic" | "future_love" | "zodiac_houses" | "health_overview" | "tree_of_life" | "matrix_3x3";
 type ThemeMode = "light" | "dark";
 type ReadingStyle = "direct" | "gentle" | "companion";
-type SpeechStatus = "idle" | "loading" | "speaking" | "paused";
 
 type HistoryEntry = {
   id: string;
@@ -323,11 +323,7 @@ export default function Home() {
   const [moreSpreadsOpen, setMoreSpreadsOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [sideMenuView, setSideMenuView] = useState<"main" | "history">("main");
-  const [speechStatus, setSpeechStatus] = useState<SpeechStatus>("idle");
-  const [speechError, setSpeechError] = useState("");
-  const speechAudioRef = useRef<HTMLAudioElement | null>(null);
-  const speechAudioUrlRef = useRef<string | null>(null);
-  const speechRequestRef = useRef<AbortController | null>(null);
+  const { speechStatus, speechError, startReadingAloud, stopReadingAloud, toggleSpeechPause } = useTtsPlayback();
 
   const selectedCards = useMemo(() => cards.filter(Boolean) as DrawnCard[], [cards]);
   const selectedIds = useMemo(() => selectedCards.map((card) => card.id), [selectedCards]);
@@ -441,137 +437,6 @@ export default function Home() {
       document.body.style.overflow = previousOverflow;
     };
   }, [aiModalOpen]);
-
-  useEffect(() => {
-    return () => {
-      speechRequestRef.current?.abort();
-      speechRequestRef.current = null;
-
-      if (speechAudioRef.current) {
-        speechAudioRef.current.pause();
-        speechAudioRef.current = null;
-      }
-
-      if (speechAudioUrlRef.current) {
-        URL.revokeObjectURL(speechAudioUrlRef.current);
-        speechAudioUrlRef.current = null;
-      }
-    };
-  }, []);
-
-  function stopReadingAloud() {
-    speechRequestRef.current?.abort();
-    speechRequestRef.current = null;
-
-    if (speechAudioRef.current) {
-      speechAudioRef.current.pause();
-      speechAudioRef.current.currentTime = 0;
-      speechAudioRef.current = null;
-    }
-
-    if (speechAudioUrlRef.current) {
-      URL.revokeObjectURL(speechAudioUrlRef.current);
-      speechAudioUrlRef.current = null;
-    }
-
-    setSpeechStatus("idle");
-  }
-
-  async function startReadingAloud() {
-    if (!aiReading || typeof window === "undefined") return;
-
-    const currentAudio = speechAudioRef.current;
-
-    if (speechStatus === "speaking" && currentAudio) {
-      currentAudio.pause();
-      setSpeechStatus("paused");
-      return;
-    }
-
-    if (speechStatus === "paused" && currentAudio) {
-      try {
-        await currentAudio.play();
-        setSpeechStatus("speaking");
-      } catch {
-        setSpeechError("Không thể tiếp tục phát giọng đọc.");
-        setSpeechStatus("idle");
-      }
-      return;
-    }
-
-    const controller = new AbortController();
-    speechRequestRef.current?.abort();
-    speechRequestRef.current = controller;
-
-    try {
-      setSpeechError("");
-      setSpeechStatus("loading");
-
-      if (speechAudioRef.current) {
-        speechAudioRef.current.pause();
-        speechAudioRef.current = null;
-      }
-
-      if (speechAudioUrlRef.current) {
-        URL.revokeObjectURL(speechAudioUrlRef.current);
-        speechAudioUrlRef.current = null;
-      }
-
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          text: readingForSpeech(aiReading)
-        }),
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Không thể tạo giọng đọc.");
-      }
-
-      const blob = await response.blob();
-      if (controller.signal.aborted) return;
-
-      const audioUrl = URL.createObjectURL(blob);
-      speechAudioUrlRef.current = audioUrl;
-
-      const audio = new Audio(audioUrl);
-      speechAudioRef.current = audio;
-
-      audio.onended = () => {
-        if (speechAudioRef.current === audio) {
-          speechAudioRef.current = null;
-        }
-        if (speechAudioUrlRef.current === audioUrl) {
-          URL.revokeObjectURL(audioUrl);
-          speechAudioUrlRef.current = null;
-        }
-        setSpeechStatus("idle");
-      };
-
-      audio.onerror = () => {
-        setSpeechStatus("idle");
-        setSpeechError("Không thể phát file giọng đọc.");
-      };
-
-      await audio.play();
-      if (!controller.signal.aborted) setSpeechStatus("speaking");
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-
-      console.error("[Gemini TTS client]", error);
-      setSpeechStatus("idle");
-      setSpeechError(error instanceof Error ? error.message : "Không thể tạo giọng đọc.");
-    } finally {
-      if (speechRequestRef.current === controller) {
-        speechRequestRef.current = null;
-      }
-    }
-  }
 
   function closeAIReader() {
     stopReadingAloud();
@@ -1357,34 +1222,16 @@ export default function Home() {
                         <span className={`voice-reader-status ${speechStatus}`} aria-hidden="true">◉</span>
                         <span>
                           <b>Nghe bài đọc</b>
-                          <small>Gemini · Fola</small>
+                          <small>{readingStyle === "direct" ? "Thẳng thắn · Fola" : readingStyle === "gentle" ? "Nhẹ nhàng · Gacrux" : readingStyle === "companion" ? "Tâm sự · Gacrux" : "Mặc định · Fola"}</small>
                         </span>
                       </div>
 
                       <div className="voice-reader-controls">
-                        <button
-                          className="voice-reader-play"
-                          type="button"
-                          onClick={() => void startReadingAloud()}
-                          disabled={speechStatus === "loading"}
-                        >
-                          {speechStatus === "loading"
-                            ? "Đang tạo giọng..."
-                            : speechStatus === "idle"
-                              ? "▶ Nghe bài"
-                              : speechStatus === "speaking"
-                                ? "Ⅱ Tạm dừng"
-                                : "▶ Tiếp tục"}
-                        </button>
-                        <button
-                          className="voice-reader-stop"
-                          type="button"
-                          onClick={stopReadingAloud}
-                          disabled={speechStatus === "idle" || speechStatus === "loading"}
-                        >
-                          ■ Dừng
-                        </button>
+                        <button className="voice-reader-play" type="button" onClick={() => void startReadingAloud(readingForSpeech(aiReading), readingStyle)} disabled={!["idle", "error"].includes(speechStatus)}>▶ Nghe bài</button>
+                        <button type="button" onClick={() => void toggleSpeechPause()} disabled={!["speaking", "paused"].includes(speechStatus)}>{speechStatus === "paused" ? "▶ Tiếp tục" : "Ⅱ Tạm dừng"}</button>
+                        <button className="voice-reader-stop" type="button" onClick={stopReadingAloud} disabled={["idle", "error"].includes(speechStatus)}>■ Dừng</button>
                       </div>
+                      <span className="voice-reader-voice-state" role="status" aria-live="polite">{speechStatus === "waiting" ? "Đang chờ" : speechStatus === "generating" ? "Đang tạo giọng" : speechStatus === "speaking" ? "Đang phát" : speechStatus === "paused" ? "Đã tạm dừng" : speechStatus === "error" ? "Lỗi" : ""}</span>
 
                       {speechError && <p className="voice-reader-error">{speechError}</p>}
                     </section>
