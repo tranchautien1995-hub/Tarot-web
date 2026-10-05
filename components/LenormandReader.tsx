@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import LenormandReaderMenu from "@/components/LenormandReaderMenu";
 import { useReadingRetry } from "@/components/useReadingRetry";
 import { useTtsPlayback } from "@/components/useTtsPlayback";
+import { createTtsJobId } from "@/lib/tts/job-id";
+import { parseLenormandHistory, type LenormandHistoryEntry } from "@/lib/lenormand/history";
 import LenormandCardPicker from "@/components/LenormandCardPicker";
 import LenormandInteractiveDeck from "@/components/LenormandInteractiveDeck";
 import LenormandPracticeCard from "@/components/LenormandPracticeCard";
@@ -64,7 +66,11 @@ export default function LenormandReader() {
   const { retrySeconds, retryBlocked, startRetry, retryMessage } = useReadingRetry();
   const [spreadChosen, setSpreadChosen] = useState(true);
   const [modeChosen, setModeChosen] = useState(true);
-  const { access } = usePlanAccess();
+  const { access, userId } = usePlanAccess();
+  const historyLimit = access.historyLimit ?? 50;
+  const historyKey = `lenormand-practice-v1-history:${userId}`;
+  const [history, setHistory] = useState<LenormandHistoryEntry[]>([]);
+  const [loadedHistoryKey, setLoadedHistoryKey] = useState("");
   const [theme, setTheme] = useState<ThemeMode>("dark");
   const [themeReady, setThemeReady] = useState(false);
   const [flowStep, setFlowStep] = useState<1 | 2>(1);
@@ -89,6 +95,27 @@ export default function LenormandReader() {
   const selectedCards = useMemo(() => cards.filter((card): card is DrawnLenormandCard => Boolean(card)), [cards]);
   const selectedIds = selectedCards.map((card) => card.id);
   const complete = selectedCards.length === count;
+
+  useEffect(() => {
+    try { setHistory(parseLenormandHistory(window.localStorage.getItem(historyKey), historyLimit)); }
+    catch { setHistory([]); }
+    setLoadedHistoryKey(historyKey);
+  }, [historyKey, historyLimit]);
+  useEffect(() => {
+    if (loadedHistoryKey !== historyKey || historyLimit === 0) return;
+    try { window.localStorage.setItem(historyKey, JSON.stringify(history.slice(0, historyLimit))); }
+    catch { /* Reading remains available when storage is full. */ }
+  }, [history, historyKey, historyLimit, loadedHistoryKey]);
+
+  function restoreHistory(entry: LenormandHistoryEntry) {
+    if (loading) return;
+    stopReadingAloud();
+    setSpread(entry.spread); setSpreadChosen(true); setMode(entry.mode); setModeChosen(true);
+    setQuestion(entry.question); setTimeframe(entry.timeframe); setSignificator(entry.significator);
+    setReadingStyle(entry.readingStyle); setCards(entry.cards.map(card => ({ ...card })));
+    setReading(entry.reading); setError(""); setPickerIndex(null); setFlowStep(2);
+    setDrawSession(value => value + 1); setReadingOpen(true);
+  }
 
   useEffect(() => {
     try {
@@ -151,6 +178,13 @@ export default function LenormandReader() {
       const reader = response.body.getReader(); const decoder = new TextDecoder(); let output = "";
       while (true) { const { done, value } = await reader.read(); if (done) break; output += decoder.decode(value, { stream: true }); setReading(output); }
       output += decoder.decode(); setReading(output);
+      if (output.trim() && historyLimit > 0) {
+        const entry: LenormandHistoryEntry = {
+          id: createTtsJobId(), savedAt: new Date().toISOString(), question, timeframe, significator,
+          spread, mode, readingStyle, cards: selectedCards.map(card => ({ ...card })), reading: output
+        };
+        setHistory(current => [entry, ...current].slice(0, historyLimit));
+      }
     } catch { setReading(""); setError("Hệ thống đang quá tải."); startRetry(); }
     finally { setLoading(false); }
   }
@@ -160,7 +194,7 @@ export default function LenormandReader() {
       <div className="ambient" aria-hidden="true" />
       <div className="star-field" aria-hidden="true">{STAR_FIELD.map((star, index) => <span key={index} className={`star-item star-${star.kind}`} style={{ "--star-left": star.left, "--star-top": star.top, "--star-size": star.size, "--star-delay": star.delay, "--star-duration": star.duration, "--star-drift-x": star.driftX, "--star-drift-y": star.driftY, "--star-twinkle": star.twinkle } as CSSProperties}>{star.kind === "five" ? "★" : star.kind === "sparkle" ? "✦" : ""}</span>)}</div>
 
-      <nav className="product-navigation shell" aria-label="Các công cụ TTarot"><LenormandReaderMenu /><div className="product-tabs" role="tablist" aria-label="Loại công cụ"><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("tarot")}>Trải bài Tarot</button><button className="active" type="button" role="tab" aria-selected="true">Trải bài Lenormand</button><button type="button" role="tab" aria-selected="false" disabled>Tarot x Lenormand</button></div></nav>
+      <nav className="product-navigation shell" aria-label="Các công cụ TTarot"><LenormandReaderMenu history={loadedHistoryKey === historyKey ? history.slice(0, historyLimit) : []} historyLimit={historyLimit} readingBusy={loading} onRestore={restoreHistory} onDelete={id => setHistory(current => current.filter(entry => entry.id !== id))} /><div className="product-tabs" role="tablist" aria-label="Loại công cụ"><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("tarot")}>Trải bài Tarot</button><button className="active" type="button" role="tab" aria-selected="true">Trải bài Lenormand</button><button type="button" role="tab" aria-selected="false" disabled>Tarot x Lenormand</button></div></nav>
       <header className="topbar shell"><div className="topbar-left"><div className="brand">✦ LENORMAND PRACTICE</div></div><div className="topbar-right"><div className="theme-toggle-wrap"><button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}><span className="theme-toggle-icon">{theme === "light" ? "☾" : "☀"}</span><span>{theme === "light" ? "Dark" : "Light"}</span></button></div></div></header>
 
       <section className={`intro shell compact-intro flow-intro ${flowStep === 2 ? "flow-intro-hidden" : ""}`}><div className="eyebrow">Không gian trải bài Lenormand cá nhân</div><h1>Tự trải, tự bốc.<br/><em>Đọc điều đang diễn ra.</em></h1><p className="lead">Ghép các lá thành câu, đọc sự việc và hướng phát triển theo đúng phương pháp Petit Lenormand.</p></section>
