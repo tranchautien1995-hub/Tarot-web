@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import LenormandReaderMenu from "@/components/LenormandReaderMenu";
 import { useReadingRetry } from "@/components/useReadingRetry";
+import { useTtsPlayback } from "@/components/useTtsPlayback";
 import LenormandCardPicker from "@/components/LenormandCardPicker";
 import LenormandInteractiveDeck from "@/components/LenormandInteractiveDeck";
 import LenormandPracticeCard from "@/components/LenormandPracticeCard";
@@ -52,6 +53,12 @@ function readingStyleFullLabel(style: ReadingStyle | null) {
   return READING_STYLES.find((item) => item.id === style)?.fullLabel || "Cách đọc mặc định";
 }
 
+function readingForSpeech(value: string) {
+  return value.replace(/```[\s\S]*?```/g, " ")
+    .replace(/[*_`#>]/g, "").replace(/^\s*[-•]\s+/gm, "")
+    .replace(/\n{3,}/g, "\n\n").trim();
+}
+
 export default function LenormandReader() {
   const { selectReader } = useReaderNavigation();
   const { retrySeconds, retryBlocked, startRetry, retryMessage } = useReadingRetry();
@@ -74,6 +81,7 @@ export default function LenormandReader() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [readingOpen, setReadingOpen] = useState(false);
+  const { speechStatus, speechError, startReadingAloud, stopReadingAloud, toggleSpeechPause } = useTtsPlayback();
 
   const definition = SPREADS.find((item) => item.id === spread)!;
   const count = definition.count;
@@ -96,22 +104,27 @@ export default function LenormandReader() {
 
   function chooseSpread(next: LenormandSpread) {
     if (spread === next && spreadChosen) { setSpreadChosen(false); return; }
+    stopReadingAloud();
     setSpreadChosen(true);
     const nextDefinition = SPREADS.find((item) => item.id === next)!;
     setSpread(next); setCards(Array(nextDefinition.count).fill(undefined)); setReading(""); setError(""); setDrawSession((value) => value + 1);
   }
   function clearSpread() {
+    stopReadingAloud();
     setCards(Array(count).fill(undefined)); setReading(""); setError(""); setReadingOpen(false); setDrawSession((value) => value + 1);
   }
   function completeInteractiveDraw(nextCards: DrawnLenormandCard[]) {
+    stopReadingAloud();
     setCards(nextCards); setReading(""); setError("");
   }
   function selectManual(card: LenormandCard) {
     if (pickerIndex === null) return;
+    stopReadingAloud();
     setCards((current) => current.map((item, index) => index === pickerIndex ? { ...card, position: positions[index] } : item));
     setPickerIndex(null); setReading("");
   }
   function removeCard(index: number) {
+    stopReadingAloud();
     setCards(current => current.map((card, i) => i === index ? undefined : card));
     setReading(""); setError(""); setReadingOpen(false);
   }
@@ -119,12 +132,17 @@ export default function LenormandReader() {
     if (mode === next && modeChosen) { setModeChosen(false); return; }
     setModeChosen(true); setMode(next); clearSpread();
   }
+  function closeReading() {
+    stopReadingAloud();
+    setReadingOpen(false);
+  }
   async function readCards() {
     if (loading || retryBlocked()) return;
     if (!access.canUseLenormand) return setError("Gói hiện tại chưa hỗ trợ Lenormand. Hãy nâng cấp gói để đọc bài.");
     if (!complete) return setError(`Bạn cần chọn đủ ${count} lá.`);
     if (definition.questionMode === "required" && !question.trim()) return setError("Hãy nhập một câu hỏi cụ thể cho trải bài này.");
     if (!timeframe.trim()) return setError("Hãy nhập khung thời gian để bài đọc không quá rộng.");
+    stopReadingAloud();
     setReadingOpen(true); setLoading(true); setError(""); setReading("");
     try {
       const response = await fetch("/api/lenormand/read", { method: "POST", headers: { "Content-Type": "application/json", ...await getApiAuthHeaders() }, body: JSON.stringify({ question, timeframe, spread, cards: selectedCards, significator, readingStyle }) });
@@ -181,7 +199,22 @@ export default function LenormandReader() {
 
       <footer className="shell"><span>✦ LENORMAND PRACTICE</span><p>Bộ Dondorf Lenormand · Không dùng lá ngược.</p></footer>
       <LenormandCardPicker open={pickerIndex !== null} selectedIds={selectedIds} slotIndex={pickerIndex || 0} onSelect={selectManual} onClose={() => setPickerIndex(null)} />
-      {readingOpen && <div className="ai-reading-modal-backdrop" role="presentation" onMouseDown={() => setReadingOpen(false)}><section className="ai-reading-modal" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}><header className="ai-reading-modal-header"><div><span className="panel-kicker">LENORMAND READING</span><h2>Đọc trải bài</h2><p>{definition.title} · {readingStyleFullLabel(readingStyle)} · {selectedCards.length}/{count} lá</p></div><button className="ai-modal-close" type="button" onClick={() => setReadingOpen(false)}>×</button></header><div className="ai-reading-modal-body">{loading && !reading && <div className="ai-modal-loading"><span className="ai-loading-orbit">✦</span><div><b>Đang kết nối các lá...</b><p>Đang đọc cặp, chuỗi và vị trí tương quan của trải bài.</p></div></div>}{error && !loading && <div className="error-box ai-modal-error"><b>Không thể đọc trải bài.</b><p role="status" aria-live="polite">{retryMessage}</p><button className="ghost-button" disabled={retrySeconds > 0} onClick={readCards}>Thử lại</button></div>}{reading && <div className="ai-reading-content"><ReadingText text={reading} streaming={loading} cardNames={selectedCards.map(card => card.name)} /></div>}</div></section></div>}
+      {readingOpen && <div className="ai-reading-modal-backdrop" role="presentation" onMouseDown={closeReading}><section className="ai-reading-modal" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}><header className="ai-reading-modal-header"><div><span className="panel-kicker">LENORMAND READING</span><h2>Đọc trải bài</h2><p>{definition.title} · {readingStyleFullLabel(readingStyle)} · {selectedCards.length}/{count} lá</p></div><button className="ai-modal-close" type="button" onClick={closeReading}>×</button></header><div className="ai-reading-modal-body">{loading && !reading && <div className="ai-modal-loading"><span className="ai-loading-orbit">✦</span><div><b>Đang kết nối các lá...</b><p>Đang đọc cặp, chuỗi và vị trí tương quan của trải bài.</p></div></div>}{error && !loading && <div className="error-box ai-modal-error"><b>Không thể đọc trải bài.</b><p role="status" aria-live="polite">{retryMessage}</p><button className="ghost-button" disabled={retrySeconds > 0} onClick={readCards}>Thử lại</button></div>}{reading && <>
+        {!loading && <section className="voice-reader" aria-label="Điều khiển giọng đọc">
+          <div className="voice-reader-main">
+            <span className={`voice-reader-status ${speechStatus}`} aria-hidden="true">◉</span>
+            <span><b>Nghe bài đọc</b><small>{readingStyle === "direct" ? "Thẳng thắn · Fola" : readingStyle === "gentle" ? "Nhẹ nhàng · Gacrux" : readingStyle === "companion" ? "Tâm sự · Gacrux" : "Mặc định · Fola"}</small></span>
+          </div>
+          <div className="voice-reader-controls">
+            <button className="voice-reader-play" type="button" onClick={() => void startReadingAloud(readingForSpeech(reading), readingStyle)} disabled={!["idle", "error"].includes(speechStatus)}>▶ Nghe bài</button>
+            <button type="button" onClick={() => void toggleSpeechPause()} disabled={!["speaking", "paused"].includes(speechStatus)}>{speechStatus === "paused" ? "▶ Tiếp tục" : "Ⅱ Tạm dừng"}</button>
+            <button className="voice-reader-stop" type="button" onClick={stopReadingAloud} disabled={["idle", "error"].includes(speechStatus)}>■ Dừng</button>
+          </div>
+          <span className="voice-reader-voice-state" role="status" aria-live="polite">{speechStatus === "waiting" ? "Đang chờ" : speechStatus === "generating" ? "Đang tạo giọng" : speechStatus === "speaking" ? "Đang phát" : speechStatus === "paused" ? "Đã tạm dừng" : speechStatus === "error" ? "Lỗi" : ""}</span>
+          {speechError && <p className="voice-reader-error">{speechError}</p>}
+        </section>}
+        <div className="ai-reading-content"><ReadingText text={reading} streaming={loading} cardNames={selectedCards.map(card => card.name)} /></div>
+      </>}</div></section></div>}
     </main>
   );
 }

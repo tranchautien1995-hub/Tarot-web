@@ -4,6 +4,8 @@
  */
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), Module = require('node:module');
 const ts = require('typescript'), project = path.resolve(__dirname, '..'), cache = new Map();
+const { webcrypto } = require('node:crypto');
+const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 function load(relative) {
   const file = path.resolve(project, relative);
   if (cache.has(file)) return cache.get(file).exports;
@@ -32,6 +34,21 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const pcm = Buffer.alloc(4800); pcm.writeInt16LE(16384, 0); pcm.writeInt16LE(-16384, 2);
 const encoded = pcm.toString('base64');
 (async () => {
+  const { createTtsJobId } = load('lib/tts/job-id.ts');
+  const nativeId = '9f354ecd-4bd7-4cb6-bb26-a85c0532bdde';
+  const modernCrypto = { randomUUID() { assert.equal(this, modernCrypto); return nativeId; } };
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: modernCrypto });
+  assert.equal(createTtsJobId(), nativeId);
+  // Reproduce iOS 15: Web Crypto present, randomUUID unavailable.
+  const legacyCrypto = { getRandomValues(values) { return webcrypto.getRandomValues(values); } };
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: legacyCrypto });
+  const ids = Array.from({ length: 1000 }, () => createTtsJobId());
+  assert.equal(new Set(ids).size, 1000);
+  assert(ids.every(id => /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(id)));
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: {} });
+  assert.throws(createTtsJobId, /Trình duyệt/);
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: legacyCrypto });
+  console.log('PASS UUID: native method binding, iOS without randomUUID, 1000 secure unique UUIDv4, unsupported browser error');
   global.window = { AudioContext: AudioContextFixture };
   const { PcmPlayer } = load('lib/tts/player.ts'), events = [], player = new PcmPlayer(value => events.push(value)), abort = new AbortController();
   await player.unlock(); await player.append(encoded, 24000, abort.signal);
@@ -55,7 +72,7 @@ const encoded = pcm.toString('base64');
   try { ({ JSDOM } = require('jsdom')); } catch { console.log('SKIP React hook controls: optional jsdom not installed'); return; }
   const dom = new JSDOM('<div id="root"></div>', { url: 'https://tts.local/' });
   global.window = dom.window; global.document = dom.window.document; global.HTMLElement = dom.window.HTMLElement;
-  global.IS_REACT_ACT_ENVIRONMENT = true; window.AudioContext = AudioContextFixture;
+  global.IS_REACT_ACT_ENVIRONMENT = true; window.webkitAudioContext = AudioContextFixture;
   const React = require('react'), { createRoot } = require('react-dom/client'), { act } = React;
   const { useTtsPlayback } = load('components/useTtsPlayback.ts');
   let hook, streamController, networkSignal, requests = [];
@@ -87,6 +104,7 @@ const encoded = pcm.toString('base64');
     const body = JSON.parse(requests.find(request => request.method === 'POST').options.body);
     assert.equal(body.readingStyle, 'gentle'); assert.equal(body.text, 'Nội dung bài đọc');
     assert(!('voice' in body)); assert(!('style' in body));
+    assert(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(body.jobId));
     assert.equal(hook.speechStatus, 'waiting');
     const context = contexts.at(-1);
     await act(async () => {
@@ -119,4 +137,7 @@ const encoded = pcm.toString('base64');
     await act(async () => root.unmount()); assert.equal(networkSignal.aborted, true); assert.equal(contexts.at(-1).state, 'closed'); streamController.close();
     console.log('PASS real React hook: no calls on mount, rapid-click guard, streamed playback, Pause/Resume without regeneration, Stop waiting/playing, unmount cleanup');
   } finally { global.fetch = nativeFetch; dom.window.close(); }
-})().catch(error => { console.error(error); process.exitCode = 1; });
+})().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => {
+  if (cryptoDescriptor) Object.defineProperty(globalThis, 'crypto', cryptoDescriptor);
+  else delete globalThis.crypto;
+});

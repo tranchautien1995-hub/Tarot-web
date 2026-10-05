@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getApiAuthHeaders } from "@/lib/supabase/auth-fetch";
 import { PcmPlayer } from "@/lib/tts/player";
+import { createTtsJobId } from "@/lib/tts/job-id";
 export type SpeechStatus = "idle" | "waiting" | "generating" | "speaking" | "paused" | "error";
 type Session = { id: string; abort: AbortController; player: PcmPlayer; headers?: Record<string, string>; paused: boolean; playing: boolean };
 
@@ -33,7 +34,7 @@ export function useTtsPlayback() {
     if (!text.trim() || session.current) return; // Ref guards two rapid clicks before React rerenders.
     let current: Session | undefined;
     try {
-      const abort = new AbortController(), id = crypto.randomUUID();
+      const abort = new AbortController(), id = createTtsJobId();
       const player = new PcmPlayer(playing => {
         if (session.current?.id !== id) return;
         session.current.playing = playing;
