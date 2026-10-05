@@ -2,6 +2,7 @@ import { verifyApiUser } from "@/lib/supabase/server-auth";
 import { TtsQueue, validJobId } from "@/lib/tts/queue";
 import { geminiAudio, TTS_MODEL } from "@/lib/tts/gemini";
 import { normalizeTtsReadingStyle } from "@/lib/tts/voice-presets";
+import { TtsError, ttsFailure } from "@/lib/tts/errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,12 +44,13 @@ export async function GET(request: Request) {
     const claim = await queue.claim(id, owner);
     if (claim.status !== "claimed") return Response.json({ status: claim.status }, { status: 202, headers: { ...NO_CACHE, "Retry-After": "2" } });
     const abort = new AbortController(), untrack = queue.track(id, abort), iterator = geminiAudio(claim.text!, abort.signal, claim.readingStyle);
-    const timer = setTimeout(() => { abort.abort(); void cleanup("error"); }, 240_000);
+    let abortReason: TtsError | undefined;
+    const timer = setTimeout(() => { abortReason = new TtsError("TTS_TIMEOUT", "Tạo giọng đọc đã hết thời gian. Vui lòng thử lại."); abort.abort(); void cleanup("error"); }, 240_000);
     let polling = false;
     const monitor = setInterval(async () => {
       if (polling) return; polling = true;
       try { if (await queue.isCancelled(id, owner)) { abort.abort(); void cleanup("cancelled"); } }
-      catch { abort.abort(); void cleanup("error"); }
+      catch { abortReason = new TtsError("TTS_QUEUE_UNAVAILABLE", "Kết nối hàng đợi giọng đọc bị gián đoạn. Vui lòng thử lại."); abort.abort(); void cleanup("error"); }
       finally { polling = false; }
     }, 2000);
     const clientAbort = () => { abort.abort(); void cleanup("cancelled"); };
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
       return cleaned;
     }
     if (request.signal.aborted) clientAbort();
-    const encoder = new TextEncoder(); let initial = true;
+    const encoder = new TextEncoder(); let initial = true, audioStarted = false;
     const stream = new ReadableStream<Uint8Array>({
       async pull(controller) {
         try {
@@ -75,10 +77,12 @@ export async function GET(request: Request) {
           const chunk = await iterator.next();
           if (abort.signal.aborted) throw new Error("Đã dừng hoặc hết thời gian tạo giọng.");
           if (chunk.done) { await cleanup("done"); controller.enqueue(encoder.encode('{"type":"done"}\n')); controller.close(); }
-          else controller.enqueue(encoder.encode(JSON.stringify({ type: "audio", ...chunk.value }) + "\n"));
-        } catch {
+          else { audioStarted = true; controller.enqueue(encoder.encode(JSON.stringify({ type: "audio", ...chunk.value }) + "\n")); }
+        } catch (error) {
+          const problem = ttsFailure(abortReason || error);
+          if (!request.signal.aborted) console.error("[TTS] generation_failed", { job_id: id, model: TTS_MODEL, reading_style: claim.readingStyle, audio_started: audioStarted, code: problem.code, ...problem.details });
           await cleanup(request.signal.aborted ? "cancelled" : "error");
-          try { controller.enqueue(encoder.encode(JSON.stringify({ type: "error", error: "Không thể hoàn tất giọng đọc. Vui lòng thử lại." }) + "\n")); controller.close(); } catch { /* Client already cancelled. */ }
+          try { controller.enqueue(encoder.encode(JSON.stringify({ type: "error", code: problem.code, error: problem.message }) + "\n")); controller.close(); } catch { /* Client already cancelled. */ }
         }
       },
       async cancel() { await cleanup("cancelled"); }

@@ -43,6 +43,11 @@ const server = http.createServer(async (request, response) => {
   const payload = JSON.parse(body), text = payload.contents[0].parts[0].text;
   calls.push({ text, payload, key: request.headers['x-goog-api-key'] });
   assert.equal(request.headers['x-goog-api-key'], 'fake-tts-key');
+  if (text.startsWith('http-error-')) {
+    const status = Number(text.split('-').at(-1));
+    response.writeHead(status, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: { code: status, status: 'TEST_PROVIDER_ERROR', message: `Provider refused fake-tts-key ${text}` } })); return;
+  }
   if (text === 'retry' && retryCount++ === 0) { response.writeHead(429, { 'Retry-After': '.5' }); response.end('{}'); return; }
   if (text === 'always-429') { response.writeHead(429, { 'Retry-After': '.5' }); response.end('{}'); return; }
   active++; maxActive = Math.max(maxActive, active); let released = false;
@@ -174,6 +179,21 @@ async function suite(api, backend) {
   const long = 'Tarot 6 lá. ' + 'The Fool xuôi, The Magician xuôi, Two of Cups ngược, Six of Swords xuôi, Queen of Pentacles xuôi, The Star xuôi. Bạn cần quan sát hành động thực tế và giữ giới hạn của mình. '.repeat(35);
   await flow(api, long, 'direct'); assert.equal(calls.at(-1).text, long.trim()); assertPreset(calls.at(-1).payload, 'direct');
   console.log('PASS validation/auth, production requires Redis, 429 retry bounds, no retry after audio, long 6-card payload');
+  for (const [status, code] of [[400, 'GEMINI_REQUEST_REJECTED'], [401, 'GEMINI_ACCESS_DENIED'], [403, 'GEMINI_ACCESS_DENIED'], [404, 'GEMINI_MODEL_UNAVAILABLE'], [503, 'GEMINI_UNAVAILABLE']]) {
+    const id = randomUUID(), text = `http-error-${status}`, start = calls.length, logs = [], oldError = console.error;
+    console.error = (...args) => logs.push(args);
+    try {
+      assert.equal((await api.POST(request('POST', id, text))).status, 202);
+      const rows = (await (await api.GET(request('GET', id))).text()).trim().split('\n').map(JSON.parse);
+      assert.equal(rows.at(-1).code, code); assert.equal(rows.at(-1).type, 'error');
+      assert.equal(calls.length - start, 1, 'no duplicate generation on provider failure');
+      assert.equal(logs[0][1].http_status, status); assert.equal(logs[0][1].audio_started, false);
+      assert.equal(logs[0][1].job_id, id);
+      assert(!JSON.stringify(logs).includes('fake-tts-key')); assert(!JSON.stringify(logs).includes(text));
+      assert(!JSON.stringify(rows).includes('provider_message')); assert(!JSON.stringify(rows).includes('TEST_PROVIDER_ERROR'));
+    } finally { console.error = oldError; }
+  }
+  console.log('PASS HTTP provider failures: correct UI messages/codes, server log, key/text redaction, one outbound request');
   if (before.TTS_TEST_REDIS_REST_URL && before.TTS_TEST_REDIS_REST_TOKEN) {
     process.env.UPSTASH_REDIS_REST_URL = before.TTS_TEST_REDIS_REST_URL;
     process.env.UPSTASH_REDIS_REST_TOKEN = before.TTS_TEST_REDIS_REST_TOKEN;
