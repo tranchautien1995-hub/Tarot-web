@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import LenormandReader from "@/components/LenormandReader";
 import { ReaderNavigationProvider } from "@/components/ReaderNavigation";
+import MobileEntrySplash from "@/components/MobileEntrySplash";
 import PricingModal from "@/components/PricingModal";
 import { AccessProvider } from "@/components/AccessContext";
 import { getPlanAccess } from "@/lib/plans";
@@ -53,6 +54,7 @@ export default function AuthGate({ children }: Props) {
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [entryComplete, setEntryComplete] = useState(false);
+  const [mobileSplashDismissed, setMobileSplashDismissed] = useState(false);
   const [skipMobileIntro, setSkipMobileIntro] = useState<boolean | null>(null);
   const [selectedExperience, setSelectedExperience] = useState<EntryMode>("tarot");
   const [authPanelOpen, setAuthPanelOpen] = useState(false);
@@ -267,6 +269,10 @@ export default function AuthGate({ children }: Props) {
   }
 
   if (skipMobileIntro === null) return <div style={{ minHeight: "100dvh", background: "var(--bg)" }} />;
+
+  if (skipMobileIntro && !mobileSplashDismissed) {
+    return <MobileEntrySplash onEnter={() => setMobileSplashDismissed(true)} />;
+  }
 
   if (!entryComplete) {
     return (

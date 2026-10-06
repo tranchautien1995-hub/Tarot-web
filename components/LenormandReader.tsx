@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useMobileViewport } from "@/components/useMobileViewport";
 import LenormandReaderMenu from "@/components/LenormandReaderMenu";
 import { useReadingRetry } from "@/components/useReadingRetry";
 import { useTtsPlayback } from "@/components/useTtsPlayback";
@@ -62,6 +63,7 @@ function readingForSpeech(value: string) {
 }
 
 export default function LenormandReader() {
+  const isMobile = useMobileViewport();
   const { selectReader } = useReaderNavigation();
   const { retrySeconds, retryBlocked, startRetry, retryMessage } = useReadingRetry();
   const [spreadChosen, setSpreadChosen] = useState(true);
@@ -192,7 +194,7 @@ export default function LenormandReader() {
   return (
     <main className={`theme-${theme} lenormand-reader`} data-theme={theme}>
       <div className="ambient" aria-hidden="true" />
-      <div className="star-field" aria-hidden="true">{STAR_FIELD.map((star, index) => <span key={index} className={`star-item star-${star.kind}`} style={{ "--star-left": star.left, "--star-top": star.top, "--star-size": star.size, "--star-delay": star.delay, "--star-duration": star.duration, "--star-drift-x": star.driftX, "--star-drift-y": star.driftY, "--star-twinkle": star.twinkle } as CSSProperties}>{star.kind === "five" ? "★" : star.kind === "sparkle" ? "✦" : ""}</span>)}</div>
+      {!isMobile && <div className="star-field" aria-hidden="true">{STAR_FIELD.map((star, index) => <span key={index} className={`star-item star-${star.kind}`} style={{ "--star-left": star.left, "--star-top": star.top, "--star-size": star.size, "--star-delay": star.delay, "--star-duration": star.duration, "--star-drift-x": star.driftX, "--star-drift-y": star.driftY, "--star-twinkle": star.twinkle } as CSSProperties}>{star.kind === "five" ? "★" : star.kind === "sparkle" ? "✦" : ""}</span>)}</div>}
 
       <nav className="product-navigation shell" aria-label="Các công cụ TTarot"><LenormandReaderMenu history={loadedHistoryKey === historyKey ? history.slice(0, historyLimit) : []} historyLimit={historyLimit} readingBusy={loading} onRestore={restoreHistory} onDelete={id => setHistory(current => current.filter(entry => entry.id !== id))} /><div className="product-tabs" role="tablist" aria-label="Loại công cụ"><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("tarot")}>Trải bài Tarot</button><button className="active" type="button" role="tab" aria-selected="true">Trải bài Lenormand</button><button type="button" role="tab" aria-selected="false" disabled>Tarot x Lenormand</button></div></nav>
       <header className="topbar shell"><div className="topbar-left"><div className="brand">✦ LENORMAND PRACTICE</div></div><div className="topbar-right"><div className="theme-toggle-wrap"><button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}><span className="theme-toggle-icon">{theme === "light" ? "☾" : "☀"}</span><span>{theme === "light" ? "Dark" : "Light"}</span></button></div></div></header>

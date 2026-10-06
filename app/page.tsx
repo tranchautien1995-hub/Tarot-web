@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } f
 import { useReaderNavigation } from "@/components/ReaderNavigation";
 import { useTtsPlayback } from "@/components/useTtsPlayback";
 import { useReadingRetry } from "@/components/useReadingRetry";
+import { useMobileViewport } from "@/components/useMobileViewport";
 import CardPicker from "@/components/CardPicker";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import PracticeCard from "@/components/PracticeCard";
@@ -286,6 +287,7 @@ function createId() {
 }
 
 export default function Home() {
+  const isMobile = useMobileViewport();
   const { selectReader } = useReaderNavigation();
   const { retrySeconds, retryBlocked, startRetry, retryMessage } = useReadingRetry();
   const [presetChosen, setPresetChosen] = useState(true);
@@ -775,7 +777,7 @@ export default function Home() {
   return (
       <main className={`theme-${theme}`} data-theme={theme}>
       <div className="ambient" aria-hidden="true" />
-      <div className="star-field" aria-hidden="true">
+      {!isMobile && <div className="star-field" aria-hidden="true">
         {STAR_FIELD.map((star, index) => (
           <span
             key={index}
@@ -792,7 +794,7 @@ export default function Home() {
             } as CSSProperties}
           >{star.kind === "five" ? "★" : star.kind === "sparkle" ? "✦" : ""}</span>
         ))}
-      </div>
+      </div>}
 
       <nav className="product-navigation shell" aria-label="Các công cụ TTarot">
         {!sideMenuOpen && (
