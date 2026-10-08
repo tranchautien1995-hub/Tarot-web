@@ -50,9 +50,6 @@ footer{display:flex;justify-content:space-between;gap:30px;border-top:1px solid 
 .entry-identity-scene{display:grid;place-content:center;text-align:center;animation:entryIdentityIn 1.2s cubic-bezier(.16,1,.3,1) both}.entry-identity-scene .entry-index{margin-bottom:26px}
 .entry-identity-scene h1{margin:0;font-family:"TTarot Entry Serif",Georgia,"Times New Roman",serif;font-size:clamp(66px,12vw,174px);font-weight:400;line-height:1;letter-spacing:.005em;font-kerning:normal;font-synthesis:none;text-rendering:optimizeLegibility;text-shadow:0 20px 80px rgba(0,0,0,.45)}
 .entry-identity-scene h1 span{display:inline-block;margin-right:.12em;color:#dfc181;font-style:italic}.entry-identity-line{width:0;height:1px;margin:32px auto 22px;background:linear-gradient(90deg,transparent,#dec189,transparent);animation:entryLineReveal 1.4s .45s cubic-bezier(.16,1,.3,1) forwards}
-.entry-identity-scene h1.entry-custom-logo{line-height:0;text-shadow:none}
-.entry-custom-logo img{display:block;width:auto;height:clamp(180px,32svh,280px);max-width:calc(100vw - 48px);object-fit:contain;margin-inline:auto}
-@media(max-height:520px){.entry-custom-logo img{height:clamp(100px,27svh,180px)}}
 .entry-identity-scene>p:last-child{margin:0;color:rgba(244,237,226,.72);font-family:"TTarot Vietnamese Serif",Georgia,"Times New Roman",serif;font-size:clamp(17px,2vw,25px);font-style:italic;font-weight:400;font-kerning:normal;letter-spacing:0;line-height:1.4;text-rendering:optimizeLegibility;opacity:0;animation:entryCopyIn 1s .7s ease forwards}
 .entry-choice-scene{z-index:auto;pointer-events:none;display:grid;grid-template-rows:auto 1fr;padding:clamp(34px,5vw,74px)}.entry-choice-scene>header{position:relative;z-index:-2;max-width:740px;align-self:start}
 .entry-choice-scene h1{margin:14px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,6.2vw,92px);font-weight:400;line-height:.9;letter-spacing:-.055em}.entry-choice-scene h1 em{display:inline-block;color:#d9bd82;font-weight:400;line-height:.9;white-space:nowrap}
@@ -5110,22 +5107,22 @@ main.theme-dark[data-theme]:not(.upgrade-page) :is(.draw-table,.v27-table){
     radial-gradient(circle at 18% 80%,rgba(18,92,84,.18),transparent 30%),
     linear-gradient(145deg,#08070c 0%,#0c0912 48%,#050509 100%);
 }
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)){
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)){
   background:linear-gradient(145deg,#211b26,#191320)!important;
   border-color:rgba(223,193,129,.30)!important;
   color:#f4ede2!important;
 }
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)):is(:hover,:focus-visible):not(:disabled){
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)):is(:hover,:focus-visible):not(:disabled){
   background:linear-gradient(145deg,rgba(32,21,37,.82),rgba(10,36,34,.78))!important;
   border-color:rgba(223,193,129,.62)!important;
   color:#f4ede2!important;
 }
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)) :is(b,strong){color:#f4ede2}
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)) small{color:#b9b2b7}
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)) :is(b,strong){color:#f4ede2}
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)) small{color:#b9b2b7}
 main.theme-dark[data-theme]:not(.upgrade-page) button.danger-action,
 main.theme-dark[data-theme]:not(.upgrade-page) button.danger-link{color:#efb2bf!important}
 
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)):is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled){background:linear-gradient(145deg,rgba(32,21,37,.82),rgba(10,36,34,.78))!important;border-color:rgba(223,193,129,.62)!important}
+main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot)):is(.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled){background:linear-gradient(145deg,rgba(32,21,37,.82),rgba(10,36,34,.78))!important;border-color:rgba(223,193,129,.62)!important}
 
 /* Uploaded Lenormand layouts; all reader colors come from the shared Tarot rules. */
 .lenormand-reader .lenormand-context-row{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:16px 0 2px;border-top:1px solid var(--line);margin-top:0}
@@ -5310,44 +5307,43 @@ main[data-theme] .flow-stage-head-nav-only{padding-top:66px!important}
 .lenormand-reader .side-menu-nav>button{grid-template-columns:minmax(0,1fr) 18px}
 .lenormand-reader .side-menu-nav>button>span{min-width:0}
 
-/* Reader controls: compact fresh cyan accent and restored gold primary actions. */
-main.theme-dark[data-theme]:not(.upgrade-page) button:not(:is(.fan-card,.slot-flip-card,.library-card,.empty-card-slot,.upgrade-glow-button,.flow-continue-button,.reading-ai-button)):is(:hover,:focus-visible,.active,[aria-selected="true"],[aria-pressed="true"]):not(:disabled){
-  background:radial-gradient(ellipse at 100% 100%,rgba(20,197,170,.32) 0%,rgba(20,197,170,.12) 23%,transparent 48%),linear-gradient(145deg,#211b26,#191320)!important;
-}
-main[data-theme]:not(.upgrade-page) button:is(.gold-button,.upgrade-glow-button),
-main[data-theme]:not(.upgrade-page) button:is(.gold-button,.upgrade-glow-button):is(:hover,:focus-visible,.active){
-  background:linear-gradient(135deg,#ead099,#c79b50)!important;
-  border-color:#dbb871!important;color:#241a10!important;
-}
-.voice-reader{display:grid;grid-template-columns:minmax(0,1fr) auto;max-width:none}
-.voice-reader-controls{margin-left:auto;justify-self:end}
-.voice-reader-voice-state{grid-column:1/-1;justify-self:end}
-.voice-reader-voice-state:empty{display:none}
-.voice-reader-error{grid-column:1/-1}
-@media(max-width:620px){
-  .voice-reader{grid-template-columns:minmax(0,1fr)}
-  .voice-reader-main{width:auto;min-width:0}
-  .voice-reader-controls{display:flex;width:auto;max-width:100%;justify-content:flex-end;gap:6px}
-  .voice-reader-controls button{width:auto;min-width:0;font-size:11px;padding:0 8px}
+/* Combined reader: reuse the official reader surfaces, slots and controls.
+   Only lay out the second selection row before the single active deck. */
+.combined-reader .combined-spreads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.combined-reader .combined-table{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+.combined-reader .combined-deck,
+.combined-reader .combined-deck>div:not(.combined-deck-label),
+.combined-reader .combined-deck .interactive-draw,
+.combined-reader .combined-deck .draw-table{display:contents}
+.combined-reader .combined-deck .draw-table::before{display:none}
+.combined-reader .combined-deck .interactive-draw-head{grid-column:1;grid-row:1}
+.combined-reader .combined-tarot .combined-deck-label{grid-row:2}
+.combined-reader .combined-tarot .picked-slots{grid-row:3}
+.combined-reader .combined-lenormand .combined-deck-label{grid-row:4}
+.combined-reader .combined-lenormand .picked-slots{grid-row:5}
+.combined-reader .combined-deck-label{grid-column:1;padding:16px 24px 0}
+.combined-reader .combined-deck-label h2{margin:0;font-family:var(--font-heading);font-size:24px;color:inherit}
+.combined-reader .combined-deck .picked-slots{grid-column:1}
+.combined-reader .combined-deck .v27-deck-stage,
+.combined-reader .combined-stage-space{grid-column:1;grid-row:6}
+.combined-reader .combined-stage-space{height:360px;pointer-events:none}
+.combined-reader .combined-deck .deck-bottom-actions{grid-column:1;grid-row:7}
+.combined-reader .combined-deck .fan-tip{grid-column:1;grid-row:8}
+.combined-reader .combined-deck-locked :is(.v27-deck-stage,.deck-bottom-actions,.fan-tip){display:none!important}
+.combined-reader .combined-deck-locked .interactive-draw-head{display:none}
+.combined-reader .combined-table[data-phase="complete"] .combined-lenormand .interactive-draw-head{display:flex}
+/* Five columns use the official card size and gap; scroll inside on narrow screens. */
+.combined-reader .combined-table[data-spread="deep"] .picked-slots{grid-template-columns:repeat(5,var(--spread-card-width));justify-content:safe center;overflow-x:auto}
+.combined-reader .combined-lenormand .picked-slots.spread-layout-box9{display:grid!important;grid-template-columns:repeat(3,var(--spread-card-width))!important;justify-content:center!important;max-width:none}
+.combined-reader .combined-lenormand .picked-slots img{object-fit:contain}
+@media(max-width:760px){
+ .combined-reader .combined-spreads{grid-template-columns:1fr}
+ .combined-reader .combined-stage-space{height:142px}
+ .combined-reader .combined-deck-label{padding:12px 18px 0}
+ .combined-reader .combined-deck-label h2{font-size:20px}
+ /* Native touch selection; the existing desktop pointer layer is hidden on mobile. */
+ .combined-reader .fan-card:not(.picked){pointer-events:auto!important}
 }
 
-/* Mobile entry is a static logo screen; no WebGL or star animations. */
-.mobile-entry-splash{
-  position:fixed;inset:0;z-index:1200;width:100%;height:100%;min-height:100svh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;
-  border:0;padding:32px 24px;color:#E5F4F4;cursor:pointer;
-  background:radial-gradient(circle at 50% 45%,rgba(79,42,83,.52),transparent 35%),radial-gradient(circle at 18% 80%,rgba(18,92,84,.28),transparent 30%),linear-gradient(145deg,#08070c 0%,#0c0912 48%,#050509 100%);
-  -webkit-tap-highlight-color:transparent;
-}
-.mobile-entry-logo{display:block;height:clamp(180px,40svh,320px);width:auto;max-width:100%;object-fit:contain}
-.mobile-entry-hint{font-family:var(--font-ui);font-size:14px;letter-spacing:.06em;line-height:1.5}
-.mobile-entry-splash:focus-visible{outline:2px solid #ead099;outline-offset:-8px}
-@media(max-width:760px){.star-field,.shooting-star-field{display:none!important}}
-
-/* Gold primary reader actions, including hover/focus and disabled states. */
-main:is(.theme-dark,.theme-light)[data-theme]:not(.upgrade-page) button:is(.upgrade-glow-button,.flow-continue-button,.reading-ai-button),
-main:is(.theme-dark,.theme-light)[data-theme]:not(.upgrade-page) button:is(.upgrade-glow-button,.flow-continue-button,.reading-ai-button):is(:hover,:focus-visible,:active,.active){
-  background:linear-gradient(135deg,#ead099,#c79b50)!important;
-  border-color:#dbb871!important;color:#241a10!important;
-}
-main[data-theme] .upgrade-glow-button::before{color:#6e4714;text-shadow:none}
+.combined-reader .side-menu-nav>button{grid-template-columns:minmax(0,1fr) 18px}
+.combined-reader .side-menu-nav>button>span{min-width:0}

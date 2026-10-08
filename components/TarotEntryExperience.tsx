@@ -590,7 +590,7 @@ export default function TarotEntryExperience({ onContinue, initialMode = "tarot"
       {phase === "identity" && (
         <section className="entry-identity-scene" aria-label="Giới thiệu TTarot">
           <p className="entry-index">A PRIVATE SPACE FOR SEEING CLEARLY</p>
-          <h1 className="entry-custom-logo"><img src="/entry-v3/ttarot-logo.svg" alt="TTarot" width={99} height={137} loading="eager" decoding="async" /></h1>
+          <h1><span>T</span>TAROT</h1>
           <div className="entry-identity-line" aria-hidden="true" />
           <p>Mỗi lá bài đang chờ được nhìn thấy.</p>
         </section>

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
-type ReaderMode = "tarot" | "lenormand";
+type ReaderMode = "tarot" | "lenormand" | "combined";
 type ReaderNavigationValue = { selectReader: (mode: ReaderMode) => void };
 const ReaderNavigationContext = createContext<ReaderNavigationValue | null>(null);
 
