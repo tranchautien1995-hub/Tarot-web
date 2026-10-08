@@ -4,13 +4,13 @@ import { usePathname } from "next/navigation";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import CombinedReader from "@/components/CombinedReader";
 import LenormandReader from "@/components/LenormandReader";
 import { ReaderNavigationProvider } from "@/components/ReaderNavigation";
+import MobileEntrySplash from "@/components/MobileEntrySplash";
 import PricingModal from "@/components/PricingModal";
 import { AccessProvider } from "@/components/AccessContext";
 import { getPlanAccess } from "@/lib/plans";
-import TarotEntryExperience, { EntryMode } from "@/components/TarotEntryExperience";
+import TarotEntryExperience, { EntryMode, EntryUnavailable } from "@/components/TarotEntryExperience";
 
 type AuthMode = "login" | "register";
 
@@ -54,6 +54,7 @@ export default function AuthGate({ children }: Props) {
   const [accountPanelOpen, setAccountPanelOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [entryComplete, setEntryComplete] = useState(false);
+  const [mobileSplashDismissed, setMobileSplashDismissed] = useState(false);
   const [skipMobileIntro, setSkipMobileIntro] = useState<boolean | null>(null);
   const [selectedExperience, setSelectedExperience] = useState<EntryMode>("tarot");
   const [authPanelOpen, setAuthPanelOpen] = useState(false);
@@ -70,6 +71,11 @@ export default function AuthGate({ children }: Props) {
       setEntryComplete(true);
     }
     const storedMode = sessionStorage.getItem("ttarot:selected-experience") as EntryMode | null;
+    if (mobile && storedMode === "combined") {
+      setSelectedExperience("tarot");
+      sessionStorage.setItem("ttarot:selected-experience", "tarot");
+      return;
+    }
     if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
       setSelectedExperience(storedMode);
     }
@@ -264,6 +270,10 @@ export default function AuthGate({ children }: Props) {
 
   if (skipMobileIntro === null) return <div style={{ minHeight: "100dvh", background: "var(--bg)" }} />;
 
+  if (skipMobileIntro && !mobileSplashDismissed) {
+    return <MobileEntrySplash onEnter={() => setMobileSplashDismissed(true)} />;
+  }
+
   if (!entryComplete) {
     return (
       <>
@@ -334,7 +344,7 @@ export default function AuthGate({ children }: Props) {
       }}>
         <ReaderNavigationProvider selectReader={requestExperience}>
           {pathname !== "/" || selectedExperience === "tarot" ? children : selectedExperience === "lenormand" ? <LenormandReader /> : (
-            <CombinedReader />
+            <EntryUnavailable mode={selectedExperience} onBack={() => setEntryComplete(false)} />
           )}
         </ReaderNavigationProvider>
       </AccessProvider>
