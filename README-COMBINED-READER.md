@@ -9,3 +9,11 @@ Xáo/bốc/lật Tarot trước; các lá Tarot giữ trên bàn, tiếp tục x
 Giữ nguyên cấu hình CKEY/APIZ của bản chính. Không sửa quota, giá, schema, auth backend, bộ bài hay intro.
 
 Chạy: npm install; npm run typecheck; npm run build.
+
+## Kiểm tra đường vào từ intro
+
+Đã kiểm tra trực tiếp: Chạm để bước vào → Tarot × Lenormand → Bước vào trải bài → AuthGate hiện có → trang kết hợp. Màn EntryUnavailable cũ đã xóa khỏi source, không còn thông báo “chưa được kích hoạt”.
+
+Bản này là full source. Giải nén, dùng toàn bộ nội dung thư mục WebVer2.3-HAR-Combined-Official-Fix1-FULL để thay source dự án; không đặt nó thành thư mục con của bản cũ. Giữ env đang dùng.
+
+File sửa so với bản chính: app/page.tsx, app/globals.css, components/AuthGate.tsx, components/ReaderNavigation.tsx, components/LenormandReader.tsx, components/TarotEntryExperience.tsx. File thêm: components/CombinedReader.tsx, app/api/combined/read/route.ts, lib/combined/spreads.ts, lib/combined/prompts.ts, README-COMBINED-READER.md.
