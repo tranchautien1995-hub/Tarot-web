@@ -814,7 +814,7 @@ export default function Home() {
         <div className="product-tabs" role="tablist" aria-label="Loại công cụ">
           <button className="active" type="button" role="tab" aria-selected="true">Trải bài Tarot</button>
           <button type="button" role="tab" aria-selected="false" onClick={() => selectReader("lenormand")}>Trải bài Lenormand</button>
-          <button type="button" role="tab" aria-selected="false" disabled title="Sẽ được phát triển sau">Tarot x Lenormand</button>
+          <button type="button" role="tab" aria-selected="false" onClick={() => selectReader("combined")}>Tarot x Lenormand</button>
         </div>
       </nav>
 

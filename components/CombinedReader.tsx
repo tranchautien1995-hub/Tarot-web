@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import InteractiveDeck from "@/components/InteractiveDeck";
 import LenormandInteractiveDeck from "@/components/LenormandInteractiveDeck";
-import LenormandReaderMenu from "@/components/LenormandReaderMenu";
+import CombinedReaderMenu from "@/components/CombinedReaderMenu";
 import ReadingText from "@/components/ReadingText";
 import { useReaderNavigation } from "@/components/ReaderNavigation";
 import { usePlanAccess } from "@/components/AccessContext";
@@ -110,7 +110,7 @@ export default function CombinedReader() {
   return <main className={`theme-${theme} combined-reader`} data-theme={theme}>
     <div className="ambient" aria-hidden="true" />
     <div className="star-field" aria-hidden="true">{STARS.map((star, index) => <span key={index} className={`star-item star-${star.kind}`} style={star.style}>{star.kind === "five" ? "★" : star.kind === "sparkle" ? "✦" : ""}</span>)}</div>
-    {<nav className="product-navigation shell" aria-label="Các công cụ TTarot"><LenormandReaderMenu /><div className="product-tabs" role="tablist" aria-label="Loại công cụ"><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("tarot")}>Trải bài Tarot</button><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("lenormand")}>Trải bài Lenormand</button><button className="active" type="button" role="tab" aria-selected="true">Tarot x Lenormand</button></div></nav>}
+    {<nav className="product-navigation shell" aria-label="Các công cụ TTarot"><CombinedReaderMenu /><div className="product-tabs" role="tablist" aria-label="Loại công cụ"><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("tarot")}>Trải bài Tarot</button><button type="button" role="tab" aria-selected="false" onClick={() => selectReader("lenormand")}>Trải bài Lenormand</button><button className="active" type="button" role="tab" aria-selected="true">Tarot x Lenormand</button></div></nav>}
     <header className="topbar shell"><div className="brand">✦ TTAROT HOME</div><button className="theme-toggle" type="button" onClick={() => setTheme(current => current === "dark" ? "light" : "dark")}>{theme === "dark" ? "☀ Light" : "☾ Dark"}</button></header>
     {!started && <section className="intro shell compact-intro flow-intro"><h1>Tarot × Lenormand</h1><p className="lead">Tarot đi vào chiều sâu. Lenormand kiểm chứng bằng diễn biến thực tế.</p></section>}
     <section className="workspace shell">

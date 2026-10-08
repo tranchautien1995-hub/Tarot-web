@@ -4,13 +4,14 @@ import { usePathname } from "next/navigation";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import CombinedReader from "@/components/CombinedReader";
 import LenormandReader from "@/components/LenormandReader";
 import { ReaderNavigationProvider } from "@/components/ReaderNavigation";
 import MobileEntrySplash from "@/components/MobileEntrySplash";
 import PricingModal from "@/components/PricingModal";
 import { AccessProvider } from "@/components/AccessContext";
 import { getPlanAccess } from "@/lib/plans";
-import TarotEntryExperience, { EntryMode, EntryUnavailable } from "@/components/TarotEntryExperience";
+import TarotEntryExperience, { EntryMode } from "@/components/TarotEntryExperience";
 
 type AuthMode = "login" | "register";
 
@@ -71,11 +72,6 @@ export default function AuthGate({ children }: Props) {
       setEntryComplete(true);
     }
     const storedMode = sessionStorage.getItem("ttarot:selected-experience") as EntryMode | null;
-    if (mobile && storedMode === "combined") {
-      setSelectedExperience("tarot");
-      sessionStorage.setItem("ttarot:selected-experience", "tarot");
-      return;
-    }
     if (storedMode === "tarot" || storedMode === "lenormand" || storedMode === "combined") {
       setSelectedExperience(storedMode);
     }
@@ -344,7 +340,7 @@ export default function AuthGate({ children }: Props) {
       }}>
         <ReaderNavigationProvider selectReader={requestExperience}>
           {pathname !== "/" || selectedExperience === "tarot" ? children : selectedExperience === "lenormand" ? <LenormandReader /> : (
-            <EntryUnavailable mode={selectedExperience} onBack={() => setEntryComplete(false)} />
+            <CombinedReader />
           )}
         </ReaderNavigationProvider>
       </AccessProvider>

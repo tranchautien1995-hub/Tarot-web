@@ -5351,3 +5351,44 @@ main:is(.theme-dark,.theme-light)[data-theme]:not(.upgrade-page) button:is(.upgr
   border-color:#dbb871!important;color:#241a10!important;
 }
 main[data-theme] .upgrade-glow-button::before{color:#6e4714;text-shadow:none}
+
+/* Combined reader: reuse the official reader surfaces, slots and controls.
+   Only lay out the second selection row before the single active deck. */
+.combined-reader .combined-spreads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.combined-reader .combined-table{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+.combined-reader .combined-deck,
+.combined-reader .combined-deck>div:not(.combined-deck-label),
+.combined-reader .combined-deck .interactive-draw,
+.combined-reader .combined-deck .draw-table{display:contents}
+.combined-reader .combined-deck .draw-table::before{display:none}
+.combined-reader .combined-deck .interactive-draw-head{grid-column:1;grid-row:1}
+.combined-reader .combined-tarot .combined-deck-label{grid-row:2}
+.combined-reader .combined-tarot .picked-slots{grid-row:3}
+.combined-reader .combined-lenormand .combined-deck-label{grid-row:4}
+.combined-reader .combined-lenormand .picked-slots{grid-row:5}
+.combined-reader .combined-deck-label{grid-column:1;padding:16px 24px 0}
+.combined-reader .combined-deck-label h2{margin:0;font-family:var(--font-heading);font-size:24px;color:inherit}
+.combined-reader .combined-deck .picked-slots{grid-column:1}
+.combined-reader .combined-deck .v27-deck-stage,
+.combined-reader .combined-stage-space{grid-column:1;grid-row:6}
+.combined-reader .combined-stage-space{height:360px;pointer-events:none}
+.combined-reader .combined-deck .deck-bottom-actions{grid-column:1;grid-row:7}
+.combined-reader .combined-deck .fan-tip{grid-column:1;grid-row:8}
+.combined-reader .combined-deck-locked :is(.v27-deck-stage,.deck-bottom-actions,.fan-tip){display:none!important}
+.combined-reader .combined-deck-locked .interactive-draw-head{display:none}
+.combined-reader .combined-table[data-phase="complete"] .combined-lenormand .interactive-draw-head{display:flex}
+/* Five columns use the official card size and gap; scroll inside on narrow screens. */
+.combined-reader .combined-table[data-spread="deep"] .picked-slots{grid-template-columns:repeat(5,var(--spread-card-width));justify-content:safe center;overflow-x:auto}
+.combined-reader .combined-lenormand .picked-slots.spread-layout-box9{display:grid!important;grid-template-columns:repeat(3,var(--spread-card-width))!important;justify-content:center!important;max-width:none}
+.combined-reader .combined-lenormand .picked-slots img{object-fit:contain}
+@media(max-width:760px){
+ .combined-reader .combined-spreads{grid-template-columns:1fr}
+ .combined-reader .combined-stage-space{height:142px}
+ .combined-reader .combined-deck-label{padding:12px 18px 0}
+ .combined-reader .combined-deck-label h2{font-size:20px}
+ /* Native touch selection; the existing desktop pointer layer is hidden on mobile. */
+ .combined-reader .fan-card:not(.picked){pointer-events:auto!important}
+}
+
+.combined-reader .side-menu-nav>button{grid-template-columns:minmax(0,1fr) 18px}
+.combined-reader .side-menu-nav>button>span{min-width:0}

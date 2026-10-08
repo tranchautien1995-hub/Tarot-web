@@ -651,16 +651,3 @@ export default function TarotEntryExperience({ onContinue, initialMode = "tarot"
   );
 }
 
-export function EntryUnavailable({ mode, onBack }: { mode: Exclude<EntryMode, "tarot">; onBack: () => void }) {
-  return (
-    <main className="entry-unavailable">
-      <div className="entry-unavailable-orbit" aria-hidden="true"><i /><i /><i /></div>
-      <section>
-        <p className="entry-index">{MODE_COPY[mode].eyebrow}</p>
-        <h1>{MODE_COPY[mode].title}</h1>
-        <p>Không gian này đã có mặt trong trải nghiệm, nhưng logic đọc bài chưa tồn tại trong source v2.2 nên chưa được kích hoạt.</p>
-        <button type="button" onClick={onBack}>Quay lại chọn trải bài</button>
-      </section>
-    </main>
-  );
-}
